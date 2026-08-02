@@ -12,8 +12,8 @@ This repository is an attempt to give that problem concrete form: documents that
 
 Full technical and legal analysis is available here:
 
-- [Long-form X/Twitter post]([https://x.com](https://x.com/DanielSmithDev/status/2084048838193721626)) — complete technical and legal argument
-- [LinkedIn piece]([https://linkedin.com](https://www.linkedin.com/posts/danielsmithdev_have-i-been-flocked-search-flock-alpr-share-7489705881710800896-nZvX)) — compressed version for professional audiences
+- [Long-form X/Twitter post]([https://x.com/DanielSmithDev/status/2084048838193721626]) — complete technical and legal argument
+- [LinkedIn piece]([https://www.linkedin.com/posts/danielsmithdev_have-i-been-flocked-search-flock-alpr-share-7489705881710800896-nZvX]) — compressed version for professional audiences
 
 The technical architecture described in these documents is derived from work building [ClawQL's security stack](https://docs.clawql.com/security/best-practices), a 32-module agentic AI security framework that implements the same Merkle-chaining, WORM audit, and external immutable anchoring patterns that Flock would need to make its footage trustworthy as evidence.
 
