@@ -42,15 +42,16 @@ Test bearer: `Authorization: Bearer test:<userId>:<email>`.
 
 ## Document generation modes
 
-`POST /api/generate` accepts `footageCategory`:
+`POST /api/generate` accepts:
 
-| Value | Pressure focus |
-|---|---|
-| `fixed_surveillance` (default) | ALPR / fixed cam hash, error rate, query abuse |
-| `body_worn` | Mute/dock/export integrity; clawql-surveillance-class bar |
-| `cellphone` | Cryptographic proof against AI alteration; Riley / selective clips |
+| Field | Values | Pressure focus |
+|---|---|---|
+| `footageCategory` | `fixed_surveillance` (default) | ALPR / fixed cam hash, error rate, query abuse |
+| | `body_worn` | Duty-to-record + mute/dock/export integrity; clawql-surveillance-class bar |
+| | `cellphone` | Cryptographic proof against AI alteration; Riley / selective clips |
+| `bodyCamRecordingStatus` | `missing` · `partial` · `recorded` | Body-worn only. **Stage 1** failure-to-record → **Stage 2** authenticity ratchet |
 
-Offline coverage in `test/offline-docs.test.mjs`. See `FOOTAGE-CHALLENGE.md`.
+Offline coverage in `test/offline-docs.test.mjs` (fixed, BWC recorded, BWC missing, cellphone). Canonical guide: [`FOOTAGE-CHALLENGE.md`](./FOOTAGE-CHALLENGE.md).
 
 ## Evidence flow under test
 

@@ -42,20 +42,24 @@ Aligned docs in this repo: `technical-standards.md`, `model-legislation.md`, `mo
 
 ## Legal pressure (all three layers)
 
-Empowerment without pressure is incomplete. The docs generator now branches on `footageCategory`:
+Empowerment without pressure is incomplete. Full operator guide + precedents: [`FOOTAGE-CHALLENGE.md`](./FOOTAGE-CHALLENGE.md).
 
-- **Fixed / ALPR** — classic FRE 901 hash/Merkle/anchor gaps + ALPR error/abuse discovery  
-- **Body-worn** — mute/dock/export integrity; push vendors toward clawql-surveillance-class controls or exclusion  
+The docs generator branches on `footageCategory` (+ `bodyCamRecordingStatus` for BWC):
+
+- **Fixed / ALPR** — FRE 901 hash/Merkle/anchor gaps + ALPR error/abuse discovery ([authentication-challenge-guide.md](../authentication-challenge-guide.md))  
+- **Body-worn** — **Stage 1** failure-to-record (adverse inference / spoliation) → **Stage 2** authenticity of any file; clawql-surveillance-class bar  
 - **Cell phone** — no authenticity presumption without cryptographic proof against AI alteration / silent re-encode; Challenge-grade civilian capture as the floor  
 
 ## Build sequence
 
 1. ~~Civilian single-device integrity + rural sync + safety alerts~~  
-2. ~~**Civilian multi-device incident MVP** — create/join, start signal, heartbeat, `PEER_LOST`, `incidentId` on packages~~
+2. ~~**Civilian multi-device incident MVP** — create/join, start signal, heartbeat, `PEER_LOST`, `incidentId` on packages~~  
 3. ~~**Docs generator: body-worn + cellphone challenge modes** (same four vectors as fixed/ALPR)~~  
-4. Attorney library: group sessions by `incidentId` + transcript cross-reference UI  
-5. Publish Challenge-grade one-pager for city councils / PDs  
-6. Push via contracts + model legislation (BWC + ALPR + phone-video authenticity), informed by what phones already do  
+4. ~~**BWC failure-to-record ratchet** (`bodyCamRecordingStatus`: missing / partial / recorded)~~  
+5. ~~**Sourced BWC + cellphone precedents** parallel to Flock FOIA/IJ facts~~  
+6. Attorney library: group sessions by `incidentId` + transcript cross-reference UI  
+7. Publish Challenge-grade one-pager for city councils / PDs  
+8. Push via contracts + model legislation (BWC + ALPR + phone-video authenticity), informed by what phones already do  
 
 ## Non-goals (near term)
 
