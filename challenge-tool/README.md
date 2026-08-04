@@ -1,33 +1,8 @@
 # challengethefootage.com
 
-Web tool that generates four legal document templates for challenging surveillance camera evidence:
-
-1. **Motion in limine** — FRE 901 authentication
-2. **Daubert motion** — FRE 702 accuracy / reliability
-3. **Fourth Amendment suppression** — access abuse / undocumented queries
-4. **Section 1983 demand letter** — civil damages
+Web tool that generates four legal document templates for challenging surveillance camera evidence.
 
 Free first generation per account. Public defenders: free unlimited access (email pd@challengethefootage.com). Additional generations: $9 via Stripe (clawql-payments).
-
-## Layout
-
-```
-challenge-tool/
-├── src/                      # React + Tailwind UI
-│   ├── App.jsx               # Generator
-│   ├── TermsPage.jsx
-│   ├── PublicDefendersPage.jsx
-│   └── index.css             # Tailwind theme
-├── index.html                # Vite entries
-├── terms.html
-├── public-defenders.html
-├── worker.js                 # Auth, entitlement, payment, generation
-├── vendors.js                # Reference vendor profiles (also inlined in worker.js)
-├── wrangler.toml
-├── terms-of-service.md
-├── document-disclaimer.txt
-└── static/                   # vite build output (served by Worker assets)
-```
 
 ## Develop
 
@@ -38,21 +13,55 @@ npm run dev          # Vite UI on :5173 (proxies /api → :8787)
 npm run worker       # build + wrangler dev (UI + API together)
 ```
 
-Set secrets in `.dev.vars` for the Worker:
-
-```
-GOOGLE_CLIENT_ID=...
-CLAWQL_GATEWAY_URL=https://...
-CLAWQL_API_KEY=...
-```
-
-Inject `window.GOOGLE_CLIENT_ID` at deploy (HTML rewrite or Pages env) so Google Sign-In renders.
-
-## Build & deploy
+## Quality gates (CI)
 
 ```bash
-npm run build        # writes to static/
-npm run deploy       # build + wrangler deploy
+npm run format:check   # Prettier
+npm run lint           # ESLint + jsx-a11y strict
+npm test               # smoke tests
+npm run test:a11y      # Playwright + axe WCAG 2.2 A/AA
+npm run lighthouse     # Lighthouse CI (a11y 100, BP/SEO ≥90)
+npm run ci             # all of the above
+```
+
+GitHub Actions: `.github/workflows/ci.yml` runs the same suite on PRs and pushes.
+
+### Accessibility policy
+
+Automated coverage:
+
+- **eslint-plugin-jsx-a11y** `strict` on all React sources
+- **@axe-core/playwright** with tags `wcag2a`, `wcag2aa`, `wcag21a`, `wcag21aa`, `wcag22aa` on `/`, ToS modal, `/terms.html`, `/public-defenders.html`
+- **Lighthouse** accessibility category must score **1.0**; color-contrast audit must pass
+- Skip link, landmarks, focus trap in ToS dialog, `prefers-reduced-motion`, labeled fields
+
+Automated tools cannot prove full WCAG conformance. Before each release, manually verify:
+
+1. Keyboard-only path through ToS → form → (mock) results tabs
+2. Screen reader announcements for errors (`role="alert"`) and entitlement status
+3. Zoom to 200% without loss of content or horizontal scrolling of primary UI
+4. Windows High Contrast / forced-colors sanity check
+
+### Lighthouse budgets
+
+| Category | Gate |
+|---|---|
+| Accessibility | error if &lt; 1.0 |
+| Best practices | error if &lt; 0.9 |
+| SEO | error if &lt; 0.9 |
+| Performance | warn if &lt; 0.85 |
+
+## Layout
+
+```
+challenge-tool/
+├── src/                 # React + Tailwind UI
+├── test/e2e/            # Playwright + axe WCAG suites
+├── worker.js            # Auth, entitlement, payment, generation
+├── eslint.config.js
+├── lighthouserc.cjs
+├── playwright.config.js
+└── static/              # vite build output
 ```
 
 Vendor profiles live **server-side in `worker.js`**. Update them there.

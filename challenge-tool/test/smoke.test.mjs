@@ -31,7 +31,13 @@ describe("challenge-tool artifacts", () => {
   });
 
   it("Vite source and built static pages exist", () => {
-    for (const f of ["index.html", "terms.html", "public-defenders.html", "src/App.jsx", "src/index.css"]) {
+    for (const f of [
+      "index.html",
+      "terms.html",
+      "public-defenders.html",
+      "src/App.jsx",
+      "src/index.css",
+    ]) {
       readFileSync(join(root, f));
     }
     for (const f of ["index.html", "terms.html", "public-defenders.html"]) {

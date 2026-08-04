@@ -16,13 +16,13 @@
  */
 
 const CORS_HEADERS = {
-  "Access-Control-Allow-Origin":  "*",
+  "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type, Authorization",
 };
 
 const FREE_GENERATIONS = 1;
-const FREE_TTL_S       = 60 * 60 * 24 * 365;
+const FREE_TTL_S = 60 * 60 * 24 * 365;
 
 // ─── Vendor profiles ──────────────────────────────────────────────────────────
 
@@ -177,30 +177,34 @@ const VENDORS = {
 // ─── System prompt factory ────────────────────────────────────────────────────
 
 function buildSystemPrompt(vendorKey, customDetails) {
-  const profile    = VENDORS[vendorKey] || null;
+  const profile = VENDORS[vendorKey] || null;
   const vendorName = profile?.name || customDetails?.name || "the surveillance vendor";
 
-  const profileSection = profile ? `
+  const profileSection = profile
+    ? `
 ## Documented facts: ${vendorName}
 
 ### Authentication and integrity gaps
-${profile.authFacts.map((f,i) => `${i+1}. ${f}`).join("\n")}
+${profile.authFacts.map((f, i) => `${i + 1}. ${f}`).join("\n")}
 
 ### System accuracy and error rate
-${profile.errorRateFacts.map((f,i) => `${i+1}. ${f}`).join("\n")}
+${profile.errorRateFacts.map((f, i) => `${i + 1}. ${f}`).join("\n")}
 
 ### Access abuse and unauthorized use
-${profile.accessAbuseFacts.map((f,i) => `${i+1}. ${f}`).join("\n")}
+${profile.accessAbuseFacts.map((f, i) => `${i + 1}. ${f}`).join("\n")}
 
 ### Civil liability and litigation context
-${profile.civilFacts.map((f,i) => `${i+1}. ${f}`).join("\n")}
+${profile.civilFacts.map((f, i) => `${i + 1}. ${f}`).join("\n")}
 
 ### Sources
-${profile.sources.map(s => `- ${s}`).join("\n")}
-` : customDetails?.additionalVendorFacts ? `
+${profile.sources.map((s) => `- ${s}`).join("\n")}
+`
+    : customDetails?.additionalVendorFacts
+      ? `
 ## User-provided facts about ${vendorName}
 ${customDetails.additionalVendorFacts}
-` : `
+`
+      : `
 ## Vendor: ${vendorName}
 No pre-populated profile available. Apply the general arguments across all four vectors based on the absence of documented controls. Discovery requests should seek documentation of any accuracy testing, error rate data, access logs, and integrity controls that may exist.
 `;
@@ -258,10 +262,14 @@ export default {
     if (request.method === "OPTIONS") return new Response(null, { headers: CORS_HEADERS });
     const url = new URL(request.url);
     try {
-      if (url.pathname === "/api/checkout"    && request.method === "POST") return handleCheckout(request, env);
-      if (url.pathname === "/api/entitlement" && request.method === "GET")  return handleEntitlement(request, env);
-      if (url.pathname === "/api/generate"    && request.method === "POST") return handleGenerate(request, env);
-      if (url.pathname === "/api/history"     && request.method === "GET")  return handleHistory(request, env);
+      if (url.pathname === "/api/checkout" && request.method === "POST")
+        return handleCheckout(request, env);
+      if (url.pathname === "/api/entitlement" && request.method === "GET")
+        return handleEntitlement(request, env);
+      if (url.pathname === "/api/generate" && request.method === "POST")
+        return handleGenerate(request, env);
+      if (url.pathname === "/api/history" && request.method === "GET")
+        return handleHistory(request, env);
       if (url.pathname.startsWith("/api/session/") && request.method === "GET") {
         return handleSession(request, env, url.pathname.split("/api/session/")[1]);
       }
@@ -283,7 +291,7 @@ async function verifyGoogleToken(token, clientId) {
   const res = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${token}`);
   if (!res.ok) throw new Error("Invalid Google token");
   const p = await res.json();
-  if (p.aud !== clientId)        throw new Error("Token audience mismatch");
+  if (p.aud !== clientId) throw new Error("Token audience mismatch");
   if (p.exp < Date.now() / 1000) throw new Error("Token expired");
   return { userId: p.sub, email: p.email, name: p.name };
 }
@@ -298,7 +306,7 @@ function extractBearer(req) {
 
 async function gwGet(env, path) {
   const res = await fetch(`${env.CLAWQL_GATEWAY_URL}${path}`, {
-    headers: { "Authorization": `Bearer ${env.CLAWQL_API_KEY}` },
+    headers: { Authorization: `Bearer ${env.CLAWQL_API_KEY}` },
   });
   if (!res.ok) throw new Error(`Gateway GET ${path} → ${res.status}`);
   return res.json();
@@ -307,7 +315,7 @@ async function gwGet(env, path) {
 async function gwPost(env, path, body) {
   const res = await fetch(`${env.CLAWQL_GATEWAY_URL}${path}`, {
     method: "POST",
-    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${env.CLAWQL_API_KEY}` },
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${env.CLAWQL_API_KEY}` },
     body: JSON.stringify(body),
   });
   if (!res.ok) throw new Error(`Gateway POST ${path} → ${res.status}: ${await res.text()}`);
@@ -316,33 +324,53 @@ async function gwPost(env, path, body) {
 
 async function recallMemory(env, userId, query) {
   try {
-    const d = await gwPost(env, "/memory/recall", { query, topK: 8, filter: { userId, tool: "surveillance-challenge" } });
-    return d.results?.map(r => r.content).join("\n\n") || null;
-  } catch (e) { console.warn("Memory recall:", e.message); return null; }
+    const d = await gwPost(env, "/memory/recall", {
+      query,
+      topK: 8,
+      filter: { userId, tool: "surveillance-challenge" },
+    });
+    return d.results?.map((r) => r.content).join("\n\n") || null;
+  } catch (e) {
+    console.warn("Memory recall:", e.message);
+    return null;
+  }
 }
 
 async function searchOnyx(env, query) {
   try {
     const d = await gwPost(env, "/docs/search", { query, limit: 5 });
-    return d.results?.map(r => r.content).join("\n\n") || null;
-  } catch (e) { console.warn("Onyx search:", e.message); return null; }
+    return d.results?.map((r) => r.content).join("\n\n") || null;
+  } catch (e) {
+    console.warn("Onyx search:", e.message);
+    return null;
+  }
 }
 
 async function ingestMemory(env, userId, sessionId, content, tags = []) {
   try {
     await gwPost(env, "/memory/ingest", {
       content,
-      metadata: { userId, sessionId, tool: "surveillance-challenge", tags: ["surveillance-challenge", `user:${userId}`, ...tags], timestamp: new Date().toISOString() },
+      metadata: {
+        userId,
+        sessionId,
+        tool: "surveillance-challenge",
+        tags: ["surveillance-challenge", `user:${userId}`, ...tags],
+        timestamp: new Date().toISOString(),
+      },
     });
-  } catch (e) { console.warn("Memory ingest:", e.message); }
+  } catch (e) {
+    console.warn("Memory ingest:", e.message);
+  }
 }
 
 async function gwChat(env, system, userMsg) {
   const d = await gwPost(env, "/v1/chat/completions", {
-    model: "claude-sonnet-4-6", max_tokens: 4000,
-    system, messages: [{ role: "user", content: userMsg }],
+    model: "claude-sonnet-4-6",
+    max_tokens: 4000,
+    system,
+    messages: [{ role: "user", content: userMsg }],
   });
-  return d.choices?.[0]?.message?.content || d.content?.find(b => b.type === "text")?.text || "";
+  return d.choices?.[0]?.message?.content || d.content?.find((b) => b.type === "text")?.text || "";
 }
 
 // ─── Entitlement ──────────────────────────────────────────────────────────────
@@ -353,14 +381,17 @@ async function getEntitlement(env, userId, email) {
   if (email) {
     try {
       const pdKey = `pd_whitelist:${email.toLowerCase()}`;
-      const isPD  = await env.RATE_LIMIT_KV.get(pdKey);
+      const isPD = await env.RATE_LIMIT_KV.get(pdKey);
       if (isPD === "true") {
         return { entitled: true, generationsUsed: 0, generationsAllowed: Infinity, isPD: true };
       }
     } catch {}
   }
-  try { return await gwGet(env, `/payments/entitlement/${userId}`); }
-  catch { return { entitled: false, generationsUsed: 0, generationsAllowed: FREE_GENERATIONS }; }
+  try {
+    return await gwGet(env, `/payments/entitlement/${userId}`);
+  } catch {
+    return { entitled: false, generationsUsed: 0, generationsAllowed: FREE_GENERATIONS };
+  }
 }
 async function getFreeUsed(env, userId) {
   const v = await env.RATE_LIMIT_KV.get(`free:${userId}`, { type: "json" });
@@ -368,7 +399,9 @@ async function getFreeUsed(env, userId) {
 }
 async function incrementFree(env, userId) {
   const c = await getFreeUsed(env, userId);
-  await env.RATE_LIMIT_KV.put(`free:${userId}`, JSON.stringify({ count: c + 1 }), { expirationTtl: FREE_TTL_S });
+  await env.RATE_LIMIT_KV.put(`free:${userId}`, JSON.stringify({ count: c + 1 }), {
+    expirationTtl: FREE_TTL_S,
+  });
 }
 
 // ─── Document generation ──────────────────────────────────────────────────────
@@ -381,9 +414,11 @@ Case: ${ctx.caseNumber} | ${ctx.defendant} | ${ctx.court} | ${ctx.jurisdiction}
 ${enriched}`;
 
   const [motion, accuracy, access, civil] = await Promise.all([
-
     // Vector 1: Authentication / FRE 901
-    gwChat(env, system, `Draft a motion in limine to exclude ${vendorName} surveillance footage on authentication grounds under FRE 901.
+    gwChat(
+      env,
+      system,
+      `Draft a motion in limine to exclude ${vendorName} surveillance footage on authentication grounds under FRE 901.
 ${base}
 Requirements:
 1. Caption block with full case details
@@ -395,10 +430,14 @@ Requirements:
 7. Ten specific discovery requests targeting ${vendorName}'s integrity controls
 8. Prayer for relief: exclusion, or in the alternative a Daubert-style hearing requiring ${vendorName} to demonstrate cryptographic integrity controls through live independent verification
 9. Signature block placeholder
-Write the complete motion. Number all argument paragraphs.`),
+Write the complete motion. Number all argument paragraphs.`
+    ),
 
     // Vector 2: Accuracy / FRE 702 / Daubert
-    gwChat(env, system, `Draft a motion challenging the reliability of ${vendorName} AI surveillance technology under FRE 702 and Daubert v. Merrell Dow Pharmaceuticals.
+    gwChat(
+      env,
+      system,
+      `Draft a motion challenging the reliability of ${vendorName} AI surveillance technology under FRE 702 and Daubert v. Merrell Dow Pharmaceuticals.
 ${base}
 Requirements:
 1. Caption block with full case details
@@ -411,10 +450,14 @@ Requirements:
 8. Ten specific discovery requests targeting accuracy testing, error rate data, independent validation studies, and internal quality metrics for ${vendorName}'s system
 9. Prayer for relief: exclusion, or in the alternative an evidentiary hearing requiring ${vendorName} to produce independent accuracy testing data
 10. Signature block placeholder
-Write the complete motion. Number all argument paragraphs.`),
+Write the complete motion. Number all argument paragraphs.`
+    ),
 
     // Vector 3: Access abuse / suppression
-    gwChat(env, system, `Draft a motion to suppress evidence obtained through ${vendorName} surveillance on Fourth Amendment grounds, focusing on unauthorized access and lack of documented law enforcement purpose.
+    gwChat(
+      env,
+      system,
+      `Draft a motion to suppress evidence obtained through ${vendorName} surveillance on Fourth Amendment grounds, focusing on unauthorized access and lack of documented law enforcement purpose.
 ${base}
 Additional facts about this specific search (if provided by user): ${ctx.searchFacts || "not specified — draft to address the general pattern and include discovery requests to establish the specific facts"}
 Requirements:
@@ -427,10 +470,14 @@ Requirements:
 7. Ten specific discovery requests: the searching officer's complete query history for the 90 days surrounding the search; all queries the officer ran without a case number; any prior complaints or investigations into the officer's ALPR use; department policy on documentation requirements; audit logs for this specific query with full metadata
 8. Prayer for relief: suppression of all evidence obtained through or derived from the ${vendorName} search
 9. Signature block placeholder
-Write the complete motion. Number all argument paragraphs.`),
+Write the complete motion. Number all argument paragraphs.`
+    ),
 
     // Vector 4: Civil damages / Section 1983
-    gwChat(env, system, `Draft a Section 1983 civil rights demand letter on behalf of a person wrongfully stopped, detained, surveilled, or harmed through ${vendorName} surveillance technology.
+    gwChat(
+      env,
+      system,
+      `Draft a Section 1983 civil rights demand letter on behalf of a person wrongfully stopped, detained, surveilled, or harmed through ${vendorName} surveillance technology.
 ${base}
 Nature of harm (if provided): ${ctx.civilHarm || "wrongful stop and detention based on ALPR misidentification — adapt to facts provided"}
 Requirements:
@@ -451,8 +498,8 @@ Requirements:
 7. Notice that failure to respond will result in filing of a Section 1983 complaint in federal district court
 8. Closing and signature block placeholder
 9. CC line: local ACLU, Institute for Justice, relevant civil rights organizations
-Write the complete demand letter in formal legal correspondence format.`),
-
+Write the complete demand letter in formal legal correspondence format.`
+    ),
   ]);
 
   return { motion, accuracy, access, civil };
@@ -462,114 +509,190 @@ Write the complete demand letter in formal legal correspondence format.`),
 
 async function handleCheckout(request, env) {
   let user;
-  try { user = await verifyGoogleToken(extractBearer(request), env.GOOGLE_CLIENT_ID); }
-  catch (e) { return json({ error: `Auth failed: ${e.message}` }, 401); }
+  try {
+    user = await verifyGoogleToken(extractBearer(request), env.GOOGLE_CLIENT_ID);
+  } catch (e) {
+    return json({ error: `Auth failed: ${e.message}` }, 401);
+  }
   let body = {};
-  try { body = await request.json(); } catch {}
+  try {
+    body = await request.json();
+  } catch {}
   try {
     const data = await gwPost(env, "/payments/stripe/checkout", {
-      userId: user.userId, email: user.email, name: user.name,
+      userId: user.userId,
+      email: user.email,
+      name: user.name,
       successUrl: body.successUrl || `${body.origin || "https://yourapp.com"}?payment=success`,
-      cancelUrl:  body.cancelUrl  || `${body.origin || "https://yourapp.com"}?payment=cancelled`,
+      cancelUrl: body.cancelUrl || `${body.origin || "https://yourapp.com"}?payment=cancelled`,
       mode: "payment",
       productName: "Surveillance Evidence Challenge — Document Set",
-      unitAmount: 900, currency: "usd",
+      unitAmount: 900,
+      currency: "usd",
     });
     return json({ checkoutUrl: data.checkoutUrl });
-  } catch (e) { return json({ error: `Checkout failed: ${e.message}` }, 500); }
+  } catch (e) {
+    return json({ error: `Checkout failed: ${e.message}` }, 500);
+  }
 }
 
 async function handleEntitlement(request, env) {
   let user;
-  try { user = await verifyGoogleToken(extractBearer(request), env.GOOGLE_CLIENT_ID); }
-  catch (e) { return json({ error: `Auth failed: ${e.message}` }, 401); }
-  const ent      = await getEntitlement(env, user.userId, user.email);
+  try {
+    user = await verifyGoogleToken(extractBearer(request), env.GOOGLE_CLIENT_ID);
+  } catch (e) {
+    return json({ error: `Auth failed: ${e.message}` }, 401);
+  }
+  const ent = await getEntitlement(env, user.userId, user.email);
   const freeUsed = await getFreeUsed(env, user.userId);
-  return json({ entitled: ent.entitled, isPD: ent.isPD || false, generationsUsed: ent.generationsUsed, generationsAllowed: ent.generationsAllowed, freeUsed, freeAllowed: FREE_GENERATIONS, canGenerate: ent.entitled || freeUsed < FREE_GENERATIONS });
+  return json({
+    entitled: ent.entitled,
+    isPD: ent.isPD || false,
+    generationsUsed: ent.generationsUsed,
+    generationsAllowed: ent.generationsAllowed,
+    freeUsed,
+    freeAllowed: FREE_GENERATIONS,
+    canGenerate: ent.entitled || freeUsed < FREE_GENERATIONS,
+  });
 }
 
 async function handleGenerate(request, env) {
   let user;
-  try { user = await verifyGoogleToken(extractBearer(request), env.GOOGLE_CLIENT_ID); }
-  catch (e) { return json({ error: `Auth failed: ${e.message}` }, 401); }
+  try {
+    user = await verifyGoogleToken(extractBearer(request), env.GOOGLE_CLIENT_ID);
+  } catch (e) {
+    return json({ error: `Auth failed: ${e.message}` }, 401);
+  }
 
-  const ent      = await getEntitlement(env, user.userId, user.email);
+  const ent = await getEntitlement(env, user.userId, user.email);
   const freeUsed = await getFreeUsed(env, user.userId);
   if (!ent.entitled && freeUsed >= FREE_GENERATIONS) {
-    return json({ error: "payment_required", message: "Free generation used. Purchase access to generate more.", freeUsed, freeAllowed: FREE_GENERATIONS }, 402);
+    return json(
+      {
+        error: "payment_required",
+        message: "Free generation used. Purchase access to generate more.",
+        freeUsed,
+        freeAllowed: FREE_GENERATIONS,
+      },
+      402
+    );
   }
 
   let form;
-  try { form = await request.json(); }
-  catch { return json({ error: "Invalid request body" }, 400); }
+  try {
+    form = await request.json();
+  } catch {
+    return json({ error: "Invalid request body" }, 400);
+  }
   if (!form.tosAccepted) return json({ error: "tos_required" }, 400);
 
-  const profile    = VENDORS[form.vendor] || null;
+  const profile = VENDORS[form.vendor] || null;
   const vendorName = profile?.name || form.customVendorName || "the surveillance vendor";
-  const system     = buildSystemPrompt(form.vendor, { name: form.customVendorName, additionalVendorFacts: form.additionalVendorFacts });
+  const system = buildSystemPrompt(form.vendor, {
+    name: form.customVendorName,
+    additionalVendorFacts: form.additionalVendorFacts,
+  });
 
   const [memoryContext, onyxContext] = await Promise.all([
-    recallMemory(env, user.userId, `surveillance evidence challenge ${vendorName} ${form.jurisdiction || ""} ${form.court || ""}`),
-    searchOnyx(env, `FRE 901 702 Daubert surveillance ALPR wrongful arrest civil rights ${vendorName} ${form.jurisdiction || ""}`),
+    recallMemory(
+      env,
+      user.userId,
+      `surveillance evidence challenge ${vendorName} ${form.jurisdiction || ""} ${form.court || ""}`
+    ),
+    searchOnyx(
+      env,
+      `FRE 901 702 Daubert surveillance ALPR wrongful arrest civil rights ${vendorName} ${form.jurisdiction || ""}`
+    ),
   ]);
 
   const enriched = [
-    memoryContext        ? `RECALLED CONTEXT:\n${memoryContext}` : "",
-    onyxContext          ? `ONYX KNOWLEDGE:\n${onyxContext}` : "",
+    memoryContext ? `RECALLED CONTEXT:\n${memoryContext}` : "",
+    onyxContext ? `ONYX KNOWLEDGE:\n${onyxContext}` : "",
     form.additionalFacts ? `ADDITIONAL FACTS:\n${form.additionalFacts}` : "",
-  ].filter(Boolean).join("\n\n---\n\n");
+  ]
+    .filter(Boolean)
+    .join("\n\n---\n\n");
 
   const ctx = {
-    caseNumber:    form.caseNumber    || "to be assigned",
-    defendant:     form.defendant     || "the defendant",
-    court:         form.court         || "the relevant court",
-    jurisdiction:  form.jurisdiction  || "the relevant jurisdiction",
-    city:          form.city          || "the relevant city",
-    contractDate:  form.contractDate  || "the contract date",
+    caseNumber: form.caseNumber || "to be assigned",
+    defendant: form.defendant || "the defendant",
+    court: form.court || "the relevant court",
+    jurisdiction: form.jurisdiction || "the relevant jurisdiction",
+    city: form.city || "the relevant city",
+    contractDate: form.contractDate || "the contract date",
     councilMember: form.councilMember || "Council Member",
-    cameraType:    form.cameraType    || "",
-    searchFacts:   form.searchFacts   || "",
-    civilHarm:     form.civilHarm     || "",
+    cameraType: form.cameraType || "",
+    searchFacts: form.searchFacts || "",
+    civilHarm: form.civilHarm || "",
   };
 
   let docs;
-  try { docs = await generateAllDocs(env, system, ctx, enriched, vendorName); }
-  catch (e) { return json({ error: `Generation failed: ${e.message}` }, 500); }
+  try {
+    docs = await generateAllDocs(env, system, ctx, enriched, vendorName);
+  } catch (e) {
+    return json({ error: `Generation failed: ${e.message}` }, 500);
+  }
 
-  const sessionId  = `surv-${user.userId}-${Date.now()}`;
+  const sessionId = `surv-${user.userId}-${Date.now()}`;
   const disclaimer = buildDisclaimer(sessionId, vendorName);
-  docs.motion   = disclaimer + docs.motion;
+  docs.motion = disclaimer + docs.motion;
   docs.accuracy = disclaimer + docs.accuracy;
-  docs.access   = disclaimer + docs.access;
-  docs.civil    = disclaimer + docs.civil;
+  docs.access = disclaimer + docs.access;
+  docs.civil = disclaimer + docs.civil;
 
   if (!ent.entitled) await incrementFree(env, user.userId);
 
-  await ingestMemory(env, user.userId, sessionId,
+  await ingestMemory(
+    env,
+    user.userId,
+    sessionId,
     `# Surveillance Challenge — ${new Date().toISOString()}\nVendor: ${vendorName}\nCase: ${ctx.caseNumber} | ${ctx.defendant} | ${ctx.court}\nJurisdiction: ${ctx.jurisdiction} | City: ${ctx.city}\n\n## Motion Summary\n${docs.motion.slice(0, 400)}...`.trim(),
     [vendorName, ctx.jurisdiction, ctx.city].filter(Boolean)
   );
 
-  return json({ sessionId, docs, meta: { user: { email: user.email }, vendorName, memoryContextUsed: !!memoryContext, onyxContextUsed: !!onyxContext, entitled: ent.entitled } });
+  return json({
+    sessionId,
+    docs,
+    meta: {
+      user: { email: user.email },
+      vendorName,
+      memoryContextUsed: !!memoryContext,
+      onyxContextUsed: !!onyxContext,
+      entitled: ent.entitled,
+    },
+  });
 }
 
 async function handleHistory(request, env) {
   let user;
-  try { user = await verifyGoogleToken(extractBearer(request), env.GOOGLE_CLIENT_ID); }
-  catch (e) { return json({ error: `Auth failed: ${e.message}` }, 401); }
+  try {
+    user = await verifyGoogleToken(extractBearer(request), env.GOOGLE_CLIENT_ID);
+  } catch (e) {
+    return json({ error: `Auth failed: ${e.message}` }, 401);
+  }
   const results = await recallMemory(env, user.userId, "surveillance challenge session");
-  return json({ sessions: (results ? results.split("\n\n") : []).slice(0, 10).map((r, i) => ({ index: i, preview: r.slice(0, 200) })) });
+  return json({
+    sessions: (results ? results.split("\n\n") : [])
+      .slice(0, 10)
+      .map((r, i) => ({ index: i, preview: r.slice(0, 200) })),
+  });
 }
 
 async function handleSession(request, env, sessionId) {
   let user;
-  try { user = await verifyGoogleToken(extractBearer(request), env.GOOGLE_CLIENT_ID); }
-  catch (e) { return json({ error: `Auth failed: ${e.message}` }, 401); }
+  try {
+    user = await verifyGoogleToken(extractBearer(request), env.GOOGLE_CLIENT_ID);
+  } catch (e) {
+    return json({ error: `Auth failed: ${e.message}` }, 401);
+  }
   const results = await recallMemory(env, user.userId, `session:${sessionId}`);
   if (!results) return json({ error: "Session not found" }, 404);
   return json({ content: results });
 }
 
 function json(data, status = 200) {
-  return new Response(JSON.stringify(data), { status, headers: { ...CORS_HEADERS, "Content-Type": "application/json" } });
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
+  });
 }

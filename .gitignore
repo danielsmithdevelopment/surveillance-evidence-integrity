@@ -8,3 +8,6 @@ dist/
 .env
 .env.*
 .artifacts/
+.lighthouseci/
+playwright-report/
+test-results/

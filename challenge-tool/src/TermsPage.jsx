@@ -1,8 +1,9 @@
-import { SiteFooter, SiteNav } from "./Shell.jsx";
+import { SiteFooter, SiteNav, SkipLink } from "./Shell.jsx";
 
 export default function TermsPage() {
   return (
     <div className="flex min-h-screen flex-col">
+      <SkipLink />
       <div className="relative overflow-hidden">
         <div className="grain" aria-hidden="true" />
         <SiteNav />
@@ -14,30 +15,49 @@ export default function TermsPage() {
         </div>
       </div>
 
-      <article className="relative z-10 mx-auto mb-16 w-full max-w-3xl flex-1 space-y-8 px-5 text-[1.02rem] leading-relaxed text-ink-muted sm:px-8">
-        <section className="rounded-2xl border border-line bg-white/85 p-6 sm:p-8">
-          <h2 className="font-display text-2xl text-ink">1. What this tool is</h2>
-          <p className="mt-3">
-            This tool generates document templates — a motion in limine (FRE 901), a Daubert / FRE 702
-            motion, a Fourth Amendment suppression motion, and a Section 1983 civil demand letter —
-            for use in connection with surveillance camera and ALPR evidence from any major vendor.
-            It is a legal research and document drafting aid, not a law firm, not a legal services
-            provider, and not a substitute for a licensed attorney.
+      <main
+        id="main-content"
+        tabIndex={-1}
+        className="relative z-10 mx-auto mb-16 w-full max-w-3xl flex-1 space-y-8 px-5 text-[1.02rem] leading-relaxed text-ink outline-none sm:px-8"
+      >
+        <section
+          className="rounded-2xl border border-line bg-white p-6 sm:p-8"
+          aria-labelledby="t1"
+        >
+          <h2 id="t1" className="font-display text-2xl text-ink">
+            1. What this tool is
+          </h2>
+          <p className="mt-3 text-ink-muted">
+            This tool generates document templates — a motion in limine (FRE 901), a Daubert / FRE
+            702 motion, a Fourth Amendment suppression motion, and a Section 1983 civil demand
+            letter — for use in connection with surveillance camera and ALPR evidence from any major
+            vendor. It is a legal research and document drafting aid, not a law firm, not a legal
+            services provider, and not a substitute for a licensed attorney.
           </p>
         </section>
 
-        <section className="rounded-2xl border border-line bg-white/85 p-6 sm:p-8">
-          <h2 className="font-display text-2xl text-ink">2. No attorney-client relationship</h2>
-          <p className="mt-3">
+        <section
+          className="rounded-2xl border border-line bg-white p-6 sm:p-8"
+          aria-labelledby="t2"
+        >
+          <h2 id="t2" className="font-display text-2xl text-ink">
+            2. No attorney-client relationship
+          </h2>
+          <p className="mt-3 text-ink-muted">
             Using this tool does not create an attorney-client relationship between you and the
-            operator of this tool, Daniel Smith, or any affiliated person or entity. No communication
-            through this tool constitutes legal advice.
+            operator of this tool, Daniel Smith, or any affiliated person or entity. No
+            communication through this tool constitutes legal advice.
           </p>
         </section>
 
-        <section className="rounded-2xl border border-line bg-white/85 p-6 sm:p-8">
-          <h2 className="font-display text-2xl text-ink">3. Not legal advice</h2>
-          <p className="mt-3">
+        <section
+          className="rounded-2xl border border-line bg-white p-6 sm:p-8"
+          aria-labelledby="t3"
+        >
+          <h2 id="t3" className="font-display text-2xl text-ink">
+            3. Not legal advice
+          </h2>
+          <p className="mt-3 text-ink-muted">
             Nothing this tool produces is legal advice. Generated documents are templates based on
             general legal frameworks and publicly available information. You must consult a licensed
             attorney in your jurisdiction before filing any motion, sending any demand letter, or
@@ -45,29 +65,44 @@ export default function TermsPage() {
           </p>
         </section>
 
-        <section className="rounded-2xl border border-line bg-white/85 p-6 sm:p-8">
-          <h2 className="font-display text-2xl text-ink">4. Payment and public defender access</h2>
-          <p className="mt-3">
+        <section
+          className="rounded-2xl border border-line bg-white p-6 sm:p-8"
+          aria-labelledby="t4"
+        >
+          <h2 id="t4" className="font-display text-2xl text-ink">
+            4. Payment and public defender access
+          </h2>
+          <p className="mt-3 text-ink-muted">
             The first generation is free. Additional generations cost $9 each. Public defenders
             receive free unlimited access after verification at{" "}
-            <a className="text-teal-deep underline" href="mailto:pd@challengethefootage.com">
+            <a
+              className="font-medium text-teal-deep underline"
+              href="mailto:pd@challengethefootage.com"
+            >
               pd@challengethefootage.com
             </a>
             . Paid generations are non-refundable once delivered.
           </p>
         </section>
 
-        <section className="rounded-2xl border border-line bg-white/85 p-6 sm:p-8">
-          <h2 className="font-display text-2xl text-ink">5. Contact</h2>
-          <p className="mt-3">
+        <section
+          className="rounded-2xl border border-line bg-white p-6 sm:p-8"
+          aria-labelledby="t5"
+        >
+          <h2 id="t5" className="font-display text-2xl text-ink">
+            5. Contact
+          </h2>
+          <p className="mt-3 text-ink-muted">
             Questions:{" "}
-            <a className="text-teal-deep underline" href="mailto:hello@clawql.com">hello@clawql.com</a>
+            <a className="font-medium text-teal-deep underline" href="mailto:hello@clawql.com">
+              hello@clawql.com
+            </a>
             {" · "}
             Full terms source in the repository at{" "}
             <code className="font-mono text-sm text-ink">challenge-tool/terms-of-service.md</code>.
           </p>
         </section>
-      </article>
+      </main>
 
       <SiteFooter />
     </div>

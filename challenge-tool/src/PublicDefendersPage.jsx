@@ -1,8 +1,9 @@
-import { SiteFooter, SiteNav, btnPrimary } from "./Shell.jsx";
+import { SiteFooter, SiteNav, SkipLink, btnPrimary } from "./Shell.jsx";
 
 export default function PublicDefendersPage() {
   return (
     <div className="flex min-h-screen flex-col">
+      <SkipLink />
       <div className="relative overflow-hidden">
         <div className="grain" aria-hidden="true" />
         <div
@@ -24,39 +25,64 @@ export default function PublicDefendersPage() {
         </div>
       </div>
 
-      <main className="relative z-10 mx-auto w-full max-w-3xl flex-1 space-y-6 px-5 pb-16 sm:px-8">
-        <section className="rounded-2xl border border-line bg-white/85 p-6 sm:p-8">
-          <h2 className="font-display text-2xl text-ink">How to get access</h2>
+      <main
+        id="main-content"
+        tabIndex={-1}
+        className="relative z-10 mx-auto w-full max-w-3xl flex-1 space-y-6 px-5 pb-16 outline-none sm:px-8"
+      >
+        <section
+          className="rounded-2xl border border-line bg-white p-6 sm:p-8"
+          aria-labelledby="how-heading"
+        >
+          <h2 id="how-heading" className="font-display text-2xl text-ink">
+            How to get access
+          </h2>
           <ol className="mt-4 list-decimal space-y-3 pl-5 text-ink-muted">
             <li>
               Email{" "}
-              <a className="font-medium text-teal-deep underline" href="mailto:pd@challengethefootage.com">
+              <a
+                className="font-medium text-teal-deep underline"
+                href="mailto:pd@challengethefootage.com"
+              >
                 pd@challengethefootage.com
               </a>{" "}
               from your office address (<code className="font-mono text-sm">.gov</code>, PD office
               domain, or equivalent).
             </li>
             <li>We verify and whitelist your Google account within one business day.</li>
-            <li>Sign in on the home page — entitlement returns unlimited generations, no Stripe.</li>
+            <li>
+              Sign in on the home page — entitlement returns unlimited generations, no Stripe.
+            </li>
           </ol>
           <a href="mailto:pd@challengethefootage.com" className={`${btnPrimary} mt-6 inline-flex`}>
             Request free access
           </a>
         </section>
 
-        <section className="rounded-2xl border border-line bg-white/85 p-6 sm:p-8">
-          <h2 className="font-display text-2xl text-ink">Sponsor a generation</h2>
+        <section
+          className="rounded-2xl border border-line bg-white p-6 sm:p-8"
+          aria-labelledby="sponsor-heading"
+        >
+          <h2 id="sponsor-heading" className="font-display text-2xl text-ink">
+            Sponsor a generation
+          </h2>
           <p className="mt-3 text-ink-muted">
             Law firms, organizations, and individuals can fund free generations for the public
             defender pool. Contact{" "}
-            <a className="text-teal-deep underline" href="mailto:sponsor@challengethefootage.com">
+            <a
+              className="font-medium text-teal-deep underline"
+              href="mailto:sponsor@challengethefootage.com"
+            >
               sponsor@challengethefootage.com
             </a>
             .
           </p>
         </section>
 
-        <a href="/" className="inline-block text-sm font-semibold text-teal-deep hover:underline">
+        <a
+          href="/"
+          className="inline-block text-sm font-semibold text-teal-deep underline-offset-2 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-teal"
+        >
           ← Back to the generator
         </a>
       </main>

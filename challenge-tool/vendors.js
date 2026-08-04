@@ -9,9 +9,9 @@
 
 export const VENDORS = {
   flock: {
-    id:           "flock",
-    name:         "Flock Safety",
-    cameraTypes:  ["License Plate Reader (ALPR)", "Falcon Camera", "Arrow Camera"],
+    id: "flock",
+    name: "Flock Safety",
+    cameraTypes: ["License Plate Reader (ALPR)", "Falcon Camera", "Arrow Camera"],
     knownFacts: [
       "FOIA-derived audit logs published at haveibeenflocked.com show 233 million searches against Flock's network, with 84% carrying no case number and approximately 9% tied to documented crimes.",
       "FBI and Homeland Security have accessed local Flock networks without clear awareness or approval from the contracting localities, as documented in public reporting based on FOIA records.",
@@ -34,9 +34,9 @@ export const VENDORS = {
   },
 
   axon: {
-    id:           "axon",
-    name:         "Axon (formerly TASER)",
-    cameraTypes:  ["Axon Body 3", "Axon Fleet 3", "Axon Air", "Axon Camera"],
+    id: "axon",
+    name: "Axon (formerly TASER)",
+    cameraTypes: ["Axon Body 3", "Axon Fleet 3", "Axon Air", "Axon Camera"],
     knownFacts: [
       "Axon Evidence is a cloud-based digital evidence management platform used by law enforcement agencies to store and share footage from Axon body cameras and fleet cameras.",
       "Axon Evidence stores footage on third-party cloud infrastructure (Microsoft Azure). Chain of custody depends on Axon's internal access controls rather than independently verifiable cryptographic proof.",
@@ -59,9 +59,14 @@ export const VENDORS = {
   },
 
   motorola: {
-    id:           "motorola",
-    name:         "Motorola Solutions (Vigilant Solutions / PMAM)",
-    cameraTypes:  ["ALPR Camera", "Vigilant Fixed LPR", "Avigilon Camera", "CommandCentral Evidence"],
+    id: "motorola",
+    name: "Motorola Solutions (Vigilant Solutions / PMAM)",
+    cameraTypes: [
+      "ALPR Camera",
+      "Vigilant Fixed LPR",
+      "Avigilon Camera",
+      "CommandCentral Evidence",
+    ],
     knownFacts: [
       "Motorola Solutions acquired Vigilant Solutions in 2019, adding one of the largest private ALPR networks in the United States to its law enforcement technology portfolio.",
       "Vigilant's LEARN (Law Enforcement Archival and Reporting Network) database aggregates license plate data from law enforcement and commercial sources, with documented sharing across jurisdictions and with federal agencies.",
@@ -84,9 +89,9 @@ export const VENDORS = {
   },
 
   genetec: {
-    id:           "genetec",
-    name:         "Genetec",
-    cameraTypes:  ["Genetec Camera", "AutoVu ALPR", "Security Center Omnicast"],
+    id: "genetec",
+    name: "Genetec",
+    cameraTypes: ["Genetec Camera", "AutoVu ALPR", "Security Center Omnicast"],
     knownFacts: [
       "Genetec is a Canadian video surveillance, access control, and ALPR platform widely deployed by municipalities, transit agencies, and law enforcement in the United States.",
       "Genetec's AutoVu ALPR system captures and stores license plate data. Genetec's Security Center platform manages video evidence storage and access.",
@@ -107,9 +112,9 @@ export const VENDORS = {
   },
 
   verkada: {
-    id:           "verkada",
-    name:         "Verkada",
-    cameraTypes:  ["Verkada Camera", "Verkada Dome Camera", "Verkada Mini Camera"],
+    id: "verkada",
+    name: "Verkada",
+    cameraTypes: ["Verkada Camera", "Verkada Dome Camera", "Verkada Mini Camera"],
     knownFacts: [
       "Verkada is a cloud-managed physical security platform. All Verkada camera footage is stored in Verkada's cloud infrastructure and accessed through Verkada's Command platform.",
       "In March 2021, Verkada suffered a significant security breach in which hackers gained access to live feeds from approximately 150,000 cameras deployed at hospitals, schools, jails, and corporations. The breach exposed fundamental questions about the security of cloud-managed surveillance infrastructure.",
@@ -132,20 +137,20 @@ export const VENDORS = {
   },
 
   custom: {
-    id:           "custom",
-    name:         "",
-    cameraTypes:  [],
-    knownFacts:   [],
+    id: "custom",
+    name: "",
+    cameraTypes: [],
+    knownFacts: [],
     auditLogGaps: [],
-    sources:      [],
+    sources: [],
   },
 };
 
 export const VENDOR_LIST = [
-  { value: "flock",    label: "Flock Safety" },
-  { value: "axon",     label: "Axon (formerly TASER)" },
+  { value: "flock", label: "Flock Safety" },
+  { value: "axon", label: "Axon (formerly TASER)" },
   { value: "motorola", label: "Motorola Solutions / Vigilant" },
-  { value: "genetec",  label: "Genetec" },
-  { value: "verkada",  label: "Verkada" },
-  { value: "custom",   label: "Other / Enter manually" },
+  { value: "genetec", label: "Genetec" },
+  { value: "verkada", label: "Verkada" },
+  { value: "custom", label: "Other / Enter manually" },
 ];

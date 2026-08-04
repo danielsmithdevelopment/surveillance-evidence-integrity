@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import {
   Field,
   SiteFooter,
   SiteNav,
+  SkipLink,
   btnGhost,
   btnPrimary,
   btnSecondary,
@@ -10,7 +11,7 @@ import {
 } from "./Shell.jsx";
 
 const TOS_KEY = "surv_tos_v1";
-const API = window.CTF_API_BASE || "";
+const API = typeof window !== "undefined" ? window.CTF_API_BASE || "" : "";
 
 const VENDORS = [
   { id: "flock", label: "Flock Safety" },
@@ -49,54 +50,111 @@ function api(path, { method = "GET", token, body } = {}) {
 
 function TosModal({ onAccept }) {
   const [checked, setChecked] = useState(false);
+  const dialogRef = useRef(null);
+  const checkboxId = useId();
+  const titleId = useId();
+
+  useEffect(() => {
+    const previouslyFocused = document.activeElement;
+    const node = dialogRef.current;
+    const focusable = node?.querySelectorAll(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+    focusable?.[0]?.focus();
+
+    function onKeyDown(e) {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        return;
+      }
+      if (e.key !== "Tab" || !focusable?.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+
+    document.addEventListener("keydown", onKeyDown);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = prevOverflow;
+      if (previouslyFocused instanceof HTMLElement) previouslyFocused.focus();
+    };
+  }, []);
 
   return (
     <div
       className="fixed inset-0 z-50 grid place-items-center bg-ink/50 px-4 backdrop-blur-sm animate-fade"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="tos-title"
+      role="presentation"
     >
-      <div className="w-full max-w-lg rounded-2xl border border-line bg-white p-6 shadow-[0_24px_80px_rgba(18,26,33,0.18)] animate-rise sm:p-8">
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        className="w-full max-w-lg rounded-2xl border border-line bg-white p-6 shadow-[0_24px_80px_rgba(18,26,33,0.18)] animate-rise sm:p-8"
+      >
         <p className="text-[0.7rem] font-bold uppercase tracking-[0.14em] text-teal">
           Before you generate
         </p>
-        <h2 id="tos-title" className="font-display mt-2 text-3xl text-ink">
+        <h2 id={titleId} className="font-display mt-2 text-3xl text-ink">
           Terms of Service
         </h2>
-        <div className="mt-4 max-h-52 space-y-3 overflow-y-auto rounded-xl border border-line bg-paper/80 p-4 text-sm leading-relaxed text-ink-muted">
+        <div
+          className="mt-4 max-h-52 space-y-3 overflow-y-auto rounded-xl border border-line bg-paper/80 p-4 text-sm leading-relaxed text-ink"
+          role="region"
+          aria-label="Terms of Service summary"
+        >
           <p>
-            Challenge the Footage generates{" "}
-            <strong className="text-ink">document templates for attorney review</strong>.
-            It is not a law firm and does not create an attorney-client relationship.
-            Nothing here is legal advice.
+            Challenge the Footage generates <strong>document templates for attorney review</strong>.
+            It is not a law firm and does not create an attorney-client relationship. Nothing here
+            is legal advice.
           </p>
           <p>
-            You agree to have every generated document reviewed by a licensed attorney
-            in your jurisdiction before filing or sending it, and to independently verify
-            all factual claims.
+            You agree to have every generated document reviewed by a licensed attorney in your
+            jurisdiction before filing or sending it, and to independently verify all factual
+            claims.
           </p>
           <p>
             Full terms:{" "}
-            <a className="text-teal-deep underline" href="/terms.html" target="_blank" rel="noreferrer">
-              /terms
+            <a
+              className="font-medium text-teal-deep underline"
+              href="/terms.html"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Terms of Service page
+              <span className="sr-only"> (opens in a new tab)</span>
             </a>
           </p>
         </div>
-        <label className="mt-5 flex cursor-pointer items-start gap-3 text-sm text-ink">
+        <div className="mt-5 flex items-start gap-3 text-sm text-ink">
           <input
+            id={checkboxId}
             type="checkbox"
             className="mt-1 size-4 rounded border-line text-teal focus:ring-teal"
             checked={checked}
             onChange={(e) => setChecked(e.target.checked)}
           />
-          <span>I have read and agree to the Terms of Service</span>
-        </label>
+          <label htmlFor={checkboxId} className="cursor-pointer">
+            I have read and agree to the Terms of Service
+          </label>
+        </div>
         <button
           type="button"
           className={`${btnPrimary} mt-5 w-full`}
           onClick={() => {
-            if (!checked) return alert("Please accept the Terms of Service to continue.");
+            if (!checked) {
+              window.alert("Please accept the Terms of Service to continue.");
+              return;
+            }
             localStorage.setItem(TOS_KEY, new Date().toISOString());
             onAccept();
           }}
@@ -135,7 +193,7 @@ function SignIn({ onCredential }) {
       </p>
     );
   }
-  return <div ref={slot} />;
+  return <div ref={slot} aria-label="Google Sign-In" />;
 }
 
 export default function App() {
@@ -164,6 +222,7 @@ export default function App() {
   const [tab, setTab] = useState("motion");
   const [witnessSession, setWitnessSession] = useState(null);
   const formRef = useRef(null);
+  const panelId = useId();
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -172,8 +231,7 @@ export default function App() {
       setWitnessSession(ws);
       setForm((f) => ({
         ...f,
-        additionalFacts:
-          `${f.additionalFacts || ""}\n\nWitness recording session: ${ws}\n`.trim(),
+        additionalFacts: `${f.additionalFacts || ""}\n\nWitness recording session: ${ws}\n`.trim(),
       }));
     }
   }, []);
@@ -268,10 +326,12 @@ export default function App() {
 
   function scrollToForm() {
     formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    formRef.current?.querySelector("select, input, textarea")?.focus();
   }
 
   return (
     <div className="flex min-h-screen flex-col">
+      <SkipLink />
       {!tosOk && <TosModal onAccept={() => setTosOk(true)} />}
 
       <header className="relative overflow-hidden">
@@ -284,20 +344,23 @@ export default function App() {
 
         <div className="relative z-10 mx-auto grid max-w-6xl gap-10 px-5 pb-14 pt-14 sm:px-8 sm:pb-20 sm:pt-20 lg:grid-cols-[1.15fr_0.85fr] lg:items-end lg:gap-16">
           <div className="animate-rise">
-            <p className="font-display text-[clamp(3rem,8vw,5.5rem)] leading-[0.95] tracking-tight text-ink">
+            <h1 className="font-display text-[clamp(3rem,8vw,5.5rem)] leading-[0.95] tracking-tight text-ink">
               Challenge
               <br />
               <span className="italic text-teal-deep">the Footage</span>
-            </p>
+            </h1>
             <p className="mt-6 max-w-md text-lg leading-relaxed text-ink-muted sm:text-xl">
-              Four legal templates for any major surveillance vendor — authentication,
-              reliability, access abuse, and civil damages.
+              Four legal templates for any major surveillance vendor — authentication, reliability,
+              access abuse, and civil damages.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-4">
               {!token ? (
                 <SignIn onCredential={onCredential} />
               ) : (
-                <div className="flex flex-wrap items-center gap-2 rounded-full border border-line bg-white/70 px-4 py-2 text-sm">
+                <div
+                  className="flex flex-wrap items-center gap-2 rounded-full border border-line bg-white/70 px-4 py-2 text-sm"
+                  aria-live="polite"
+                >
                   <span>
                     Signed in as <strong>{userEmail || "Google user"}</strong>
                   </span>
@@ -307,7 +370,7 @@ export default function App() {
                     </span>
                   )}
                   {entitlement && !entitlement.isPD && (
-                    <span className="rounded-md bg-ink/80 px-2 py-0.5 text-xs font-semibold text-white">
+                    <span className="rounded-md bg-ink px-2 py-0.5 text-xs font-semibold text-white">
                       {entitlement.canGenerate
                         ? entitlement.entitled
                           ? "Paid access"
@@ -323,16 +386,19 @@ export default function App() {
             </div>
           </div>
 
-          <div className="animate-rise-delay relative hidden min-h-[280px] lg:block" aria-hidden="true">
+          <div
+            className="animate-rise-delay relative hidden min-h-[280px] lg:block"
+            aria-hidden="true"
+          >
             <div className="absolute inset-0 rounded-[2rem] bg-gradient-to-br from-teal/20 via-white/40 to-amber/15" />
             <div className="absolute inset-6 rounded-[1.5rem] border border-white/60 bg-ink/[0.03] backdrop-blur-[2px]" />
             <div className="absolute inset-0 flex flex-col justify-between p-10 font-mono text-[11px] leading-relaxed text-ink-muted">
               <div>
                 <p className="text-teal">VECTORS</p>
-                <p className="mt-3 text-ink">01  FRE 901 · chain of custody</p>
-                <p className="text-ink">02  FRE 702 · 0.1% floor</p>
-                <p className="text-ink">03  4th Amendment · case numbers</p>
-                <p className="text-ink">04  § 1983 · wrongful stop</p>
+                <p className="mt-3 text-ink">01 FRE 901 · chain of custody</p>
+                <p className="text-ink">02 FRE 702 · 0.1% floor</p>
+                <p className="text-ink">03 4th Amendment · case numbers</p>
+                <p className="text-ink">04 § 1983 · wrongful stop</p>
               </div>
               <div>
                 <p>Flock · Axon · Motorola</p>
@@ -343,118 +409,190 @@ export default function App() {
         </div>
       </header>
 
-      <main className="relative z-10 mx-auto w-full max-w-6xl flex-1 px-5 pb-16 sm:px-8">
+      <main
+        id="main-content"
+        tabIndex={-1}
+        className="relative z-10 mx-auto w-full max-w-6xl flex-1 px-5 pb-16 outline-none sm:px-8"
+      >
         {witnessSession && (
-          <div className="mb-6 rounded-xl border border-teal/25 bg-teal-soft/70 px-4 py-3 text-sm text-ink animate-fade">
+          <div
+            className="mb-6 rounded-xl border border-teal/25 bg-teal-soft/70 px-4 py-3 text-sm text-ink animate-fade"
+            role="status"
+          >
             Witness session linked: <code className="font-mono">{witnessSession}</code>
           </div>
         )}
 
         <section
           ref={formRef}
-          className="rounded-2xl border border-line bg-white/85 p-5 shadow-[0_18px_50px_rgba(18,26,33,0.06)] backdrop-blur-md sm:p-8"
+          aria-labelledby="case-details-heading"
+          className="rounded-2xl border border-line bg-white p-5 shadow-[0_18px_50px_rgba(18,26,33,0.06)] sm:p-8"
         >
-          <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
-            <div>
-              <h2 className="font-display text-3xl text-ink">Case details</h2>
-              <p className="mt-1 text-sm text-ink-muted">
-                Free first generation · $9 after ·{" "}
-                <a className="text-teal-deep underline-offset-2 hover:underline" href="/public-defenders.html">
-                  public defenders free
-                </a>
-              </p>
-            </div>
+          <div className="mb-6">
+            <h2 id="case-details-heading" className="font-display text-3xl text-ink">
+              Case details
+            </h2>
+            <p className="mt-1 text-sm text-ink-muted">
+              Free first generation · $9 after ·{" "}
+              <a
+                className="font-medium text-teal-deep underline underline-offset-2 hover:text-teal"
+                href="/public-defenders.html"
+              >
+                public defenders free
+              </a>
+            </p>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label="Vendor">
-              <select
-                className={inputClass}
-                value={vendor}
-                onChange={(e) => setVendor(e.target.value)}
-                disabled={!token}
-              >
-                {VENDORS.map((v) => (
-                  <option key={v.id} value={v.id}>{v.label}</option>
-                ))}
-              </select>
+              {(id) => (
+                <select
+                  id={id}
+                  className={inputClass}
+                  value={vendor}
+                  onChange={(e) => setVendor(e.target.value)}
+                  disabled={!token}
+                >
+                  {VENDORS.map((v) => (
+                    <option key={v.id} value={v.id}>
+                      {v.label}
+                    </option>
+                  ))}
+                </select>
+              )}
             </Field>
             {vendor === "custom" && (
               <Field label="Custom vendor name">
-                <input
-                  className={inputClass}
-                  value={customVendorName}
-                  onChange={(e) => setCustomVendorName(e.target.value)}
-                  placeholder="Vendor legal name"
-                />
+                {(id) => (
+                  <input
+                    id={id}
+                    className={inputClass}
+                    value={customVendorName}
+                    onChange={(e) => setCustomVendorName(e.target.value)}
+                    placeholder="Vendor legal name"
+                    autoComplete="organization"
+                  />
+                )}
               </Field>
             )}
             <Field label="Case number">
-              <input className={inputClass} value={form.caseNumber} onChange={(e) => updateField("caseNumber", e.target.value)} />
+              {(id) => (
+                <input
+                  id={id}
+                  className={inputClass}
+                  value={form.caseNumber}
+                  onChange={(e) => updateField("caseNumber", e.target.value)}
+                  autoComplete="off"
+                />
+              )}
             </Field>
             <Field label="Defendant / client">
-              <input className={inputClass} value={form.defendant} onChange={(e) => updateField("defendant", e.target.value)} />
+              {(id) => (
+                <input
+                  id={id}
+                  className={inputClass}
+                  value={form.defendant}
+                  onChange={(e) => updateField("defendant", e.target.value)}
+                  autoComplete="name"
+                />
+              )}
             </Field>
             <Field label="Court">
-              <input className={inputClass} value={form.court} onChange={(e) => updateField("court", e.target.value)} />
+              {(id) => (
+                <input
+                  id={id}
+                  className={inputClass}
+                  value={form.court}
+                  onChange={(e) => updateField("court", e.target.value)}
+                />
+              )}
             </Field>
             <Field label="Jurisdiction">
-              <input
-                className={inputClass}
-                value={form.jurisdiction}
-                onChange={(e) => updateField("jurisdiction", e.target.value)}
-                placeholder="e.g. C.D. Cal. / California Superior Court"
-              />
+              {(id) => (
+                <input
+                  id={id}
+                  className={inputClass}
+                  value={form.jurisdiction}
+                  onChange={(e) => updateField("jurisdiction", e.target.value)}
+                  placeholder="e.g. C.D. Cal. / California Superior Court"
+                />
+              )}
             </Field>
             <Field label="City / agency">
-              <input className={inputClass} value={form.city} onChange={(e) => updateField("city", e.target.value)} />
+              {(id) => (
+                <input
+                  id={id}
+                  className={inputClass}
+                  value={form.city}
+                  onChange={(e) => updateField("city", e.target.value)}
+                  autoComplete="address-level2"
+                />
+              )}
             </Field>
             <Field label="Camera / footage type">
-              <input
-                className={inputClass}
-                value={form.cameraType}
-                onChange={(e) => updateField("cameraType", e.target.value)}
-                placeholder="ALPR hit, fixed CCTV, body-worn…"
-              />
+              {(id) => (
+                <input
+                  id={id}
+                  className={inputClass}
+                  value={form.cameraType}
+                  onChange={(e) => updateField("cameraType", e.target.value)}
+                  placeholder="ALPR hit, fixed CCTV, body-worn…"
+                />
+              )}
             </Field>
           </div>
 
           <Field label="Additional case facts" className="mt-4">
-            <textarea
-              className={`${inputClass} min-h-28 resize-y`}
-              value={form.additionalFacts}
-              onChange={(e) => updateField("additionalFacts", e.target.value)}
-              placeholder="What happened, when, which officers, how the footage is being used…"
-            />
+            {(id) => (
+              <textarea
+                id={id}
+                className={`${inputClass} min-h-28 resize-y`}
+                value={form.additionalFacts}
+                onChange={(e) => updateField("additionalFacts", e.target.value)}
+                placeholder="What happened, when, which officers, how the footage is being used…"
+              />
+            )}
           </Field>
           <Field label="Search / access facts (Fourth Amendment)" className="mt-4">
-            <textarea
-              className={`${inputClass} min-h-24 resize-y`}
-              value={form.searchFacts}
-              onChange={(e) => updateField("searchFacts", e.target.value)}
-              placeholder="Case number on the query? Stated purpose? Officer query history if known…"
-            />
+            {(id) => (
+              <textarea
+                id={id}
+                className={`${inputClass} min-h-24 resize-y`}
+                value={form.searchFacts}
+                onChange={(e) => updateField("searchFacts", e.target.value)}
+                placeholder="Case number on the query? Stated purpose? Officer query history if known…"
+              />
+            )}
           </Field>
           <Field label="Civil harm (§ 1983)" className="mt-4">
-            <textarea
-              className={`${inputClass} min-h-24 resize-y`}
-              value={form.civilHarm}
-              onChange={(e) => updateField("civilHarm", e.target.value)}
-              placeholder="Wrongful stop, detention at gunpoint, arrest, lost wages, injury…"
-            />
+            {(id) => (
+              <textarea
+                id={id}
+                className={`${inputClass} min-h-24 resize-y`}
+                value={form.civilHarm}
+                onChange={(e) => updateField("civilHarm", e.target.value)}
+                placeholder="Wrongful stop, detention at gunpoint, arrest, lost wages, injury…"
+              />
+            )}
           </Field>
           {vendor === "custom" && (
             <Field label="Additional vendor facts" className="mt-4">
-              <textarea
-                className={`${inputClass} min-h-24 resize-y`}
-                value={form.additionalVendorFacts}
-                onChange={(e) => updateField("additionalVendorFacts", e.target.value)}
-              />
+              {(id) => (
+                <textarea
+                  id={id}
+                  className={`${inputClass} min-h-24 resize-y`}
+                  value={form.additionalVendorFacts}
+                  onChange={(e) => updateField("additionalVendorFacts", e.target.value)}
+                />
+              )}
             </Field>
           )}
 
           {error && (
-            <p className="mt-5 rounded-xl border border-danger/20 bg-danger/5 px-4 py-3 text-sm text-danger" role="alert">
+            <p
+              className="mt-5 rounded-xl border border-danger/20 bg-danger/5 px-4 py-3 text-sm text-danger"
+              role="alert"
+            >
               {error}
             </p>
           )}
@@ -465,11 +603,17 @@ export default function App() {
               className={btnPrimary}
               disabled={!token || !tosOk || busy || (entitlement && !entitlement.canGenerate)}
               onClick={handleGenerate}
+              aria-busy={busy}
             >
               {busy ? "Generating…" : "Generate all four documents"}
             </button>
             {entitlement && !entitlement.canGenerate && !entitlement.isPD && (
-              <button type="button" className={btnSecondary} disabled={busy} onClick={handleCheckout}>
+              <button
+                type="button"
+                className={btnSecondary}
+                disabled={busy}
+                onClick={handleCheckout}
+              >
                 Pay $9 — unlock generation
               </button>
             )}
@@ -477,19 +621,28 @@ export default function App() {
         </section>
 
         {docs && (
-          <section className="mt-8 rounded-2xl border border-line bg-white/85 p-5 shadow-[0_18px_50px_rgba(18,26,33,0.06)] backdrop-blur-md animate-rise sm:p-8">
+          <section
+            className="mt-8 rounded-2xl border border-line bg-white p-5 shadow-[0_18px_50px_rgba(18,26,33,0.06)] animate-rise sm:p-8"
+            aria-labelledby="generated-docs-heading"
+          >
             <div className="flex flex-wrap items-end justify-between gap-3">
               <div>
-                <h2 className="font-display text-3xl text-ink">Generated documents</h2>
-                <p className="mt-1 font-mono text-xs text-ink-muted">{sessionId}</p>
+                <h2 id="generated-docs-heading" className="font-display text-3xl text-ink">
+                  Generated documents
+                </h2>
+                <p className="mt-1 font-mono text-xs text-ink-muted">Session {sessionId}</p>
               </div>
               <div className="flex gap-2">
-                <button type="button" className={btnGhost} onClick={copyCurrent}>Copy</button>
-                <button type="button" className={btnGhost} onClick={downloadCurrent}>Download .md</button>
+                <button type="button" className={btnGhost} onClick={copyCurrent}>
+                  Copy
+                </button>
+                <button type="button" className={btnGhost} onClick={downloadCurrent}>
+                  Download .md
+                </button>
               </div>
             </div>
 
-            <div className="mt-5 flex flex-wrap gap-2" role="tablist">
+            <div className="mt-5 flex flex-wrap gap-2" role="tablist" aria-label="Document type">
               {DOC_TABS.map((t) => {
                 const active = tab === t.key;
                 return (
@@ -497,16 +650,19 @@ export default function App() {
                     key={t.key}
                     type="button"
                     role="tab"
+                    id={`${panelId}-tab-${t.key}`}
                     aria-selected={active}
+                    aria-controls={`${panelId}-panel`}
+                    tabIndex={active ? 0 : -1}
                     onClick={() => setTab(t.key)}
-                    className={`rounded-xl border px-3.5 py-2 text-left text-sm transition ${
+                    className={`rounded-xl border px-3.5 py-2 text-left text-sm transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal ${
                       active
                         ? "border-teal bg-teal text-white"
-                        : "border-line bg-white text-ink-muted hover:border-teal/40 hover:text-ink"
+                        : "border-line bg-white text-ink hover:border-teal/40"
                     }`}
                   >
                     <span className="block font-semibold">{t.label}</span>
-                    <span className={`block text-xs ${active ? "text-white/80" : "text-ink-muted"}`}>
+                    <span className={`block text-xs ${active ? "text-white" : "text-ink-muted"}`}>
                       {t.full}
                     </span>
                   </button>
@@ -514,9 +670,16 @@ export default function App() {
               })}
             </div>
 
-            <pre className="mt-5 max-h-[min(70vh,720px)] overflow-auto whitespace-pre-wrap break-words rounded-xl bg-ink p-5 font-mono text-[0.78rem] leading-relaxed text-[#e7eef2]">
-              {docs[tab]}
-            </pre>
+            <div
+              role="tabpanel"
+              id={`${panelId}-panel`}
+              aria-labelledby={`${panelId}-tab-${tab}`}
+              className="mt-5"
+            >
+              <pre className="max-h-[min(70vh,720px)] overflow-auto whitespace-pre-wrap break-words rounded-xl bg-ink p-5 font-mono text-[0.78rem] leading-relaxed text-[#e7eef2]">
+                {docs[tab]}
+              </pre>
+            </div>
           </section>
         )}
       </main>
