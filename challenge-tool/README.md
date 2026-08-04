@@ -10,6 +10,8 @@ One product for **evidence + legal document templates**.
 
 See [PRODUCT.md](./PRODUCT.md), [CHALLENGE-GRADE.md](./CHALLENGE-GRADE.md), and the full challenge guide [FOOTAGE-CHALLENGE.md](./FOOTAGE-CHALLENGE.md).
 
+**Production (Cloudflare):** [CLOUDFLARE-DEPLOY.md](./CLOUDFLARE-DEPLOY.md) — KV, R2, secrets, Google Sign-In, custom domain, post-deploy checks.
+
 Free first generation per account. Public defenders: free unlimited access (email pd@challengethefootage.com). Additional generations: $9 via Stripe (clawql-payments).
 
 ## Develop
@@ -83,6 +85,7 @@ challenge-tool/
 ├── worker.js            # Auth, entitlement, payment, generation, evidence
 ├── r2.js                # Optional R2 PUT signing
 ├── PRODUCT.md           # Product model
+├── CLOUDFLARE-DEPLOY.md # Production Workers / DNS / secrets
 ├── TESTING.md           # How to run / what CI covers
 ├── eslint.config.js
 ├── lighthouserc.cjs
@@ -92,10 +95,18 @@ challenge-tool/
 
 Vendor profiles live **server-side in `worker.js`**. Update them there.
 
+## Deploy
+
+```bash
+npm run deploy           # build + wrangler deploy
+```
+
+Full production runbook (KV, R2, Google, ClawQL, domain): [CLOUDFLARE-DEPLOY.md](./CLOUDFLARE-DEPLOY.md).
+
 ## Public defender whitelist
 
 ```bash
-wrangler kv:key put --binding=RATE_LIMIT_KV "pd_whitelist:{email}" "true"
+npx wrangler kv key put --binding=RATE_LIMIT_KV "pd_whitelist:{email}" "true"
 ```
 
 ## ToS acceptance

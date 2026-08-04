@@ -135,6 +135,30 @@ async function serveAssets(request, env) {
     headers.set("Content-Type", "text/markdown; charset=utf-8");
   }
 
+  const contentType = headers.get("Content-Type") || "";
+  // Inject public GIS client id so Sign-In works without baking secrets into static/.
+  if (
+    response.status === 200 &&
+    contentType.includes("text/html") &&
+    env.GOOGLE_CLIENT_ID
+  ) {
+    const clientId = String(env.GOOGLE_CLIENT_ID).replace(/</g, "\\u003c");
+    const inject = `<script>window.GOOGLE_CLIENT_ID=${JSON.stringify(clientId)};</script>`;
+    return new HTMLRewriter()
+      .on("head", {
+        element(el) {
+          el.prepend(inject, { html: true });
+        },
+      })
+      .transform(
+        new Response(response.body, {
+          status: response.status,
+          statusText: response.statusText,
+          headers,
+        }),
+      );
+  }
+
   return new Response(response.body, {
     status: response.status,
     statusText: response.statusText,

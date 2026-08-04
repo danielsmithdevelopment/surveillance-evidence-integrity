@@ -78,8 +78,10 @@ Native hashing must stay aligned with Worker hex digests (`@noble/hashes` full-f
 
 ## Production checklist (not automated)
 
+Full runbook: [CLOUDFLARE-DEPLOY.md](./CLOUDFLARE-DEPLOY.md).
+
 - [ ] Deploy Worker + assets; DNS for challengethefootage.com
-- [ ] `ALLOW_TEST_AUTH` unset
+- [ ] `ALLOW_TEST_AUTH` unset (`/api/health` → `testAuthEnabled: false`)
 - [ ] Google client ID + ClawQL secrets set
 - [ ] R2 bucket bound or `R2_*` secrets configured
 - [ ] Stripe checkout path verified with a real card in test mode

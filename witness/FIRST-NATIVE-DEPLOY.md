@@ -20,7 +20,7 @@ iOS TestFlight is step 2 once Android feels good.
 | Physical phone | Android phone | iPhone |
 | Live CTF Worker URL | Strongly recommended | Same |
 
-If `challengethefootage.com` is still down, point the app at a Worker you *have* deployed (or local tunnel) via env — see below.
+If `challengethefootage.com` is still down, deploy the site first ([challenge-tool/CLOUDFLARE-DEPLOY.md](../challenge-tool/CLOUDFLARE-DEPLOY.md)), or point the app at a Worker you *have* deployed (or local tunnel) via env — see below.
 
 ---
 

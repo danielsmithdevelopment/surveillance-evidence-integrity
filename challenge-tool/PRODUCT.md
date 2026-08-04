@@ -39,6 +39,8 @@ challengethefootage.com/
 
 Native `witness/` is the **Expo / React Native** companion for high-reliability capture (see [witness/NATIVE.md](../witness/NATIVE.md)). Branding and account live on Challenge the Footage. Tauri / pure Rust mobile are deferred.
 
+**Ship the website:** [CLOUDFLARE-DEPLOY.md](./CLOUDFLARE-DEPLOY.md) (Workers + KV + R2 + DNS). Native APK after that: [witness/FIRST-NATIVE-DEPLOY.md](../witness/FIRST-NATIVE-DEPLOY.md).
+
 ## Payments
 
 - **Stripe Checkout only** (via ClawQL payments gateway).

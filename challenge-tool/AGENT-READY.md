@@ -60,6 +60,8 @@ Commerce (informational / light):
 
 ## Still required after deploy
 
+Full runbook: [CLOUDFLARE-DEPLOY.md](./CLOUDFLARE-DEPLOY.md).
+
 1. **Point DNS + Worker** so challengethefootage.com stops returning 530.
 2. **Re-scan:** `POST https://isitagentready.com/api/scan` `{"url":"https://challengethefootage.com","siteType":"api"}`.
 3. **DNS-AID (optional, advanced):** publish `_index._agents` / `_mcp._agents` SVCB/HTTPS records (enable DNSSEC for full credit).
