@@ -1,5 +1,7 @@
 # EAS + on-device Whisper builds
 
+**Never shipped a native app?** Start with [FIRST-NATIVE-DEPLOY.md](./FIRST-NATIVE-DEPLOY.md) (Android APK first, then TestFlight).
+
 Custom native builds (not Expo Go) are required for `whisper.rn` and bundled ggml weights.
 
 ## One-time setup
