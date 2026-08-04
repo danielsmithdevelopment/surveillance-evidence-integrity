@@ -261,6 +261,41 @@
         }
       }
     },
+    "/api/evidence/sync-lite": {
+      "post": {
+        "operationId": "syncEvidenceLite",
+        "summary": "Rural / 2G one-shot: register hashes + gzip transcript",
+        "security": [],
+        "description": "Designed for poor connectivity. Delivers a gzip+base64 transcript and media hashes in a single request. Audio/video can upload later via upload-url when the link improves. On-device Whisper should produce the transcript before this call.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["deviceId", "transcriptHash", "audioHash", "videoHash"],
+                "properties": {
+                  "deviceId": { "type": "string" },
+                  "transcriptHash": { "type": "string" },
+                  "audioHash": { "type": "string" },
+                  "videoHash": { "type": "string" },
+                  "transcriptEncoding": { "type": "string", "enum": ["gzip+base64"] },
+                  "transcriptGzipB64": { "type": "string" },
+                  "transcriptText": { "type": "string" },
+                  "linkTier": { "type": "string", "enum": ["offline", "constrained", "ok"] },
+                  "source": { "type": "string", "enum": ["native", "web"] }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Secured with claimCode; transcriptStored=true; mediaPending=true"
+          }
+        }
+      }
+    },
     "/api/evidence/claim": {
       "post": {
         "operationId": "claimEvidence",

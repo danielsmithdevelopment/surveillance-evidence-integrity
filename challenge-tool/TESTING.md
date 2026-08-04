@@ -43,6 +43,7 @@ Test bearer: `Authorization: Bearer test:<userId>:<email>`.
 1. **Authenticated secure** — `POST /api/evidence/secure` with three media hashes → KV record + merkle root.
 2. **Device secure + claim** — `POST /api/evidence/secure-device` → claimCode → `POST /api/evidence/claim` with test auth.
 3. **Upload** — `POST /api/evidence/upload-url` → `PUT /api/evidence/object/...` with `X-Content-SHA256`. Without R2, metadata is stored and `storage` may be `none`.
+4. **Rural sync-lite** — `POST /api/evidence/sync-lite` with `transcriptEncoding: "gzip+base64"` registers hashes and stores the transcript inline in one RTT (`mediaPending: true`).
 
 Merkle root = `SHA-256(transcriptHash + ":" + audioHash + ":" + videoHash)` (see `evidence-crypto.js`).
 

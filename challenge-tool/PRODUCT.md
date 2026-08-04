@@ -55,8 +55,13 @@ Browser / Native (Expo) app
 ### Record-first (native)
 
 ```
-Native record (no Google mid-encounter)
-  → POST /api/evidence/secure-device  → sessionId + claimCode
+Native record (no Google mid-encounter; works offline)
+  → On-device Whisper (when linked) + full-file SHA-256
+  → Durable local queue
+  → Probe link
+       offline      → stay on device
+       constrained  → POST /api/evidence/sync-lite (gzip transcript + hashes)
+       ok           → sync-lite, then audio/video PUTs
   → Open challengethefootage.com/evidence.html?claim=…&code=…
   → User signs in → POST /api/evidence/claim → evidence appears in their library
 ```

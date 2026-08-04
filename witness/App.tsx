@@ -41,12 +41,21 @@ import {
   startParallelAudio,
   type AudioCapture,
 } from "./src/audio";
-import { secureDeviceEvidence, uploadEvidenceObject } from "./src/api";
 import {
   formatEvidenceTranscript,
   getWhisperEngine,
   liveTranscriptBanner,
 } from "./src/whisper";
+import { probeLink, uploadPlan } from "./src/connectivity";
+import { flushQueueItem } from "./src/sync";
+import {
+  listQueueItems,
+  loadQueueItem,
+  needsSync,
+  saveQueueItem,
+  type QueueItem,
+} from "./src/queue";
+import { gzipTextToBase64 } from "./src/gzip";
 
 const CONSENT_KEY = "ctf_evidence_consent_v1";
 const DEVICE_KEY = "ctf_evidence_device_id";
@@ -76,6 +85,11 @@ interface SessionResult {
   uploads?: { transcript?: boolean; audio?: boolean; video?: boolean };
   audioSource?: "parallel" | "ffmpeg" | "pending";
   transcriptEngine?: "stub" | "native";
+  linkTier?: "offline" | "constrained" | "ok";
+  compressedBytes?: number;
+  mediaPending?: boolean;
+  localOnly?: boolean;
+  localId?: string;
 }
 
 function randomId(prefix: string) {
@@ -115,6 +129,30 @@ export default function App() {
       if (consented) setPhase("idle");
     })();
   }, []);
+
+  // Retry queued rural syncs when the app returns to idle with a link.
+  useEffect(() => {
+    if (phase !== "idle") return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const items = await listQueueItems();
+        for (const item of items.filter(needsSync).slice(0, 3)) {
+          if (cancelled) return;
+          try {
+            await flushQueueItem(item);
+          } catch (e) {
+            console.warn("Queue flush:", e);
+          }
+        }
+      } catch {
+        // ignore
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [phase]);
 
   const consentNotice = useMemo(() => {
     if (ALL_PARTY_STATES.has(stateCode.toUpperCase())) {
@@ -226,10 +264,13 @@ export default function App() {
       const engine = await getWhisperEngine();
       whisperEngineId.current = engine.id;
       let modelText = "";
-      if (audioUri && engine.id === "native") {
+      if (audioUri) {
         try {
           const spoken = await engine.transcribeFile(audioUri);
           modelText = spoken.text || "";
+          if (modelText) {
+            setTranscript((t) => `${liveTranscriptBanner(engine.id)}${modelText}\n`);
+          }
         } catch (e: any) {
           console.warn("Whisper transcribe:", e?.message || e);
         }
@@ -264,82 +305,99 @@ export default function App() {
         audioSource = "pending";
       }
 
-      setStatus("Securing package…");
-      const secured = await secureDeviceEvidence({
+      const localId = randomId("local");
+      const queueItem: QueueItem = {
+        localId,
+        createdAt: new Date().toISOString(),
         deviceId,
+        stateCode: stateCode.toUpperCase(),
+        startedAt: startedAt.current!,
+        endedAt,
+        transcriptText,
         transcriptHash,
         audioHash,
         videoHash,
-        transcriptText,
-        mimeType: "video/mp4",
-        startedAt: startedAt.current,
-        endedAt,
-        stateCode: stateCode.toUpperCase(),
-        source: "native",
-        location: locationRef.current,
-        audioExtracted: audioSource !== "pending",
+        transcriptPath,
+        audioPath: audioUri,
+        videoPath: videoUri,
         audioSource,
-      });
+        transcriptEngine: engine.id,
+        location: locationRef.current,
+        uploads: {},
+        syncAttempts: 0,
+      };
+      await saveQueueItem(queueItem);
 
-      const uploads: SessionResult["uploads"] = {};
-      const common = {
-        sessionId: secured.sessionId,
-        deviceId,
-        claimCode: secured.claimCode,
+      setStatus("Checking link (rural / 2G aware)…");
+      const link = await probeLink();
+      const plan = uploadPlan(link.tier);
+      setStatus(link.detail);
+
+      let secured: SessionResult = {
+        sessionId: localId,
+        status: "local_only",
+        verificationId: localId,
+        uploads: {},
+        audioSource,
+        transcriptEngine: engine.id,
+        linkTier: link.tier,
+        mediaPending: true,
+        localOnly: true,
+        localId,
       };
 
-      try {
-        setStatus("Uploading transcript…");
-        await uploadEvidenceObject({
-          ...common,
-          artifactType: "transcript",
-          fileUri: transcriptPath,
-          contentType: "text/plain",
-          sha256: transcriptHash,
-        });
-        uploads.transcript = true;
-
-        if (audioUri && audioSource !== "pending") {
-          setStatus("Uploading audio…");
-          await uploadEvidenceObject({
-            ...common,
-            artifactType: "audio",
-            fileUri: audioUri,
-            contentType: "audio/mp4",
-            sha256: audioHash,
-          });
-          uploads.audio = true;
+      if (plan.syncLite) {
+        try {
+          setStatus(
+            link.tier === "constrained"
+              ? "2G/slow link — syncing compressed transcript…"
+              : "Syncing transcript…",
+          );
+          const gzInfo = gzipTextToBase64(transcriptText);
+          const flushed = await flushQueueItem(queueItem, { tier: link.tier });
+          secured = {
+            sessionId: flushed.sessionId || localId,
+            status: flushed.status || "secured",
+            claimCode: flushed.claimCode,
+            claimUrl: flushed.claimUrl,
+            verificationId: flushed.verificationId || flushed.sessionId || localId,
+            uploads: flushed.uploads,
+            audioSource,
+            transcriptEngine: engine.id,
+            linkTier: link.tier,
+            mediaPending: !(flushed.uploads.audio && flushed.uploads.video),
+            localOnly: !flushed.sessionId,
+            localId,
+            compressedBytes: gzInfo.gzipBytes,
+          };
+          if (link.tier === "constrained") {
+            setStatus(
+              "Transcript synced over slow link. Video stays on device until signal improves.",
+            );
+          }
+        } catch (syncErr: any) {
+          console.warn("Sync failed — kept on device:", syncErr);
+          Alert.alert(
+            "Saved on device",
+            `${syncErr.message || syncErr}\n\nHashes and transcript are stored locally. Open the app again when you have signal — we will sync the compressed transcript first.`,
+          );
         }
-
-        setStatus("Uploading video…");
-        await uploadEvidenceObject({
-          ...common,
-          artifactType: "video",
-          fileUri: videoUri,
-          contentType: "video/mp4",
-          sha256: videoHash,
-        });
-        uploads.video = true;
-      } catch (uploadErr: any) {
-        console.warn("Blob upload issue (hashes still secured):", uploadErr);
+      } else {
         Alert.alert(
-          "Upload incomplete",
-          `${uploadErr.message || uploadErr}\n\nThe evidence package is still secured. You can link it on the website; retry upload from a later build if needed.`,
+          "Saved on device",
+          "No data connection. On-device transcript and hashes are safe. We will sync a compressed transcript as soon as you get even a weak (2G) signal — video waits for a better link.",
         );
       }
 
-      setResult({
-        sessionId: secured.sessionId,
-        status: secured.status,
-        claimCode: secured.claimCode,
-        claimUrl: secured.claimUrl,
-        verificationId: secured.verificationId || secured.sessionId,
-        uploads,
-        audioSource,
-        transcriptEngine: whisperEngineId.current,
-      });
+      setResult(secured);
       setPhase("secured");
-      setStatus("Evidence secured.");
+      setStatus(
+        secured.localOnly
+          ? "Evidence saved on device (waiting for signal)."
+          : secured.mediaPending
+            ? "Transcript secured. Media pending better link."
+            : "Evidence secured.",
+      );
     } catch (e: any) {
       console.error(e);
       setStatus(e.message || String(e));
@@ -349,13 +407,58 @@ export default function App() {
   };
 
   const openClaimOnWeb = useCallback(() => {
-    if (!result) return;
+    if (!result || result.localOnly || !result.claimCode) {
+      Alert.alert(
+        "Not synced yet",
+        "Need at least a brief data signal to register the compressed transcript and get a claim link. Tap Retry sync when you have bars.",
+      );
+      return;
+    }
     const url =
       result.claimUrl ||
       `${CTF_WEB}/evidence.html?claim=${encodeURIComponent(result.sessionId)}${
         result.claimCode ? `&code=${encodeURIComponent(result.claimCode)}` : ""
       }`;
     Linking.openURL(url);
+  }, [result]);
+
+  const retrySync = useCallback(async () => {
+    if (!result?.localId) return;
+    setStatus("Retrying sync…");
+    try {
+      const item = await loadQueueItem(result.localId);
+      if (!item) {
+        Alert.alert("Nothing queued", "Local package not found on device.");
+        return;
+      }
+      const flushed = await flushQueueItem(item);
+      const gz = gzipTextToBase64(item.transcriptText);
+      setResult({
+        sessionId: flushed.sessionId || result.sessionId,
+        status: flushed.status || result.status,
+        claimCode: flushed.claimCode,
+        claimUrl: flushed.claimUrl,
+        verificationId: flushed.verificationId || flushed.sessionId || result.verificationId,
+        uploads: flushed.uploads,
+        audioSource: result.audioSource,
+        transcriptEngine: result.transcriptEngine,
+        linkTier: (await probeLink()).tier,
+        mediaPending: !(flushed.uploads.audio && flushed.uploads.video),
+        localOnly: !flushed.sessionId,
+        localId: result.localId,
+        compressedBytes: gz.gzipBytes,
+      });
+      setStatus(
+        flushed.sessionId
+          ? flushed.uploads.video
+            ? "Evidence secured."
+            : "Transcript synced. Media pending better link."
+          : "Still offline — kept on device.",
+      );
+    } catch (e: any) {
+      Alert.alert("Sync failed", e.message || String(e));
+      setStatus(e.message || String(e));
+    }
   }, [result]);
 
   const openDocs = useCallback(() => {
@@ -477,6 +580,11 @@ export default function App() {
               ? "on-device Whisper"
               : "pending (audio authoritative)"}
             {" · "}
+            Link: {result.linkTier || "unknown"}
+            {typeof result.compressedBytes === "number"
+              ? ` · gzip ${result.compressedBytes}B`
+              : ""}
+            {" · "}
             Uploads:{" "}
             {[
               result.uploads?.transcript && "transcript",
@@ -484,8 +592,21 @@ export default function App() {
               result.uploads?.video && "video",
             ]
               .filter(Boolean)
-              .join(", ") || "hashes only"}
+              .join(", ") ||
+              (result.localOnly ? "none yet (on device)" : "hashes only")}
           </Text>
+          {result.mediaPending || result.localOnly ? (
+            <Text style={styles.body}>
+              {result.localOnly
+                ? "Package is on this phone. Even a weak 2G signal is enough to push the compressed transcript; video waits for a better link."
+                : "Transcript is on the server. Audio/video will upload when connectivity improves — tap Retry sync on Wi‑Fi or stronger cell."}
+            </Text>
+          ) : null}
+          {(result.localOnly || result.mediaPending) && (
+            <Pressable style={styles.btn} onPress={retrySync}>
+              <Text style={styles.btnText}>Retry sync</Text>
+            </Pressable>
+          )}
           <Pressable style={styles.btn} onPress={openClaimOnWeb}>
             <Text style={styles.btnText}>
               Link to my account on the website

@@ -24,9 +24,10 @@ Users brand-perceive **Challenge the Footage**, not a separate crypto/Arweave ap
 
 **Record first, account later.** Mid-encounter must not require Google sign-in.
 
-1. Native records → hashes → `POST /api/evidence/secure-device` (device + claim code)
-2. User opens Challenge the Footage → signs in → claims the session (or deep-link auto-claim)
-3. ClawQL independently anchors behind the scenes; Stripe only for document packs
+1. Native records → **on-device Whisper** (offline) → hashes → durable local queue
+2. Probe link: **offline** keep local · **constrained/2G** `POST /api/evidence/sync-lite` (gzip transcript only) · **ok** sync-lite then audio/video
+3. User opens Challenge the Footage → signs in → claims the session (needs claimCode from a successful sync-lite)
+4. ClawQL independently anchors behind the scenes; Stripe only for document packs
 
 ## Near-term build order
 
@@ -35,13 +36,14 @@ Users brand-perceive **Challenge the Footage**, not a separate crypto/Arweave ap
 3. ~~Full-file SHA-256 + parallel audio (ffmpeg optional)~~
 4. ~~R2 upload via Worker-proxied PUT~~
 5. ~~Whisper module scaffold (stub + optional whisper.rn)~~
-6. EAS Build / TestFlight / Play internal track (`eas.json` scaffolded; needs `eas init`)
-7. Bundle a Whisper model in the EAS profile + verify live STT on device
-8. Revisit enclave-backed keys / Rust crypto module if counsel requires it
+6. ~~Rural / 2G sync-lite (gzip transcript first, media later)~~
+7. EAS Build / TestFlight / Play internal track (`eas.json` scaffolded; needs `eas init`)
+8. Bundle a Whisper model in the EAS profile + verify live STT on device
+9. Revisit enclave-backed keys / Rust crypto module if counsel requires it
 
 ## Testing
 
-Worker evidence APIs (including device claim + upload) are covered in `challenge-tool/test/` — see [TESTING.md](../challenge-tool/TESTING.md).
+Worker evidence APIs (including device claim, sync-lite, upload) are covered in `challenge-tool/test/` — see [TESTING.md](../challenge-tool/TESTING.md).
 
 Native:
 
@@ -51,6 +53,6 @@ cd witness && npm test
 
 Hashing must produce the same lowercase hex SHA-256 as the Worker (`witness/src/hash.ts` ↔ `challenge-tool/evidence-crypto.js`). Merkle root on the server is `SHA-256(transcriptHash:audioHash:videoHash)`.
 
-Transcript packaging never invents speech when Whisper is unavailable (`TRANSCRIPT_PENDING` marker via `src/whisper-format.js`).
+Transcript packaging never invents speech when Whisper is unavailable (`TRANSCRIPT_PENDING` marker via `src/whisper-format.js`). On constrained links, only the gzip transcript + hashes leave the device.
 
 Expo/EAS device tests are manual until a native CI job is added.

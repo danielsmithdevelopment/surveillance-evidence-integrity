@@ -6,13 +6,28 @@ Expo / React Native companion for [challengethefootage.com](https://challengethe
 
 ## What users do
 
-1. Open the app → consent by state → **Start recording** (no Google required)
-2. Stop → full-file SHA-256 of transcript / audio / video → `POST /api/evidence/secure-device`
-3. Upload blobs (`transcript` → `audio` → `video`) via Worker-proxied PUT → R2 when configured
+1. Open the app → consent by state → **Start recording** (no Google required; works offline)
+2. Stop → **on-device Whisper** (when linked) → full-file SHA-256 → durable local queue
+3. Sync by link quality:
+   - **No signal** — stay on device
+   - **2G / slow** — gzip transcript + hashes via `POST /api/evidence/sync-lite` (one small request)
+   - **OK link** — sync-lite, then audio, then video
 4. **Link to my account on the website** → sign in → claim session
 5. Prepare documents / pay with Stripe on the website
 
 No crypto wallet. ClawQL anchors independently behind the scenes.
+
+## Rural / poor connectivity
+
+Designed for places where video upload is unrealistic mid-day:
+
+| Tier | What leaves the phone |
+|---|---|
+| Offline | Nothing — hashes + transcript stored in `documentDirectory/evidence-queue/` |
+| Constrained (slow RTT / weak cell) | Gzip transcript + three hashes (`sync-lite`) |
+| OK | Transcript + audio + video |
+
+Tap **Retry sync** when bars improve. Media never blocks securing the transcript.
 
 ## Audio strategy
 
@@ -52,10 +67,11 @@ Profiles live in [`eas.json`](./eas.json): `development` (dev client), `preview`
 ## Incomplete (known)
 
 1. ~~Whisper module scaffold~~ — stub + optional `whisper.rn` path (`EXPO_PUBLIC_WHISPER=1`); live model still needs a custom dev client + model asset
-2. Enclave / Keychain-backed device keys
-3. Production R2 bucket binding + secrets on the CTF Worker
-4. Replace `extra.eas.projectId` placeholder after `eas init`
-5. Background recording / shake-to-activate shortcuts
+2. ~~Rural 2G sync-lite~~ — gzip transcript first; media deferred
+3. Enclave / Keychain-backed device keys
+4. Production R2 bucket binding + secrets on the CTF Worker
+5. Replace `extra.eas.projectId` placeholder after `eas init`
+6. Background recording / shake-to-activate shortcuts
 
 ## Whisper
 
@@ -72,8 +88,10 @@ npx expo run:ios   # or eas build --profile development
 
 `src/whisper.ts` probes `whisper.rn` and falls back to the stub when the module or model is missing.
 
+Transcript text (Whisper or pending marker) is what we push over 2G — gzip'd via `fflate` in `src/gzip.ts`.
+
 ```bash
-npm test   # node:test for transcript packaging
+npm test   # node:test for transcript packaging + rural sync plan
 ```
 
 ## Legacy worker

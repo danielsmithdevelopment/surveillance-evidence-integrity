@@ -177,4 +177,39 @@ describe("evidence API (wrangler local)", () => {
     assert.equal(verify.json.claimable, false);
     assert.ok(verify.json.objects?.transcript);
   });
+
+  it("sync-lite accepts gzip transcript in one RTT", async () => {
+    const transcriptText =
+      "# Challenge the Footage — Evidence transcript\nengine: stub\n\nOfficer: license and registration.\n";
+    const transcriptHash = await sha256Hex(transcriptText);
+    const { gzipTextToBytes } = await import("../evidence-gzip.js");
+    const gz = await gzipTextToBytes(transcriptText);
+    const transcriptGzipB64 = Buffer.from(gz).toString("base64");
+    assert.ok(gz.byteLength < Buffer.byteLength(transcriptText) + 64);
+
+    const lite = await api("/api/evidence/sync-lite", {
+      method: "POST",
+      body: {
+        deviceId: "device-2g-001",
+        transcriptHash,
+        audioHash: HASHES.audioHash,
+        videoHash: HASHES.videoHash,
+        transcriptEncoding: "gzip+base64",
+        transcriptGzipB64,
+        linkTier: "constrained",
+        source: "native",
+        stateCode: "MT",
+      },
+    });
+    assert.equal(lite.status, 200, JSON.stringify(lite.json));
+    assert.ok(lite.json.claimCode);
+    assert.equal(lite.json.transcriptStored, true);
+    assert.equal(lite.json.mediaPending, true);
+    assert.equal(lite.json.sync, "lite");
+
+    const verify = await api(`/api/evidence/verify/${lite.json.sessionId}`);
+    assert.equal(verify.status, 200);
+    assert.equal(verify.json.objects?.transcript?.storage, "inline");
+    assert.equal(verify.json.mediaPending, true);
+  });
 });

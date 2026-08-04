@@ -24,6 +24,7 @@
 
 import { buildOfflineDocs } from "./offline-docs.js";
 import { evidenceMerkleRoot, randomClaimCode, sha256Hex } from "./evidence-crypto.js";
+import { gunzipBase64ToText } from "./evidence-gzip.js";
 import { r2Configured, r2PutObject } from "./r2.js";
 
 const CORS_HEADERS = {
@@ -396,6 +397,9 @@ export default {
       }
       if (url.pathname === "/api/evidence/secure-device" && request.method === "POST") {
         return handleEvidenceSecureDevice(request, env);
+      }
+      if (url.pathname === "/api/evidence/sync-lite" && request.method === "POST") {
+        return handleEvidenceSyncLite(request, env);
       }
       if (url.pathname === "/api/evidence/claim" && request.method === "POST") {
         return handleEvidenceClaim(request, env);
@@ -1003,6 +1007,111 @@ async function handleEvidenceSecureDevice(request, env) {
   });
 }
 
+/**
+ * Rural / 2G path: one request registers hashes and delivers a gzip transcript.
+ * Media (audio/video) can follow later when the link improves.
+ */
+async function handleEvidenceSyncLite(request, env) {
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return json({ error: "Invalid request body" }, 400);
+  }
+
+  const { deviceId, transcriptHash, audioHash, videoHash } = body;
+  if (!deviceId || !transcriptHash || !audioHash || !videoHash) {
+    return json({ error: "deviceId, transcriptHash, audioHash, and videoHash are required" }, 400);
+  }
+
+  let transcriptText = "";
+  if (body.transcriptEncoding === "gzip+base64" && body.transcriptGzipB64) {
+    try {
+      transcriptText = await gunzipBase64ToText(String(body.transcriptGzipB64));
+    } catch (e) {
+      return json({ error: `gzip transcript decode failed: ${e.message}` }, 400);
+    }
+  } else if (typeof body.transcriptText === "string") {
+    transcriptText = body.transcriptText;
+  } else {
+    return json({ error: "transcriptGzipB64 (gzip+base64) or transcriptText is required" }, 400);
+  }
+
+  // Cap inline transcript for KV (2G payloads should be far smaller).
+  const MAX_CHARS = 64 * 1024;
+  if (transcriptText.length > MAX_CHARS) {
+    return json({ error: `Transcript exceeds ${MAX_CHARS} characters` }, 413);
+  }
+
+  const digest = await sha256Hex(transcriptText);
+  if (digest !== String(transcriptHash).toLowerCase()) {
+    return json({ error: "transcriptHash does not match gzip payload" }, 400);
+  }
+
+  const sessionId = `ev-dev-${String(deviceId).slice(0, 8)}-${Date.now().toString(36)}`;
+  const claimCode = randomClaimCode();
+  const claimCodeHash = await sha256Hex(claimCode);
+
+  const record = await persistEvidenceRecord(env, {
+    sessionId,
+    userId: null,
+    email: null,
+    deviceId: String(deviceId),
+    transcriptHash,
+    audioHash,
+    videoHash,
+    transcriptText,
+    mimeType: body.mimeType,
+    startedAt: body.startedAt,
+    endedAt: body.endedAt,
+    stateCode: body.stateCode,
+    source: body.source || "native",
+    claimable: true,
+    claimCodeHash,
+    location: body.location || null,
+  });
+
+  // Inline store transcript so a second PUT is not required on 2G.
+  record.objects = record.objects || {};
+  record.objects.transcript = {
+    key: `inline:${sessionId}:transcript`,
+    sha256: transcriptHash,
+    bytes: new TextEncoder().encode(transcriptText).byteLength,
+    storage: "inline",
+    uploadedAt: new Date().toISOString(),
+    linkTier: body.linkTier || "constrained",
+  };
+  record.transcriptEngine = body.transcriptEngine || null;
+  record.sync = "lite";
+  record.mediaPending = true;
+
+  try {
+    await env.RATE_LIMIT_KV.put(`evidence:${sessionId}`, JSON.stringify(record), {
+      expirationTtl: 60 * 60 * 24 * 365 * 5,
+    });
+    await env.RATE_LIMIT_KV.put(
+      `device:${deviceId}`,
+      JSON.stringify({ deviceId, lastSessionId: sessionId, seenAt: new Date().toISOString() }),
+      { expirationTtl: 60 * 60 * 24 * 365 * 5 }
+    );
+  } catch (e) {
+    console.warn("sync-lite KV:", e.message);
+  }
+
+  return json({
+    sessionId: record.sessionId,
+    status: record.status,
+    merkleRoot: record.merkleRoot,
+    securedAt: record.securedAt,
+    verificationId: record.sessionId,
+    claimCode,
+    claimUrl: `https://challengethefootage.com/evidence.html?claim=${encodeURIComponent(sessionId)}&code=${encodeURIComponent(claimCode)}`,
+    transcriptStored: true,
+    mediaPending: true,
+    sync: "lite",
+  });
+}
+
 async function handleEvidenceClaim(request, env) {
   let user;
   try {
@@ -1218,6 +1327,9 @@ async function handleEvidenceObjectPut(request, env, sessionId, artifactType) {
     uploadedAt: new Date().toISOString(),
   };
   record.objects = objects;
+  if (record.objects.audio && record.objects.video) {
+    record.mediaPending = false;
+  }
   try {
     await env.RATE_LIMIT_KV.put(`evidence:${sessionId}`, JSON.stringify(record), {
       expirationTtl: 60 * 60 * 24 * 365 * 5,
@@ -1371,6 +1483,8 @@ async function handleEvidenceVerify(request, env, sessionId) {
       source: record.source,
       claimable: !!record.claimable,
       independentlyVerifiable: record.status === "anchored",
+      mediaPending: !!record.mediaPending,
+      sync: record.sync || null,
       objects: record.objects
         ? Object.fromEntries(
             Object.entries(record.objects).map(([k, v]) => [
