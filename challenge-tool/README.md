@@ -1,34 +1,59 @@
 # challengethefootage.com
 
-Cloudflare Worker + static frontend that generates four legal document templates for challenging surveillance evidence.
+Web tool that generates four legal document templates for challenging surveillance camera evidence:
+
+1. **Motion in limine** — FRE 901 authentication
+2. **Daubert motion** — FRE 702 accuracy / reliability
+3. **Fourth Amendment suppression** — access abuse / undocumented queries
+4. **Section 1983 demand letter** — civil damages
+
+Free first generation per account. Public defenders: free unlimited access (email pd@challengethefootage.com). Additional generations: $9 via Stripe (clawql-payments).
 
 ## Layout
 
 ```
 challenge-tool/
-├── frontend.jsx              # React UI (bundled into static/ for Pages)
-├── worker.js                 # Auth, entitlement, Stripe checkout, generation
+├── src/                      # React + Tailwind UI
+│   ├── App.jsx               # Generator
+│   ├── TermsPage.jsx
+│   ├── PublicDefendersPage.jsx
+│   └── index.css             # Tailwind theme
+├── index.html                # Vite entries
+├── terms.html
+├── public-defenders.html
+├── worker.js                 # Auth, entitlement, payment, generation
 ├── vendors.js                # Reference vendor profiles (also inlined in worker.js)
-├── wrangler.toml             # Worker + KV + assets
-├── terms-of-service.md       # Source for /terms
-├── document-disclaimer.txt   # Disclaimer template (also built in worker)
-└── static/                   # Deployed assets
-    ├── index.html
-    ├── app.js                # Compiled / CDN-ready frontend
-    ├── styles.css
-    ├── terms.html
-    └── public-defenders.html
+├── wrangler.toml
+├── terms-of-service.md
+├── document-disclaimer.txt
+└── static/                   # vite build output (served by Worker assets)
 ```
 
-## API routes (Worker)
+## Develop
 
-| Method | Path | Auth | Purpose |
-|---|---|---|---|
-| POST | `/api/checkout` | Google Bearer | Stripe Checkout via ClawQL payments |
-| GET | `/api/entitlement` | Google Bearer | Free / paid / PD status |
-| POST | `/api/generate` | Google Bearer | Generate all four documents |
-| GET | `/api/history` | Google Bearer | Prior session previews |
-| GET | `/api/session/:id` | Google Bearer | Recall one session |
+```bash
+cd challenge-tool
+npm install
+npm run dev          # Vite UI on :5173 (proxies /api → :8787)
+npm run worker       # build + wrangler dev (UI + API together)
+```
+
+Set secrets in `.dev.vars` for the Worker:
+
+```
+GOOGLE_CLIENT_ID=...
+CLAWQL_GATEWAY_URL=https://...
+CLAWQL_API_KEY=...
+```
+
+Inject `window.GOOGLE_CLIENT_ID` at deploy (HTML rewrite or Pages env) so Google Sign-In renders.
+
+## Build & deploy
+
+```bash
+npm run build        # writes to static/
+npm run deploy       # build + wrangler deploy
+```
 
 Vendor profiles live **server-side in `worker.js`**. Update them there.
 
@@ -37,29 +62,6 @@ Vendor profiles live **server-side in `worker.js`**. Update them there.
 ```bash
 wrangler kv:key put --binding=RATE_LIMIT_KV "pd_whitelist:{email}" "true"
 ```
-
-## Local development
-
-```bash
-cd challenge-tool
-npx wrangler dev
-```
-
-Set secrets in `.dev.vars`:
-
-```
-GOOGLE_CLIENT_ID=...
-CLAWQL_GATEWAY_URL=https://...
-CLAWQL_API_KEY=...
-```
-
-## Deploy
-
-```bash
-npx wrangler deploy
-```
-
-Point `challengethefootage.com` (and `.org`) DNS to the Worker / Pages project.
 
 ## ToS acceptance
 
