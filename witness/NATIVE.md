@@ -42,9 +42,11 @@ Works for **police encounters and broader personal safety** (meetups, dates, nig
 6. ~~Rural / 2G sync-lite (gzip transcript first, media later)~~
 7. ~~EAS + Whisper model fetch/bundle (`BUILD.md`, `eas-build-pre-install`)~~
 8. ~~Interrupt recovery + emergency contacts / check-in~~
-9. Run `eas init` + preview TestFlight/Play with a real Apple/Google account
-10. Server-side SMS gateway (Twilio) for safety-ping (today: SMS drafts on device)
-11. Revisit enclave-backed keys / Rust crypto module if counsel requires it
+9. ~~Evidence swarm MVP (create/join, start signal, heartbeat, PEER_LOST, swarmId)~~
+10. Run `eas init` + preview TestFlight/Play with a real Apple/Google account
+11. Attorney UI: group by swarmId + transcript cross-reference
+12. Server-side SMS gateway (Twilio) for safety-ping (today: SMS drafts on device)
+13. Revisit enclave-backed keys / Rust crypto module if counsel requires it
 
 ## Testing
 

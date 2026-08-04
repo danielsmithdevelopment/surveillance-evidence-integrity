@@ -7,8 +7,11 @@
 1. **Record** when they do not feel safe — police / enforcement encounters, marketplace meetups, first dates, walking alone at night, and similar situations
 2. **Secure** that evidence (on-device first; works on weak / 2G links)
 3. **Alert** trusted contacts if a check-in is missed or recording ends unexpectedly
-4. **Prepare** attorney-review legal templates when the situation involves surveillance / ALPR / civil rights claims
-5. **Pay** with a normal credit card when they need more generations
+4. **Swarm** multi-phone capture — multi-angle / multi-mic like multiple body cams (independent packages, shared `swarmId`)
+5. **Prepare** attorney-review legal templates when the situation involves surveillance / ALPR / civil rights claims
+6. **Pay** with a normal credit card when they need more generations
+
+**Challenge-grade capture** (phones → body cams → ALPR/fixed cams): see [CHALLENGE-GRADE.md](./CHALLENGE-GRADE.md).
 
 ## What the user sees
 
@@ -76,10 +79,24 @@ Native record (no Google mid-encounter; works offline)
 - **Interrupt recovery:** process death / unexpected stop → keep honest pending hashes, alert contacts, sync-lite when possible
 - Not a guarantee against harm — a private record + trusted-contact signal when things go wrong
 
+### Evidence swarm (multi-angle / multi-mic)
+
+```
+Create or join swarm code
+  → Heartbeats (~4s)
+  → Any member signals start → all members begin independent recordings
+  → PEER_LOST logged if a recording peer misses heartbeats
+  → Each device sync-lite’s its own package tagged with swarmId
+```
+
+Same pattern we want for multi-BWC and multi-sensor incidents — demonstrated first on civilian phones. See [CHALLENGE-GRADE.md](./CHALLENGE-GRADE.md).
+
 ## Roadmap notes
 
 - Ship **web recording** for one-URL onboarding; ship **Expo native** for reliability (full-file SHA-256, parallel audio, Worker→R2 uploads).
-- Never surface “connect wallet”, token tickers, or Arweave TX IDs in primary UI. Optional advanced “Independent verification” panel may show a verification ID for attorneys/experts.
+- Swarm → attorney UI grouping by `swarmId` + transcript cross-reference (intersection / union / conflicts).
+- Push Challenge-grade requirements into body-cam / ALPR procurement (model legislation + contracts).
+- Never surface “connect wallet”, token tickers, or Arweave TX IDs in primary UI.
 - Consider Rust only as a crypto/hash native module later — not as the app shell.
 
 ## Testing & quality

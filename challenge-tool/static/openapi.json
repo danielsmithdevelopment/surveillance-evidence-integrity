@@ -331,6 +331,49 @@
         }
       }
     },
+    "/api/evidence/swarm/create": {
+      "post": {
+        "operationId": "createEvidenceSwarm",
+        "summary": "Create a multi-device evidence swarm (multi-angle / multi-mic)",
+        "security": [],
+        "responses": { "200": { "description": "swarmId + members" } }
+      }
+    },
+    "/api/evidence/swarm/join": {
+      "post": {
+        "operationId": "joinEvidenceSwarm",
+        "summary": "Join an evidence swarm by code",
+        "security": [],
+        "responses": { "200": { "description": "Updated swarm view" } }
+      }
+    },
+    "/api/evidence/swarm/heartbeat": {
+      "post": {
+        "operationId": "evidenceSwarmHeartbeat",
+        "summary": "Heartbeat while in a swarm; may return newPeerLost events",
+        "security": [],
+        "responses": { "200": { "description": "Swarm view + ack" } }
+      }
+    },
+    "/api/evidence/swarm/signal": {
+      "post": {
+        "operationId": "evidenceSwarmSignal",
+        "summary": "Broadcast start/stop/idle to swarm members",
+        "security": [],
+        "responses": { "200": { "description": "Updated swarm view" } }
+      }
+    },
+    "/api/evidence/swarm/{swarmId}": {
+      "get": {
+        "operationId": "getEvidenceSwarm",
+        "summary": "Get swarm status",
+        "security": [],
+        "parameters": [
+          { "name": "swarmId", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "Swarm view" } }
+      }
+    },
     "/api/evidence/claim": {
       "post": {
         "operationId": "claimEvidence",

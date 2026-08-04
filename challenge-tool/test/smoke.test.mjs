@@ -88,12 +88,15 @@ describe("challenge-tool artifacts", () => {
     assert.match(workerSrc, /handleEvidenceSecureDevice/);
     assert.match(workerSrc, /handleEvidenceSyncLite/);
     assert.match(workerSrc, /handleEvidenceSafetyPing/);
+    assert.match(workerSrc, /handleSwarmCreate/);
     assert.match(workerSrc, /handleEvidenceClaim/);
     assert.match(workerSrc, /handleEvidenceUploadUrl/);
     assert.match(workerSrc, /handleEvidenceObjectPut/);
     readFileSync(join(root, "r2.js"));
     readFileSync(join(root, "evidence-crypto.js"));
     readFileSync(join(root, "evidence-gzip.js"));
+    readFileSync(join(root, "swarm.js"));
+    readFileSync(join(root, "CHALLENGE-GRADE.md"));
     readFileSync(join(root, "TESTING.md"));
     assert.match(workerSrc, /oauth-authorization-server/);
     readFileSync(join(root, "src/webmcp.js"));

@@ -25,6 +25,8 @@ export type QueueItem = {
   interrupted?: boolean;
   interruptReason?: string | null;
   safetyAlertSent?: boolean;
+  swarmId?: string | null;
+  peerLostNotes?: string;
   /** Server fields filled after sync-lite */
   sessionId?: string;
   claimCode?: string;
