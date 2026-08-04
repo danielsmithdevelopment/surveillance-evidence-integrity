@@ -134,7 +134,15 @@
                   },
                   "vendor": {
                     "type": "string",
-                    "enum": ["flock", "axon", "motorola", "genetec", "verkada", "custom"]
+                    "enum": [
+                      "flock",
+                      "axon",
+                      "motorola",
+                      "genetec",
+                      "verkada",
+                      "cellphone",
+                      "custom"
+                    ]
                   },
                   "customVendorName": {
                     "type": "string"
@@ -168,6 +176,11 @@
                   },
                   "additionalVendorFacts": {
                     "type": "string"
+                  },
+                  "footageCategory": {
+                    "type": "string",
+                    "enum": ["fixed_surveillance", "body_worn", "cellphone"],
+                    "description": "Capture class: fixed/ALPR, body-worn, or cell phone footage"
                   }
                 }
               }

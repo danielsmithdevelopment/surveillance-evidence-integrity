@@ -5,10 +5,10 @@ One product for **evidence + legal document templates**.
 1. Record a police encounter (`/evidence.html` or native Evidence app)
 2. Secure evidence to the user’s account (ClawQL anchors independently — **no crypto wallet**)
 3. Optional **multi-device incident** — several phones, one `incidentId`, coordinated start
-4. Generate FRE 901 / 702 / Fourth Amendment / § 1983 templates
+4. Generate FRE 901 / 702 / Fourth Amendment / § 1983 templates for **fixed/ALPR, body-worn, or cell phone** footage
 5. Pay with **Stripe** (card) when past the free generation; public defenders free
 
-See [PRODUCT.md](./PRODUCT.md) and [CHALLENGE-GRADE.md](./CHALLENGE-GRADE.md).
+See [PRODUCT.md](./PRODUCT.md), [CHALLENGE-GRADE.md](./CHALLENGE-GRADE.md), and [FOOTAGE-CHALLENGE.md](./FOOTAGE-CHALLENGE.md).
 
 Free first generation per account. Public defenders: free unlimited access (email pd@challengethefootage.com). Additional generations: $9 via Stripe (clawql-payments).
 

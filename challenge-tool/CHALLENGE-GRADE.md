@@ -38,15 +38,24 @@ Civilian multi-device incidents prove the pattern. Body-cam fleets and fixed cam
 5. Incident / unit correlation id when multiple devices cover one event  
 6. No crypto-wallet UX for end users — anchoring is infrastructure
 
-Aligned docs in this repo: `technical-standards.md`, `model-legislation.md`, `model-contract-language.md`, `authentication-challenge-guide.md`.
+Aligned docs in this repo: `technical-standards.md`, `model-legislation.md`, `model-contract-language.md`, `authentication-challenge-guide.md`, [`FOOTAGE-CHALLENGE.md`](./FOOTAGE-CHALLENGE.md).
+
+## Legal pressure (all three layers)
+
+Empowerment without pressure is incomplete. The docs generator now branches on `footageCategory`:
+
+- **Fixed / ALPR** — classic FRE 901 hash/Merkle/anchor gaps + ALPR error/abuse discovery  
+- **Body-worn** — mute/dock/export integrity; push vendors toward clawql-surveillance-class controls or exclusion  
+- **Cell phone** — no authenticity presumption without cryptographic proof against AI alteration / silent re-encode; Challenge-grade civilian capture as the floor  
 
 ## Build sequence
 
 1. ~~Civilian single-device integrity + rural sync + safety alerts~~  
 2. ~~**Civilian multi-device incident MVP** — create/join, start signal, heartbeat, `PEER_LOST`, `incidentId` on packages~~
-3. Attorney library: group sessions by `incidentId` + transcript cross-reference UI  
-4. Publish Challenge-grade one-pager for city councils / PDs  
-5. Push via contracts + model legislation (BWC + ALPR), informed by what phones already do  
+3. ~~**Docs generator: body-worn + cellphone challenge modes** (same four vectors as fixed/ALPR)~~  
+4. Attorney library: group sessions by `incidentId` + transcript cross-reference UI  
+5. Publish Challenge-grade one-pager for city councils / PDs  
+6. Push via contracts + model legislation (BWC + ALPR + phone-video authenticity), informed by what phones already do  
 
 ## Non-goals (near term)
 

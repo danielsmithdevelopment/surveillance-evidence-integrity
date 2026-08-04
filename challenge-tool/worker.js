@@ -23,6 +23,11 @@
  */
 
 import { buildOfflineDocs } from "./offline-docs.js";
+import {
+  FOOTAGE_CATEGORY_IDS,
+  getFootageCategory,
+  resolveFootageProfile,
+} from "./footage-modes.js";
 import { evidenceMerkleRoot, randomClaimCode, sha256Hex } from "./evidence-crypto.js";
 import { gunzipBase64ToText } from "./evidence-gzip.js";
 import { r2Configured, r2PutObject } from "./r2.js";
@@ -193,26 +198,31 @@ const VENDORS = {
   axon: {
     name: "Axon (formerly TASER)",
     errorRateFacts: [
-      "ALPR technology across all vendors operates at a documented error rate of approximately 10% for plate misreads, based on a 2019 estimate and confirmed by DHS's 2025 market survey acknowledging character confusion errors without setting any minimum standard.",
-      "Axon body camera footage is subject to the same downstream chain of custody questions as ALPR footage: cloud storage on Microsoft Azure means integrity depends on Axon's internal controls rather than independently verifiable cryptographic proof.",
+      "Axon body-worn and fleet cameras are widely treated as the authoritative record of police encounters, yet public documentation does not establish independently verified completeness rates for activation, mute gaps, or dock/cloud re-encode fidelity.",
+      "Vendor AI assist features (transcription, redaction, search) introduce secondary model-error risk when the state relies on AI-derived descriptions of what body-worn video shows.",
+      "ALPR technology across vendors (including Axon ecosystem offerings) operates at a documented error rate of approximately 10% for plate misreads where ALPR is in use — but body-worn reliability challenges are primarily completeness and chain-of-custody, not OCR.",
     ],
     accessAbuseFacts: [
-      "Multiple public records requests and civil litigation have raised questions about Axon Evidence audit log completeness and whether all access events are logged in a tamper-evident manner.",
-      "The broader ALPR officer abuse pattern — documented in at least 28 cases nationwide by the Institute for Justice — reflects systemic access control failures across all vendors, not Flock-specific failures.",
+      "Multiple public records requests and civil litigation have raised questions about Axon Evidence audit log completeness and whether all view/share/export events are logged in a tamper-evident manner.",
+      "Evidence.com-class platforms are typically the sole oracle for who accessed body-worn media; without an external integrity anchor, the defense cannot independently verify the access log itself.",
+      "Retention and category-based deletion policies can destroy Brady material if preservation holds are late or incomplete.",
     ],
     authFacts: [
-      "Axon Evidence does not publicly document cryptographic hashing of footage within camera hardware at capture, Merkle-chained audit logs, or external immutable anchoring of footage integrity.",
-      "Cloud storage on third-party infrastructure introduces additional chain of custody questions independent of Axon's internal access controls.",
+      "Axon Evidence does not publicly document cryptographic hashing of footage within camera hardware before dock / network upload, Merkle-chained audit logs, or external immutable anchoring independent of Axon infrastructure.",
+      "Docking and cloud ingest commonly re-wrap or transcode media — integrity breakpoints unless a pre-upload hash was computed on-device.",
+      "Mute, buffer, and activation events are central to authenticity of the encounter record; public materials do not show tamper-evident proofs of those events suitable for third-party verification.",
+      "Cloud storage on third-party infrastructure (e.g. Microsoft Azure) means chain of custody depends on Axon's internal controls rather than Challenge-grade independent verification (clawql-surveillance class).",
     ],
     civilFacts: [
-      "Section 1983 provides a federal cause of action for deprivation of constitutional rights under color of state law, applicable to wrongful stops and detentions based on misidentification from any surveillance system.",
+      "Section 1983 provides a federal cause of action for deprivation of constitutional rights under color of state law, including force and detention incidents where body-worn video is incomplete, missing, or selectively retained.",
+      "Wrongful arrest / excessive-force settlements frequently turn on what body-worn video shows — or fails to show — making integrity and completeness controls material to civil exposure.",
       "Wrongful arrest settlements involving short detention without physical injury typically range from $10,000 to $75,000. Cases involving prolonged detention, lost employment, or physical injury frequently reach $100,000 to $500,000 or more.",
     ],
     sources: [
       "Axon Evidence platform documentation (public)",
-      "EFF and ACLU surveillance reporting",
-      "Institute for Justice — ALPR error documentation",
-      "DHS SAVER ALPR Market Survey Report, June 2025",
+      "EFF and ACLU body-camera / surveillance reporting",
+      "Civil litigation and public-records reporting on Evidence.com access and retention",
+      "Challenge the Footage — Challenge-grade capture / clawql-surveillance integrity bar",
     ],
   },
 
@@ -294,21 +304,35 @@ const VENDORS = {
 
 // ─── System prompt factory ────────────────────────────────────────────────────
 
-function buildSystemPrompt(vendorKey, customDetails) {
-  const profile = VENDORS[vendorKey] || null;
-  const vendorName = profile?.name || customDetails?.name || "the surveillance vendor";
+function buildSystemPrompt(vendorKey, customDetails, footageCategory = "fixed_surveillance") {
+  const resolved = resolveFootageProfile(
+    footageCategory,
+    vendorKey,
+    VENDORS[vendorKey] || null,
+    customDetails?.name
+  );
+  const profile = resolved.profile;
+  const vendorName = resolved.vendorName;
+  const mode = resolved.mode;
+  const pack = resolved.pack;
 
   const profileSection = profile
     ? `
+## Footage category: ${mode.label}
+${mode.description}
+
+## Pressure line
+${pack.pressureLine}
+
 ## Documented facts: ${vendorName}
 
 ### Authentication and integrity gaps
 ${profile.authFacts.map((f, i) => `${i + 1}. ${f}`).join("\n")}
 
-### System accuracy and error rate
+### Reliability / accuracy frame (${pack.accuracyFrame})
 ${profile.errorRateFacts.map((f, i) => `${i + 1}. ${f}`).join("\n")}
 
-### Access abuse and unauthorized use
+### Access / custody frame (${pack.accessFrame})
 ${profile.accessAbuseFacts.map((f, i) => `${i + 1}. ${f}`).join("\n")}
 
 ### Civil liability and litigation context
@@ -316,32 +340,72 @@ ${profile.civilFacts.map((f, i) => `${i + 1}. ${f}`).join("\n")}
 
 ### Sources
 ${profile.sources.map((s) => `- ${s}`).join("\n")}
+${
+  customDetails?.additionalVendorFacts
+    ? `\n### Operator-supplied source facts\n${customDetails.additionalVendorFacts}\n`
+    : ""
+}
 `
     : customDetails?.additionalVendorFacts
       ? `
+## Footage category: ${mode.label}
+${pack.pressureLine}
+
 ## User-provided facts about ${vendorName}
 ${customDetails.additionalVendorFacts}
 `
       : `
-## Vendor: ${vendorName}
-No pre-populated profile available. Apply the general arguments across all four vectors based on the absence of documented controls. Discovery requests should seek documentation of any accuracy testing, error rate data, access logs, and integrity controls that may exist.
+## Footage category: ${mode.label}
+## Source: ${vendorName}
+${pack.pressureLine}
+No pre-populated profile available. Apply the four vectors using mode-appropriate discovery (integrity, reliability, access/custody, civil). Seek hash-at-capture, mute/dock or device-extraction logs, and independent verification — not vendor-portal assertions.
 `;
 
-  return `You are a legal and technical expert helping people challenge surveillance camera evidence and seek civil remedies for surveillance-related harms. You generate four types of documents, each targeting a different vulnerability in how surveillance systems are used as evidence or for enforcement.
+  const vectorBlock =
+    footageCategory === "body_worn"
+      ? `## The four attack vectors (body-worn / in-car)
 
-## The four attack vectors
+### Vector 1 — Authentication (FRE 901)
+Body-worn footage must be authenticated under FRE 901(b)(9). Demand hash before leave-device, tamper-evident activation/mute/dock logs, and external integrity anchoring. Evidence.com-class clouds as sole oracle are vendor assertion, not proof. Push vendors toward Challenge-grade / clawql-surveillance-class controls or exclusion.
+
+### Vector 2 — Reliability (FRE 702 / Daubert)
+Focus on completeness and fidelity — not ALPR OCR. Non-activation, mute gaps, dock re-encode, and AI transcript/redaction errors are reliability defects. Partial clips presented as the whole encounter fail Daubert gatekeeping.
+
+### Vector 3 — Access / Brady / Fourth Amendment
+Who viewed/exported vault files, retention/auto-delete, and withheld multi-officer angles are the body-cam analogues of ALPR query abuse. Incomplete production is a constitutional issue when force or detention is at stake.
+
+### Vector 4 — Civil damages (Section 1983)
+Missing or selectively retained body-worn video that conceals force supports § 1983 exposure. Damages frameworks match other unlawful-force / wrongful-detention cases.`
+      : footageCategory === "cellphone"
+        ? `## The four attack vectors (cell phone / personal device)
+
+### Vector 1 — Authentication (FRE 901)
+Phone video must be authenticated. Without capture-time hash / content credentials / Challenge-grade package, AI alteration and silent re-encode cannot be ruled out. WhatsApp/iCloud/share-sheet exports destroy provenance. "Just watch the video" is not FRE 901(b)(9).
+
+### Vector 2 — Reliability (FRE 702 / Daubert)
+Deepfakes, consumer editors, selective clipping, and juror over-trust of video. Require cryptographic proof or exclude / limit. Challenge-grade civilian capture sets the floor accusatory phone video should meet.
+
+### Vector 3 — Riley / extraction / selective production
+Riley v. California constrains phone searches. Overbroad extraction and withholding neighbor clips are suppressible / Brady problems. Officer personal-phone recording outside BWC policy needs discovery.
+
+### Vector 4 — Civil damages (Section 1983)
+Reliance on unverified or altered phone video to justify force or charges supports constitutional and tort theories.`
+        : `## The four attack vectors (fixed / ALPR surveillance)
 
 ### Vector 1 — Authentication (FRE 901)
 Surveillance footage offered as evidence must be authenticated under FRE 901. FRE 901(b)(9) requires the proponent to show the system producing the evidence is reliable and produces accurate results. No major surveillance vendor publicly documents: (1) cryptographic hashing of footage within camera hardware before network transmission, (2) Merkle-chained audit logs, (3) external immutable anchoring of Merkle roots to a system outside the vendor's control, or (4) tamper-evident access logs for all queries. Without these controls, "this is what the camera recorded, unaltered" is a vendor assertion — not a provable fact. The capability to alter footage without forensic traces is commercially available (Toka, documented by Haaretz 2022).
 
 ### Vector 2 — Accuracy (FRE 702 / Daubert)
-AI-generated evidence is subject to reliability scrutiny under FRE 702 and Daubert. ALPR systems operate at a documented error rate of approximately 10% for plate misreads — confirmed by a 2019 industry estimate and acknowledged in DHS's own June 2025 market survey. No court has established an acceptable error rate for AI-generated evidence used to initiate stops, detentions, or arrests. A system with a 10% error rate scanning 2,000 plates per minute produces thousands of false identifications per hour across a network. The appropriate standard for evidence used in criminal prosecution should be no worse than 1 error per 1,000 reads (0.1%) — two orders of magnitude better than current documented performance. Until vendors can demonstrate compliance with that standard through independent testing, the reliability requirement of FRE 702 and Daubert is not met.
+AI-generated evidence is subject to reliability scrutiny under FRE 702 and Daubert. ALPR systems operate at a documented error rate of approximately 10% for plate misreads — confirmed by a 2019 industry estimate and acknowledged in DHS's own June 2025 market survey. The appropriate standard for evidence used in criminal prosecution should be no worse than 1 error per 1,000 reads (0.1%), independently verified.
 
 ### Vector 3 — Access abuse and Fourth Amendment
-The Fourth Amendment protects against unreasonable searches and seizures. ALPR data used to initiate a stop or investigation is a search. When that search is conducted without a legitimate law enforcement purpose — as documented in at least 28 cases of officer abuse nationwide — it is an unconstitutional search and any evidence obtained is subject to suppression under the exclusionary rule. Discovery into the searching officer's query history, case number documentation, and department abuse record is essential.
+ALPR data used to initiate a stop or investigation is a search. Unauthorized personal-use queries (28+ documented cases) and queries without case numbers support suppression. Discovery into officer query history is essential.
 
 ### Vector 4 — Civil damages (Section 1983)
-42 U.S.C. § 1983 provides a federal cause of action for deprivation of constitutional rights under color of state law. Wrongful stops, detentions at gunpoint, and arrests based on ALPR misidentification constitute Fourth Amendment violations actionable under Section 1983. Damages include compensatory damages for detention time, economic losses, emotional distress, and reputational harm; punitive damages where officer conduct was egregious; and attorney's fees under 42 U.S.C. § 1988. Settlements in wrongful arrest cases range from $10,000–$75,000 for brief detentions to $100,000–$500,000+ for prolonged detention or physical harm. Colorado and New Mexico have abolished qualified immunity for state claims; California and Washington have active legislation.
+Wrongful stops and detentions based on ALPR misidentification are actionable under § 1983. Settlement ranges commonly $10,000–$75,000 for brief detentions to $100,000–$500,000+ for prolonged harm.`;
+
+  return `You are a legal and technical expert helping people challenge digital camera evidence — fixed/ALPR surveillance, police body-worn cameras, and cell phone video — and seek civil remedies. You generate four types of documents, each targeting a different vulnerability.
+${vectorBlock}
 ${profileSection}
 ## Document generation standards
 
@@ -628,23 +692,85 @@ async function incrementFree(env, userId) {
 
 // ─── Document generation ──────────────────────────────────────────────────────
 
-async function generateAllDocs(env, system, ctx, enriched, vendorName, profile) {
-  if (wantsOfflineGeneration(env)) {
-    return buildOfflineDocs({ vendorName, profile, ctx, enriched });
+function gatewayPrompts(vendorName, ctx, base) {
+  const cat = ctx.footageCategory || "fixed_surveillance";
+  if (cat === "body_worn") {
+    return {
+      motion: `Draft a motion in limine to exclude ${vendorName} body-worn / in-car footage on authentication grounds under FRE 901.
+${base}
+Requirements:
+1. Caption block with full case details
+2. Introduction stating relief sought (exclude body-worn footage lacking Challenge-grade integrity)
+3. Factual background: device/vendor, docking/cloud path, how prosecution will use the video
+4. FRE 901(a) and 901(b)(9) standard — process/system reliability
+5. Argue absence of: (a) cryptographic hash before leave-device, (b) tamper-evident activation/mute/dock logs, (c) Merkle or equivalent audit chain, (d) external immutable anchor independent of the evidence cloud
+6. Explain why Evidence.com-class portals as sole oracle are vendor assertion; reference commercial undetectable-alteration risk (Toka / Haaretz 2022) and demand clawql-surveillance-class controls
+7. Ten discovery requests on body-worn integrity (hash, mute/dock, export, re-encode)
+8. Prayer: exclusion or evidentiary hearing with live independent verification
+9. Signature placeholder
+Write the complete motion. Number paragraphs.`,
+      accuracy: `Draft a FRE 702 / Daubert motion challenging reliability of ${vendorName} body-worn footage and any AI assist output (transcript/redaction/search).
+${base}
+Requirements:
+1. Caption 2. Intro independent of authentication motion
+3. FRE 702 / Daubert gatekeeping for completeness and AI-derived descriptions
+4. Completeness problem: non-activation, mute gaps, buffer limits, dock/cloud re-encode, partial multi-officer sets
+5. Proposed minimum: hash-before-leave-device + tamper-evident activation/mute logs + complete officer set
+6. Argue AI assist misdescription risk
+7. Ten discovery requests on completeness testing and AI tools
+8. Prayer for exclusion or hearing
+9. Signature placeholder
+Write the complete motion.`,
+      access: `Draft a motion to suppress / compel complete ${vendorName} body-worn evidence on Fourth Amendment and Brady grounds.
+${base}
+Additional facts: ${ctx.searchFacts || "not specified — include discovery to establish activation, mute, exports, multi-officer angles"}
+Requirements:
+1. Caption 2. Intro 3. Legal standard (exclusionary rule + Brady completeness)
+4. Vault access/export/retention failures; failure-to-activate as constitutional issue in force cases
+5. Ten discovery requests on vault logs, retention, redactions vs masters, personal-phone sidecars
+6. Prayer for suppression or complete production with integrity proofs
+7. Signature placeholder
+Write the complete motion.`,
+    };
   }
-
-  const base = `
-Vendor: ${vendorName}
-Camera / footage type: ${ctx.cameraType || "surveillance camera footage"}
-Case: ${ctx.caseNumber} | ${ctx.defendant} | ${ctx.court} | ${ctx.jurisdiction}
-${enriched}`;
-
-  const [motion, accuracy, access, civil] = await Promise.all([
-    // Vector 1: Authentication / FRE 901
-    gwChat(
-      env,
-      system,
-      `Draft a motion in limine to exclude ${vendorName} surveillance footage on authentication grounds under FRE 901.
+  if (cat === "cellphone") {
+    return {
+      motion: `Draft a motion in limine to exclude cell phone video for lack of authentication under FRE 901, emphasizing AI-alteration and provenance risk.
+${base}
+Requirements:
+1. Caption 2. Intro — exclude unverified phone video
+3. Facts: device, how obtained, export path (Messages/WhatsApp/cloud)
+4. FRE 901(a)/(b)(9) — process reliability
+5. Argue no capture-time hash/content credential/Challenge-grade package; re-encode destroys provenance; EXIF is spoofable
+6. Generative AI alteration is widely available; "just watch the video" is insufficient
+7. Ten discovery requests for original camera-roll file, hashes at each hop, AI/edit apps, cloud logs
+8. Prayer: exclusion or hearing requiring cryptographic proof it was not AI-altered
+9. Signature placeholder
+Write the complete motion.`,
+      accuracy: `Draft a FRE 702 / Daubert motion to exclude unverified / AI-risk cell phone video.
+${base}
+Requirements:
+1. Caption 2. Intro 3. FRE 702 standard for technical video evidence
+4. Deepfake/edit risk, selective clipping, juror over-trust of video (FRE 403 prejudice)
+5. Proposed minimum: capture-time cryptographic proof or exclusion/limiting instruction
+6. Note Challenge-grade civilian capture as the floor accusatory phone video should meet
+7. Ten discovery requests on editing apps, splice analysis, neighbor files
+8. Prayer 9. Signature
+Write the complete motion.`,
+      access: `Draft a motion to suppress cell phone video / limit extraction under Riley and selective-production/Brady principles.
+${base}
+Additional facts: ${ctx.searchFacts || "not specified — discovery for warrant theory, extraction scope, withheld clips"}
+Requirements:
+1. Caption 2. Intro 3. Riley v. California standard; overbroad extraction
+4. Selective production of one clip when related media existed
+5. Officer personal-phone recording outside BWC policy if applicable
+6. Ten discovery requests (warrant, extraction scope, cloud warrants, hash chain of custody)
+7. Prayer 8. Signature
+Write the complete motion.`,
+    };
+  }
+  return {
+    motion: `Draft a motion in limine to exclude ${vendorName} surveillance footage on authentication grounds under FRE 901.
 ${base}
 Requirements:
 1. Caption block with full case details
@@ -656,48 +782,57 @@ Requirements:
 7. Ten specific discovery requests targeting ${vendorName}'s integrity controls
 8. Prayer for relief: exclusion, or in the alternative a Daubert-style hearing requiring ${vendorName} to demonstrate cryptographic integrity controls through live independent verification
 9. Signature block placeholder
-Write the complete motion. Number all argument paragraphs.`
-    ),
-
-    // Vector 2: Accuracy / FRE 702 / Daubert
-    gwChat(
-      env,
-      system,
-      `Draft a motion challenging the reliability of ${vendorName} AI surveillance technology under FRE 702 and Daubert v. Merrell Dow Pharmaceuticals.
+Write the complete motion. Number all argument paragraphs.`,
+    accuracy: `Draft a motion challenging the reliability of ${vendorName} AI surveillance technology under FRE 702 and Daubert v. Merrell Dow Pharmaceuticals.
 ${base}
 Requirements:
 1. Caption block with full case details
 2. Introduction: this motion challenges admissibility of AI-generated surveillance evidence on reliability grounds independent of the authentication challenge
 3. Legal standard: FRE 702 requires that testimony or evidence based on scientific, technical, or other specialized knowledge meet reliability standards; Daubert requires the court to act as gatekeeper; this applies to AI-generated evidence and to the systems that produce identification matches
 4. The error rate problem: document the approximately 10% plate misread rate (2019 estimate, DHS 2025 market survey acknowledgment), at least 27 documented wrongful stops and detentions from ALPR errors since 2018 (Institute for Justice), and the Oak Park oversight board's 2025 finding that Flock cameras played no meaningful role in any crime investigation during three years of deployment
-5. The proposed standard: evidence used to initiate stops, detentions, or criminal prosecutions should meet a minimum reliability threshold of no worse than 1 error per 1,000 reads (0.1%) — two orders of magnitude better than current documented industry performance — independently verified by a neutral third party
-6. Argument that ${vendorName} cannot demonstrate its system meets this standard through independent testing, and that no court has established what the acceptable error rate is for AI-generated surveillance evidence used in criminal prosecution
-7. Specific examples from the documented record of wrongful stops and detentions arising from character confusion errors (zero/O, one/I, H/M, 2/7, etc.)
-8. Ten specific discovery requests targeting accuracy testing, error rate data, independent validation studies, and internal quality metrics for ${vendorName}'s system
-9. Prayer for relief: exclusion, or in the alternative an evidentiary hearing requiring ${vendorName} to produce independent accuracy testing data
+5. The proposed minimum reliability threshold of no worse than 1 error per 1,000 reads (0.1%), independently verified
+6. Argument that ${vendorName} cannot demonstrate its system meets this standard through independent testing
+7. Character confusion errors (zero/O, one/I, etc.)
+8. Ten specific discovery requests targeting accuracy testing
+9. Prayer for relief: exclusion or evidentiary hearing
 10. Signature block placeholder
-Write the complete motion. Number all argument paragraphs.`
-    ),
-
-    // Vector 3: Access abuse / suppression
-    gwChat(
-      env,
-      system,
-      `Draft a motion to suppress evidence obtained through ${vendorName} surveillance on Fourth Amendment grounds, focusing on unauthorized access and lack of documented law enforcement purpose.
+Write the complete motion. Number all argument paragraphs.`,
+    access: `Draft a motion to suppress evidence obtained through ${vendorName} surveillance on Fourth Amendment grounds, focusing on unauthorized access and lack of documented law enforcement purpose.
 ${base}
 Additional facts about this specific search (if provided by user): ${ctx.searchFacts || "not specified — draft to address the general pattern and include discovery requests to establish the specific facts"}
 Requirements:
 1. Caption block with full case details
 2. Introduction: evidence obtained through an unconstitutional search must be suppressed under the exclusionary rule
-3. Legal standard: Fourth Amendment protection against unreasonable searches; ALPR queries constitute a search when used to initiate stops or investigations; warrantless use requires a legitimate law enforcement purpose; evidence from unconstitutional searches is suppressible under Mapp v. Ohio and progeny
-4. The access abuse pattern: at least 28 documented cases of officers using ALPR systems to conduct searches for personal rather than law enforcement purposes (Institute for Justice, 2024–2026); specific documented cases by name, jurisdiction, and conduct; the finding that 84% of searches in FOIA-derived Flock audit logs carry no case number making unauthorized personal use structurally undetectable
-5. Argument that without a documented case number, stated law enforcement purpose, and verifiable chain of authorization, the search that produced the evidence against this defendant cannot be distinguished from the documented pattern of unauthorized personal use
-6. Argument that the systemic failure of access controls — evidenced by the documented abuse pattern and the absence of cryptographic audit trails — taints the reliability of access logs offered to justify the search
-7. Ten specific discovery requests: the searching officer's complete query history for the 90 days surrounding the search; all queries the officer ran without a case number; any prior complaints or investigations into the officer's ALPR use; department policy on documentation requirements; audit logs for this specific query with full metadata
-8. Prayer for relief: suppression of all evidence obtained through or derived from the ${vendorName} search
+3. Legal standard: Fourth Amendment; ALPR queries as searches when used to initiate stops; Mapp v. Ohio
+4. Access abuse pattern: 28+ documented personal-use cases; 84% of FOIA-derived Flock searches without case numbers
+5. Argument that without case number / purpose / authorization the search cannot be distinguished from abuse
+6. Cryptographic audit-trail failures taint vendor logs
+7. Ten discovery requests on officer query history and department policy
+8. Prayer for suppression
 9. Signature block placeholder
-Write the complete motion. Number all argument paragraphs.`
-    ),
+Write the complete motion. Number all argument paragraphs.`,
+  };
+}
+
+async function generateAllDocs(env, system, ctx, enriched, vendorName, profile) {
+  if (wantsOfflineGeneration(env)) {
+    return buildOfflineDocs({ vendorName, profile, ctx, enriched });
+  }
+
+  const mode = getFootageCategory(ctx.footageCategory);
+  const base = `
+Footage category: ${mode.label}
+Source / vendor: ${vendorName}
+Camera / footage type: ${ctx.cameraType || mode.label}
+Case: ${ctx.caseNumber} | ${ctx.defendant} | ${ctx.court} | ${ctx.jurisdiction}
+${enriched}`;
+
+  const prompts = gatewayPrompts(vendorName, ctx, base);
+
+  const [motion, accuracy, access, civil] = await Promise.all([
+    gwChat(env, system, prompts.motion),
+    gwChat(env, system, prompts.accuracy),
+    gwChat(env, system, prompts.access),
 
     // Vector 4: Civil damages / Section 1983
     gwChat(
@@ -816,25 +951,39 @@ async function handleGenerate(request, env) {
   }
   if (!form.tosAccepted) return json({ error: "tos_required" }, 400);
 
-  const profile = VENDORS[form.vendor] || null;
-  const vendorName = profile?.name || form.customVendorName || "the surveillance vendor";
-  const system = buildSystemPrompt(form.vendor, {
-    name: form.customVendorName,
-    additionalVendorFacts: form.additionalVendorFacts,
-  });
+  const footageCategory = FOOTAGE_CATEGORY_IDS.includes(form.footageCategory)
+    ? form.footageCategory
+    : "fixed_surveillance";
+  const resolved = resolveFootageProfile(
+    footageCategory,
+    form.vendor,
+    VENDORS[form.vendor] || null,
+    form.customVendorName
+  );
+  const profile = resolved.profile;
+  const vendorName = resolved.vendorName;
+  const system = buildSystemPrompt(
+    form.vendor,
+    {
+      name: form.customVendorName,
+      additionalVendorFacts: form.additionalVendorFacts,
+    },
+    footageCategory
+  );
 
   const offline = wantsOfflineGeneration(env);
+  const modeLabel = resolved.mode.label;
   const [memoryContext, onyxContext] = offline
     ? [null, null]
     : await Promise.all([
         recallMemory(
           env,
           user.userId,
-          `surveillance evidence challenge ${vendorName} ${form.jurisdiction || ""} ${form.court || ""}`
+          `evidence challenge ${modeLabel} ${vendorName} ${form.jurisdiction || ""} ${form.court || ""}`
         ),
         searchOnyx(
           env,
-          `FRE 901 702 Daubert surveillance ALPR wrongful arrest civil rights ${vendorName} ${form.jurisdiction || ""}`
+          `FRE 901 702 Daubert ${modeLabel} body camera cellphone deepfake ALPR wrongful arrest civil rights ${vendorName} ${form.jurisdiction || ""}`
         ),
       ]);
 
@@ -857,6 +1006,7 @@ async function handleGenerate(request, env) {
     cameraType: form.cameraType || "",
     searchFacts: form.searchFacts || "",
     civilHarm: form.civilHarm || "",
+    footageCategory,
   };
 
   let docs;

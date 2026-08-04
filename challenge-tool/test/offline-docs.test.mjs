@@ -4,6 +4,7 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { buildOfflineDocs } from "../offline-docs.js";
+import { CELLPHONE_PROFILE, resolveFootageProfile } from "../footage-modes.js";
 
 describe("offline document templates", () => {
   const ctx = {
@@ -13,6 +14,7 @@ describe("offline document templates", () => {
     jurisdiction: "State of California",
     city: "Oakland",
     cameraType: "Flock Safety ALPR fixed camera",
+    footageCategory: "fixed_surveillance",
     searchFacts:
       "Officer queried plate 7XKR492 on 2024-11-03 without a case number in the audit log export.",
     civilHarm:
@@ -61,5 +63,55 @@ describe("offline document templates", () => {
     for (const key of ["motion", "accuracy", "access"]) {
       assert.match(docs[key], /10\. /);
     }
+  });
+
+  it("body-worn mode pressures mute/dock hash and clawql-surveillance-class controls", () => {
+    const axon = {
+      name: "Axon (formerly TASER)",
+      authFacts: ["No public hardware hash before dock."],
+      errorRateFacts: ["Completeness failures on activation."],
+      accessAbuseFacts: ["Vault logs are vendor-controlled."],
+      civilFacts: ["§ 1983 for incomplete force video."],
+      sources: ["Axon docs"],
+    };
+    const resolved = resolveFootageProfile("body_worn", "axon", axon, null);
+    const docs = buildOfflineDocs({
+      vendorName: resolved.vendorName,
+      profile: resolved.profile,
+      ctx: {
+        ...ctx,
+        footageCategory: "body_worn",
+        cameraType: "Axon Body 3",
+        searchFacts: "Officer muted for 45 seconds during takedown.",
+      },
+      enriched: "",
+    });
+    assert.match(docs.motion, /BODY-WORN|body-worn/i);
+    assert.match(docs.motion, /leave-device|dock|mute/i);
+    assert.match(docs.motion, /clawql-surveillance/i);
+    assert.match(docs.accuracy, /completeness|mute|activation/i);
+    assert.match(docs.access, /Evidence-vault|vault|Brady/i);
+    assert.match(docs.motion, /10\. /);
+  });
+
+  it("cellphone mode demands cryptographic proof against AI alteration", () => {
+    const docs = buildOfflineDocs({
+      vendorName: CELLPHONE_PROFILE.name,
+      profile: CELLPHONE_PROFILE,
+      ctx: {
+        ...ctx,
+        footageCategory: "cellphone",
+        cameraType: "iPhone 15 via WhatsApp export",
+        searchFacts: "Phone seized; only a compressed chat export produced.",
+        civilHarm: "Charged based on a clip that may be AI-edited.",
+      },
+      enriched: "",
+    });
+    assert.match(docs.motion, /CELL PHONE|AI-ALTERATION/i);
+    assert.match(docs.motion, /cryptographic|Challenge-grade|content credential/i);
+    assert.match(docs.accuracy, /deepfake|AI|over-trust/i);
+    assert.match(docs.access, /Riley/);
+    assert.match(docs.civil, /unverified|altered/i);
+    assert.match(docs.motion, /10\. /);
   });
 });
