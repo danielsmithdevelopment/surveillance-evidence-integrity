@@ -8,10 +8,10 @@
 2. **Secure** that evidence (on-device first; works on weak / 2G links)
 3. **Alert** trusted contacts if a check-in is missed or recording ends unexpectedly
 4. **Multi-device incident** capture — multi-angle / multi-mic like multiple body cams (independent packages, shared `incidentId`)
-5. **Challenge** camera evidence in court-ready templates — same four vectors for **fixed/ALPR**, **body-worn**, and **cell phone** footage (see [FOOTAGE-CHALLENGE.md](./FOOTAGE-CHALLENGE.md))
+5. **Challenge** camera evidence in court-ready templates — same four vectors for **fixed/ALPR**, **body-worn** (including **failure-to-record**), and **cell phone** footage (see [FOOTAGE-CHALLENGE.md](./FOOTAGE-CHALLENGE.md))
 6. **Pay** with a normal credit card when they need more generations
 
-**Challenge-grade capture** (phones → body cams → ALPR/fixed cams): see [CHALLENGE-GRADE.md](./CHALLENGE-GRADE.md). Document generation applies matching legal pressure to all three.
+**Challenge-grade capture** (phones → body cams → ALPR/fixed cams): see [CHALLENGE-GRADE.md](./CHALLENGE-GRADE.md). Document generation applies matching legal pressure to all three — BWC path ratchets Stage 1 (no recording) → Stage 2 (authenticity).
 
 ## What the user sees
 
@@ -21,7 +21,7 @@
 | Record on `/evidence.html` (or native Evidence app) | Camera/mic capture → hashes → upload |
 | Situation presets + emergency contacts | Dead-man check-in + interrupt SMS drafts + safety-ping API |
 | “Evidence secured” / interrupted recovery | ClawQL anchors a Merkle root when online. User never sees a chain, wallet, or gas fee |
-| Generate documents (pick footage category) | Mode-aware FRE 901 / 702 / 4th Am / §1983 templates; Stripe for $9 packs |
+| Generate documents (footage category + BWC recording status) | Mode-aware FRE 901 / 702 / 4th Am / §1983 templates; Stripe for $9 packs |
 | Public defender access | Email whitelist; unlimited generations |
 
 Users are **not** expected to understand ClawQL, Arweave, Merkle trees, or R2. Those are implementation details.

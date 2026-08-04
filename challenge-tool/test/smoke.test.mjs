@@ -98,6 +98,10 @@ describe("challenge-tool artifacts", () => {
     readFileSync(join(root, "incident.js"));
     readFileSync(join(root, "footage-modes.js"));
     readFileSync(join(root, "FOOTAGE-CHALLENGE.md"));
+    assert.match(
+      readFileSync(join(root, "FOOTAGE-CHALLENGE.md"), "utf8"),
+      /bodyCamRecordingStatus/
+    );
     readFileSync(join(root, "CHALLENGE-GRADE.md"));
     assert.match(workerSrc, /footageCategory/);
     assert.match(workerSrc, /resolveFootageProfile/);
