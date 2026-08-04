@@ -27,13 +27,13 @@ import { evidenceMerkleRoot, randomClaimCode, sha256Hex } from "./evidence-crypt
 import { gunzipBase64ToText } from "./evidence-gzip.js";
 import { r2Configured, r2PutObject } from "./r2.js";
 import {
-  SWARM_TTL,
+  INCIDENT_TTL,
   applyPeerTimeouts,
-  emptySwarm,
-  publicSwarmView,
-  randomSwarmCode,
-  swarmKvKey,
-} from "./swarm.js";
+  emptyIncident,
+  publicIncidentView,
+  randomIncidentCode,
+  incidentKvKey,
+} from "./incident.js";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
@@ -412,22 +412,22 @@ export default {
       if (url.pathname === "/api/evidence/safety-ping" && request.method === "POST") {
         return handleEvidenceSafetyPing(request, env);
       }
-      if (url.pathname === "/api/evidence/swarm/create" && request.method === "POST") {
-        return handleSwarmCreate(request, env);
+      if (url.pathname === "/api/evidence/incident/create" && request.method === "POST") {
+        return handleIncidentCreate(request, env);
       }
-      if (url.pathname === "/api/evidence/swarm/join" && request.method === "POST") {
-        return handleSwarmJoin(request, env);
+      if (url.pathname === "/api/evidence/incident/join" && request.method === "POST") {
+        return handleIncidentJoin(request, env);
       }
-      if (url.pathname === "/api/evidence/swarm/heartbeat" && request.method === "POST") {
-        return handleSwarmHeartbeat(request, env);
+      if (url.pathname === "/api/evidence/incident/heartbeat" && request.method === "POST") {
+        return handleIncidentHeartbeat(request, env);
       }
-      if (url.pathname === "/api/evidence/swarm/signal" && request.method === "POST") {
-        return handleSwarmSignal(request, env);
+      if (url.pathname === "/api/evidence/incident/signal" && request.method === "POST") {
+        return handleIncidentSignal(request, env);
       }
-      if (url.pathname.startsWith("/api/evidence/swarm/") && request.method === "GET") {
-        const id = url.pathname.split("/api/evidence/swarm/")[1];
+      if (url.pathname.startsWith("/api/evidence/incident/") && request.method === "GET") {
+        const id = url.pathname.split("/api/evidence/incident/")[1];
         if (id && !["create", "join", "heartbeat", "signal"].includes(id)) {
-          return handleSwarmGet(request, env, id);
+          return handleIncidentGet(request, env, id);
         }
       }
       if (url.pathname === "/api/evidence/claim" && request.method === "POST") {
@@ -1098,7 +1098,7 @@ async function handleEvidenceSyncLite(request, env) {
     claimable: true,
     claimCodeHash,
     location: body.location || null,
-    swarmId: body.swarmId || null,
+    incidentId: body.incidentId || null,
   });
 
   // Inline store transcript so a second PUT is not required on 2G.
@@ -1117,7 +1117,7 @@ async function handleEvidenceSyncLite(request, env) {
   record.interrupted = !!body.interrupted;
   record.interruptReason = body.interruptReason || null;
   record.scenario = body.scenario || null;
-  record.swarmId = body.swarmId || null;
+  record.incidentId = body.incidentId || null;
 
   try {
     await env.RATE_LIMIT_KV.put(`evidence:${sessionId}`, JSON.stringify(record), {
@@ -1128,8 +1128,8 @@ async function handleEvidenceSyncLite(request, env) {
       JSON.stringify({ deviceId, lastSessionId: sessionId, seenAt: new Date().toISOString() }),
       { expirationTtl: 60 * 60 * 24 * 365 * 5 }
     );
-    if (body.swarmId) {
-      await linkSessionToSwarm(env, body.swarmId, deviceId, sessionId);
+    if (body.incidentId) {
+      await linkSessionToIncident(env, body.incidentId, deviceId, sessionId);
     }
   } catch (e) {
     console.warn("sync-lite KV:", e.message);
@@ -1146,7 +1146,7 @@ async function handleEvidenceSyncLite(request, env) {
     transcriptStored: true,
     mediaPending: true,
     interrupted: !!record.interrupted,
-    swarmId: record.swarmId || null,
+    incidentId: record.incidentId || null,
     sync: "lite",
   });
 }
@@ -1208,19 +1208,19 @@ async function handleEvidenceSafetyPing(request, env) {
   return json({ ok: true, pingId, stored: true });
 }
 
-async function loadSwarm(env, swarmId) {
-  const raw = await env.RATE_LIMIT_KV.get(swarmKvKey(swarmId));
+async function loadIncident(env, incidentId) {
+  const raw = await env.RATE_LIMIT_KV.get(incidentKvKey(incidentId));
   if (!raw) return null;
   return typeof raw === "string" ? JSON.parse(raw) : raw;
 }
 
-async function saveSwarm(env, swarm) {
-  await env.RATE_LIMIT_KV.put(swarmKvKey(swarm.swarmId), JSON.stringify(swarm), {
-    expirationTtl: SWARM_TTL,
+async function saveIncident(env, incident) {
+  await env.RATE_LIMIT_KV.put(incidentKvKey(incident.incidentId), JSON.stringify(incident), {
+    expirationTtl: INCIDENT_TTL,
   });
 }
 
-async function handleSwarmCreate(request, env) {
+async function handleIncidentCreate(request, env) {
   let body;
   try {
     body = await request.json();
@@ -1230,24 +1230,24 @@ async function handleSwarmCreate(request, env) {
   const deviceId = body.deviceId ? String(body.deviceId) : "";
   if (!deviceId) return json({ error: "deviceId is required" }, 400);
 
-  const swarmId = randomSwarmCode();
-  const swarm = emptySwarm({
-    swarmId,
+  const incidentId = randomIncidentCode();
+  const incident = emptyIncident({
+    incidentId,
     hostDeviceId: deviceId,
     label: body.label || "Host",
   });
   try {
-    await saveSwarm(env, swarm);
+    await saveIncident(env, incident);
   } catch (e) {
     return json({ error: e.message }, 500);
   }
   return json({
-    ...publicSwarmView(swarm),
-    joinUrl: `https://challengethefootage.com/evidence.html?swarm=${encodeURIComponent(swarmId)}`,
+    ...publicIncidentView(incident),
+    joinUrl: `https://challengethefootage.com/evidence.html?incident=${encodeURIComponent(incidentId)}`,
   });
 }
 
-async function handleSwarmJoin(request, env) {
+async function handleIncidentJoin(request, env) {
   let body;
   try {
     body = await request.json();
@@ -1255,49 +1255,49 @@ async function handleSwarmJoin(request, env) {
     return json({ error: "Invalid request body" }, 400);
   }
   const deviceId = body.deviceId ? String(body.deviceId) : "";
-  const swarmId = body.swarmId ? String(body.swarmId).toUpperCase() : "";
-  if (!deviceId || !swarmId) return json({ error: "deviceId and swarmId are required" }, 400);
+  const incidentId = body.incidentId ? String(body.incidentId).toUpperCase() : "";
+  if (!deviceId || !incidentId) return json({ error: "deviceId and incidentId are required" }, 400);
 
-  let swarm;
+  let incident;
   try {
-    swarm = await loadSwarm(env, swarmId);
+    incident = await loadIncident(env, incidentId);
   } catch (e) {
     return json({ error: e.message }, 500);
   }
-  if (!swarm) return json({ error: "Swarm not found" }, 404);
-  if (swarm.status === "closed") return json({ error: "Swarm is closed" }, 409);
+  if (!incident) return json({ error: "Incident not found" }, 404);
+  if (incident.status === "closed") return json({ error: "Incident is closed" }, 409);
 
   const now = new Date().toISOString();
-  if (!swarm.members[deviceId]) {
-    swarm.members[deviceId] = {
+  if (!incident.members[deviceId]) {
+    incident.members[deviceId] = {
       deviceId,
-      label: body.label || `Device ${Object.keys(swarm.members).length + 1}`,
+      label: body.label || `Device ${Object.keys(incident.members).length + 1}`,
       joinedAt: now,
       lastBeatAt: now,
       recording: false,
       sessionId: null,
       peerLostAnnounced: false,
     };
-    swarm.peerEvents = [
-      ...(swarm.peerEvents || []),
-      { at: now, type: "PEER_JOIN", deviceId, detail: "Joined swarm" },
+    incident.peerEvents = [
+      ...(incident.peerEvents || []),
+      { at: now, type: "PEER_JOIN", deviceId, detail: "Joined incident" },
     ].slice(-100);
   } else {
-    swarm.members[deviceId].lastBeatAt = now;
-    swarm.members[deviceId].peerLostAnnounced = false;
-    if (body.label) swarm.members[deviceId].label = body.label;
+    incident.members[deviceId].lastBeatAt = now;
+    incident.members[deviceId].peerLostAnnounced = false;
+    if (body.label) incident.members[deviceId].label = body.label;
   }
 
-  const newLost = applyPeerTimeouts(swarm);
+  const newLost = applyPeerTimeouts(incident);
   try {
-    await saveSwarm(env, swarm);
+    await saveIncident(env, incident);
   } catch (e) {
     return json({ error: e.message }, 500);
   }
-  return json({ ...publicSwarmView(swarm), newPeerLost: newLost });
+  return json({ ...publicIncidentView(incident), newPeerLost: newLost });
 }
 
-async function handleSwarmHeartbeat(request, env) {
+async function handleIncidentHeartbeat(request, env) {
   let body;
   try {
     body = await request.json();
@@ -1305,43 +1305,43 @@ async function handleSwarmHeartbeat(request, env) {
     return json({ error: "Invalid request body" }, 400);
   }
   const deviceId = body.deviceId ? String(body.deviceId) : "";
-  const swarmId = body.swarmId ? String(body.swarmId).toUpperCase() : "";
-  if (!deviceId || !swarmId) return json({ error: "deviceId and swarmId are required" }, 400);
+  const incidentId = body.incidentId ? String(body.incidentId).toUpperCase() : "";
+  if (!deviceId || !incidentId) return json({ error: "deviceId and incidentId are required" }, 400);
 
-  let swarm;
+  let incident;
   try {
-    swarm = await loadSwarm(env, swarmId);
+    incident = await loadIncident(env, incidentId);
   } catch (e) {
     return json({ error: e.message }, 500);
   }
-  if (!swarm) return json({ error: "Swarm not found" }, 404);
-  if (!swarm.members[deviceId]) {
+  if (!incident) return json({ error: "Incident not found" }, 404);
+  if (!incident.members[deviceId]) {
     return json({ error: "Not a member — join first" }, 403);
   }
 
   const now = new Date().toISOString();
-  swarm.members[deviceId].lastBeatAt = now;
-  swarm.members[deviceId].peerLostAnnounced = false;
+  incident.members[deviceId].lastBeatAt = now;
+  incident.members[deviceId].peerLostAnnounced = false;
   if (typeof body.recording === "boolean") {
-    swarm.members[deviceId].recording = body.recording;
+    incident.members[deviceId].recording = body.recording;
   }
-  if (body.sessionId) swarm.members[deviceId].sessionId = body.sessionId;
-  if (body.label) swarm.members[deviceId].label = body.label;
+  if (body.sessionId) incident.members[deviceId].sessionId = body.sessionId;
+  if (body.label) incident.members[deviceId].label = body.label;
 
-  const newLost = applyPeerTimeouts(swarm);
+  const newLost = applyPeerTimeouts(incident);
   try {
-    await saveSwarm(env, swarm);
+    await saveIncident(env, incident);
   } catch (e) {
     return json({ error: e.message }, 500);
   }
   return json({
-    ...publicSwarmView(swarm),
+    ...publicIncidentView(incident),
     newPeerLost: newLost,
     ackAt: now,
   });
 }
 
-async function handleSwarmSignal(request, env) {
+async function handleIncidentSignal(request, env) {
   let body;
   try {
     body = await request.json();
@@ -1349,43 +1349,43 @@ async function handleSwarmSignal(request, env) {
     return json({ error: "Invalid request body" }, 400);
   }
   const deviceId = body.deviceId ? String(body.deviceId) : "";
-  const swarmId = body.swarmId ? String(body.swarmId).toUpperCase() : "";
+  const incidentId = body.incidentId ? String(body.incidentId).toUpperCase() : "";
   const type = body.type ? String(body.type) : "";
-  if (!deviceId || !swarmId || !type) {
-    return json({ error: "deviceId, swarmId, and type are required" }, 400);
+  if (!deviceId || !incidentId || !type) {
+    return json({ error: "deviceId, incidentId, and type are required" }, 400);
   }
   if (!["start", "stop", "idle"].includes(type)) {
     return json({ error: "type must be start|stop|idle" }, 400);
   }
 
-  let swarm;
+  let incident;
   try {
-    swarm = await loadSwarm(env, swarmId);
+    incident = await loadIncident(env, incidentId);
   } catch (e) {
     return json({ error: e.message }, 500);
   }
-  if (!swarm) return json({ error: "Swarm not found" }, 404);
-  if (!swarm.members[deviceId]) {
+  if (!incident) return json({ error: "Incident not found" }, 404);
+  if (!incident.members[deviceId]) {
     return json({ error: "Not a member" }, 403);
   }
 
   const now = new Date().toISOString();
-  swarm.signal = { type, at: now, byDeviceId: deviceId };
+  incident.signal = { type, at: now, byDeviceId: deviceId };
   if (type === "start") {
-    swarm.status = "recording";
-    for (const m of Object.values(swarm.members)) {
+    incident.status = "recording";
+    for (const m of Object.values(incident.members)) {
       m.peerLostAnnounced = false;
     }
   } else if (type === "stop") {
-    swarm.status = "closed";
-    for (const m of Object.values(swarm.members)) {
+    incident.status = "closed";
+    for (const m of Object.values(incident.members)) {
       m.recording = false;
     }
   } else {
-    swarm.status = "open";
+    incident.status = "open";
   }
-  swarm.peerEvents = [
-    ...(swarm.peerEvents || []),
+  incident.peerEvents = [
+    ...(incident.peerEvents || []),
     {
       at: now,
       type: type === "start" ? "START" : type === "stop" ? "STOP" : "IDLE",
@@ -1395,42 +1395,42 @@ async function handleSwarmSignal(request, env) {
   ].slice(-100);
 
   try {
-    await saveSwarm(env, swarm);
+    await saveIncident(env, incident);
   } catch (e) {
     return json({ error: e.message }, 500);
   }
-  return json(publicSwarmView(swarm));
+  return json(publicIncidentView(incident));
 }
 
-async function handleSwarmGet(_request, env, swarmId) {
-  const id = String(swarmId || "").toUpperCase();
-  if (!id) return json({ error: "Missing swarm id" }, 400);
-  let swarm;
+async function handleIncidentGet(_request, env, incidentId) {
+  const id = String(incidentId || "").toUpperCase();
+  if (!id) return json({ error: "Missing incident id" }, 400);
+  let incident;
   try {
-    swarm = await loadSwarm(env, id);
+    incident = await loadIncident(env, id);
   } catch (e) {
     return json({ error: e.message }, 500);
   }
-  if (!swarm) return json({ error: "Not found" }, 404);
-  applyPeerTimeouts(swarm);
+  if (!incident) return json({ error: "Not found" }, 404);
+  applyPeerTimeouts(incident);
   try {
-    await saveSwarm(env, swarm);
+    await saveIncident(env, incident);
   } catch {
     // still return view
   }
-  return json(publicSwarmView(swarm));
+  return json(publicIncidentView(incident));
 }
 
-async function linkSessionToSwarm(env, swarmId, deviceId, sessionId) {
-  if (!swarmId || !deviceId || !sessionId) return;
+async function linkSessionToIncident(env, incidentId, deviceId, sessionId) {
+  if (!incidentId || !deviceId || !sessionId) return;
   try {
-    const swarm = await loadSwarm(env, String(swarmId).toUpperCase());
-    if (!swarm || !swarm.members[deviceId]) return;
-    swarm.members[deviceId].sessionId = sessionId;
-    swarm.members[deviceId].lastBeatAt = new Date().toISOString();
-    await saveSwarm(env, swarm);
+    const incident = await loadIncident(env, String(incidentId).toUpperCase());
+    if (!incident || !incident.members[deviceId]) return;
+    incident.members[deviceId].sessionId = sessionId;
+    incident.members[deviceId].lastBeatAt = new Date().toISOString();
+    await saveIncident(env, incident);
   } catch (e) {
-    console.warn("linkSessionToSwarm:", e.message);
+    console.warn("linkSessionToIncident:", e.message);
   }
 }
 
@@ -1725,7 +1725,7 @@ async function persistEvidenceRecord(env, input) {
     location: input.location || null,
     claimable: !!input.claimable,
     claimCodeHash: input.claimCodeHash || null,
-    swarmId: input.swarmId || null,
+    incidentId: input.incidentId || null,
   };
 
   try {
@@ -1810,7 +1810,7 @@ async function handleEvidenceVerify(request, env, sessionId) {
       interrupted: !!record.interrupted,
       interruptReason: record.interruptReason || null,
       scenario: record.scenario || null,
-      swarmId: record.swarmId || null,
+      incidentId: record.incidentId || null,
       sync: record.sync || null,
       objects: record.objects
         ? Object.fromEntries(

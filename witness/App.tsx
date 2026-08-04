@@ -72,13 +72,13 @@ import {
   type SafetyScenario,
 } from "./src/safety";
 import {
-  createSwarm,
+  createIncident,
   formatPeerLostNotes,
-  joinSwarm,
-  swarmHeartbeat,
-  swarmSignal,
-  type SwarmView,
-} from "./src/swarm";
+  joinIncident,
+  incidentHeartbeat,
+  incidentSignal,
+  type IncidentView,
+} from "./src/incident";
 
 const CONSENT_KEY = "ctf_evidence_consent_v1";
 const DEVICE_KEY = "ctf_evidence_device_id";
@@ -117,7 +117,7 @@ interface SessionResult {
   interruptReason?: string | null;
   scenario?: SafetyScenario;
   safetyAlertSent?: boolean;
-  swarmId?: string | null;
+  incidentId?: string | null;
 }
 
 function randomId(prefix: string) {
@@ -157,10 +157,10 @@ export default function App() {
   const [contactName, setContactName] = useState("");
   const [contactPhone, setContactPhone] = useState("");
   const [checkInLeft, setCheckInLeft] = useState<number | null>(null);
-  const [swarmId, setSwarmId] = useState<string | null>(null);
-  const [swarmJoinCode, setSwarmJoinCode] = useState("");
-  const [swarmView, setSwarmView] = useState<SwarmView | null>(null);
-  const [swarmLabel, setSwarmLabel] = useState("Phone");
+  const [incidentId, setIncidentId] = useState<string | null>(null);
+  const [incidentJoinCode, setIncidentJoinCode] = useState("");
+  const [incidentView, setIncidentView] = useState<IncidentView | null>(null);
+  const [incidentLabel, setIncidentLabel] = useState("Phone");
   const startedAt = useRef<string | null>(null);
   const locationRef = useRef<{ latitude: number; longitude: number } | null>(
     null,
@@ -171,10 +171,10 @@ export default function App() {
   const checkInTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const checkInDeadlineRef = useRef<number | null>(null);
   const activeLocalIdRef = useRef<string | null>(null);
-  const swarmIdRef = useRef<string | null>(null);
+  const incidentIdRef = useRef<string | null>(null);
   const peerLostNotesRef = useRef("");
-  const swarmBeatTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const swarmAutoStartRef = useRef(false);
+  const incidentBeatTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const incidentAutoStartRef = useRef(false);
   const phaseRef = useRef<Phase>("consent");
   const stopAndProcessRef = useRef<
     | ((
@@ -190,8 +190,8 @@ export default function App() {
   }, [phase]);
 
   useEffect(() => {
-    swarmIdRef.current = swarmId;
-  }, [swarmId]);
+    incidentIdRef.current = incidentId;
+  }, [incidentId]);
 
   useEffect(() => {
     (async () => {
@@ -350,7 +350,7 @@ export default function App() {
     [clearCheckInTimer, scenario],
   );
 
-  const rememberPeerLost = useCallback((view: SwarmView) => {
+  const rememberPeerLost = useCallback((view: IncidentView) => {
     const notes = formatPeerLostNotes(view.newPeerLost || []);
     if (notes) {
       peerLostNotesRef.current = peerLostNotesRef.current
@@ -368,52 +368,52 @@ export default function App() {
     }
   }, []);
 
-  const tickSwarm = useCallback(async () => {
-    const id = swarmIdRef.current;
+  const tickIncident = useCallback(async () => {
+    const id = incidentIdRef.current;
     if (!id) return;
     try {
       const deviceId = await ensureDeviceId();
-      const view = await swarmHeartbeat({
-        swarmId: id,
+      const view = await incidentHeartbeat({
+        incidentId: id,
         deviceId,
         recording: phaseRef.current === "recording",
-        label: swarmLabel,
+        label: incidentLabel,
       });
-      setSwarmView(view);
+      setIncidentView(view);
       rememberPeerLost(view);
       if (
         view.signal?.type === "start" &&
         phaseRef.current === "idle" &&
-        !swarmAutoStartRef.current
+        !incidentAutoStartRef.current
       ) {
-        swarmAutoStartRef.current = true;
-        setStatus("Swarm start signal — beginning recording…");
+        incidentAutoStartRef.current = true;
+        setStatus("Incident start signal — beginning recording…");
         void startRecordingRef.current?.();
       }
     } catch (e) {
-      console.warn("Swarm heartbeat:", e);
+      console.warn("Incident heartbeat:", e);
     }
-  }, [rememberPeerLost, swarmLabel]);
+  }, [rememberPeerLost, incidentLabel]);
 
   useEffect(() => {
-    if (!swarmId) {
-      if (swarmBeatTimerRef.current) {
-        clearInterval(swarmBeatTimerRef.current);
-        swarmBeatTimerRef.current = null;
+    if (!incidentId) {
+      if (incidentBeatTimerRef.current) {
+        clearInterval(incidentBeatTimerRef.current);
+        incidentBeatTimerRef.current = null;
       }
       return;
     }
-    tickSwarm();
-    swarmBeatTimerRef.current = setInterval(() => {
-      tickSwarm();
+    tickIncident();
+    incidentBeatTimerRef.current = setInterval(() => {
+      tickIncident();
     }, 4000);
     return () => {
-      if (swarmBeatTimerRef.current) {
-        clearInterval(swarmBeatTimerRef.current);
-        swarmBeatTimerRef.current = null;
+      if (incidentBeatTimerRef.current) {
+        clearInterval(incidentBeatTimerRef.current);
+        incidentBeatTimerRef.current = null;
       }
     };
-  }, [swarmId, tickSwarm]);
+  }, [incidentId, tickIncident]);
 
   const acceptConsent = async () => {
     await SecureStore.setItemAsync(
@@ -468,16 +468,16 @@ export default function App() {
       setRecording(true);
       setStatus("Recording…");
 
-      if (swarmIdRef.current) {
+      if (incidentIdRef.current) {
         try {
-          const signaled = await swarmSignal(
-            swarmIdRef.current,
+          const signaled = await incidentSignal(
+            incidentIdRef.current,
             deviceId,
             "start",
           );
-          setSwarmView(signaled);
+          setIncidentView(signaled);
         } catch (e) {
-          console.warn("Swarm start signal:", e);
+          console.warn("Incident start signal:", e);
         }
       }
       const engine = await getWhisperEngine();
@@ -627,28 +627,28 @@ export default function App() {
         scenario,
         interrupted,
         interruptReason,
-        swarmId: swarmIdRef.current,
+        incidentId: incidentIdRef.current,
         peerLostNotes: peerLostNotesRef.current || undefined,
       });
       setTranscript(transcriptText);
       await saveQueueItem(queueItem);
 
-      if (swarmIdRef.current) {
+      if (incidentIdRef.current) {
         try {
-          await swarmHeartbeat({
-            swarmId: swarmIdRef.current,
+          await incidentHeartbeat({
+            incidentId: incidentIdRef.current,
             deviceId,
             recording: false,
             sessionId: queueItem.sessionId,
-            label: swarmLabel,
+            label: incidentLabel,
           });
           if (userStopRef.current) {
-            await swarmSignal(swarmIdRef.current, deviceId, "stop");
+            await incidentSignal(incidentIdRef.current, deviceId, "stop");
           }
         } catch (e) {
-          console.warn("Swarm end beat:", e);
+          console.warn("Incident end beat:", e);
         }
-        swarmAutoStartRef.current = false;
+        incidentAutoStartRef.current = false;
       }
 
       if (interrupted) {
@@ -688,7 +688,7 @@ export default function App() {
         interruptReason,
         scenario,
         safetyAlertSent: queueItem.safetyAlertSent,
-        swarmId: swarmIdRef.current,
+        incidentId: incidentIdRef.current,
       };
 
       if (plan.syncLite) {
@@ -733,7 +733,7 @@ export default function App() {
             interruptReason,
             scenario,
             safetyAlertSent: queueItem.safetyAlertSent,
-            swarmId: swarmIdRef.current,
+            incidentId: incidentIdRef.current,
           };
         } catch (syncErr: any) {
           console.warn("Sync failed — kept on device:", syncErr);
@@ -915,7 +915,7 @@ export default function App() {
             </Pressable>
           ))}
 
-          <Text style={styles.label}>Multi-device swarm (optional)</Text>
+          <Text style={styles.label}>Multi-device incident (optional)</Text>
           <Text style={styles.body}>
             Like multiple body cams: each phone records its own angle and mic.
             Share a code so everyone starts together; if a peer goes dark, others
@@ -924,34 +924,34 @@ export default function App() {
           <TextInput
             style={styles.input}
             placeholder="Label for this phone"
-            value={swarmLabel}
-            onChangeText={setSwarmLabel}
+            value={incidentLabel}
+            onChangeText={setIncidentLabel}
           />
-          {swarmId ? (
+          {incidentId ? (
             <View>
               <Text style={styles.body}>
-                Swarm {swarmId} · {swarmView?.members?.length || 1} device(s) ·{" "}
-                {swarmView?.status || "…"}
+                Incident {incidentId} · {incidentView?.members?.length || 1} device(s) ·{" "}
+                {incidentView?.status || "…"}
               </Text>
-              <Text style={styles.monoInline}>{swarmId}</Text>
+              <Text style={styles.monoInline}>{incidentId}</Text>
               <Pressable
                 style={styles.btnGhost}
                 onPress={async () => {
-                  await Clipboard.setStringAsync(swarmId);
-                  Alert.alert("Copied", "Swarm code copied");
+                  await Clipboard.setStringAsync(incidentId);
+                  Alert.alert("Copied", "Incident code copied");
                 }}
               >
-                <Text style={styles.link}>Copy swarm code</Text>
+                <Text style={styles.link}>Copy incident code</Text>
               </Pressable>
               <Pressable
                 style={styles.btnGhost}
                 onPress={() => {
-                  setSwarmId(null);
-                  setSwarmView(null);
-                  swarmAutoStartRef.current = false;
+                  setIncidentId(null);
+                  setIncidentView(null);
+                  incidentAutoStartRef.current = false;
                 }}
               >
-                <Text style={styles.link}>Leave swarm</Text>
+                <Text style={styles.link}>Leave incident</Text>
               </Pressable>
             </View>
           ) : (
@@ -961,47 +961,47 @@ export default function App() {
                 onPress={async () => {
                   try {
                     const deviceId = await ensureDeviceId();
-                    const view = await createSwarm(deviceId, swarmLabel);
-                    setSwarmId(view.swarmId);
-                    setSwarmView(view);
+                    const view = await createIncident(deviceId, incidentLabel);
+                    setIncidentId(view.incidentId);
+                    setIncidentView(view);
                     peerLostNotesRef.current = "";
                     Alert.alert(
-                      "Swarm created",
-                      `Code ${view.swarmId} — share with other phones, then Start recording on any device.`,
+                      "Incident created",
+                      `Code ${view.incidentId} — share with other phones, then Start recording on any device.`,
                     );
                   } catch (e: any) {
-                    Alert.alert("Swarm", e.message || String(e));
+                    Alert.alert("Incident", e.message || String(e));
                   }
                 }}
               >
-                <Text style={styles.link}>Create swarm</Text>
+                <Text style={styles.link}>Create incident</Text>
               </Pressable>
               <TextInput
                 style={styles.input}
                 autoCapitalize="characters"
                 placeholder="Join code"
-                value={swarmJoinCode}
-                onChangeText={setSwarmJoinCode}
+                value={incidentJoinCode}
+                onChangeText={setIncidentJoinCode}
               />
               <Pressable
                 style={styles.btnGhost}
                 onPress={async () => {
                   try {
                     const deviceId = await ensureDeviceId();
-                    const view = await joinSwarm(
-                      swarmJoinCode.trim(),
+                    const view = await joinIncident(
+                      incidentJoinCode.trim(),
                       deviceId,
-                      swarmLabel,
+                      incidentLabel,
                     );
-                    setSwarmId(view.swarmId);
-                    setSwarmView(view);
+                    setIncidentId(view.incidentId);
+                    setIncidentView(view);
                     peerLostNotesRef.current = "";
                   } catch (e: any) {
                     Alert.alert("Join failed", e.message || String(e));
                   }
                 }}
               >
-                <Text style={styles.link}>Join swarm</Text>
+                <Text style={styles.link}>Join incident</Text>
               </Pressable>
             </View>
           )}
@@ -1177,8 +1177,8 @@ export default function App() {
               Situation: {SCENARIO_LABELS[result.scenario] || result.scenario}
             </Text>
           ) : null}
-          {result.swarmId ? (
-            <Text style={styles.body}>Swarm / multi-angle id: {result.swarmId}</Text>
+          {result.incidentId ? (
+            <Text style={styles.body}>Incident / multi-angle id: {result.incidentId}</Text>
           ) : null}
           <Text style={styles.body}>
             Verification ID{"\n"}

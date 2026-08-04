@@ -1,5 +1,5 @@
 /**
- * Swarm client wiring contract (no network).
+ * Incident client wiring contract (no network).
  */
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
@@ -9,16 +9,16 @@ import { fileURLToPath } from "node:url";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 
-describe("swarm native wiring", () => {
-  it("App exposes create/join swarm and PEER_LOST packaging", () => {
+describe("incident native wiring", () => {
+  it("App exposes create/join incident and PEER_LOST packaging", () => {
     const app = readFileSync(join(root, "App.tsx"), "utf8");
-    assert.match(app, /createSwarm/);
-    assert.match(app, /joinSwarm/);
-    assert.match(app, /swarmSignal/);
-    assert.match(app, /Multi-device swarm/);
+    assert.match(app, /createIncident/);
+    assert.match(app, /joinIncident/);
+    assert.match(app, /incidentSignal/);
+    assert.match(app, /Multi-device incident/);
     assert.match(app, /peerLostNotes/);
     const pkg = readFileSync(join(root, "src/package-session.ts"), "utf8");
-    assert.match(pkg, /swarmId/);
+    assert.match(pkg, /incidentId/);
     assert.match(pkg, /peerLostNotes/);
   });
 });

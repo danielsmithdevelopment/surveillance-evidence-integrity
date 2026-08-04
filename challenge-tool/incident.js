@@ -1,24 +1,24 @@
 /**
- * Evidence swarm helpers (multi-device / multi-angle incident rooms).
+ * Multi-device incident helpers (multi-angle / multi-mic rooms).
  */
 
-const SWARM_TTL = 60 * 60 * 24 * 7; // 7 days
+const INCIDENT_TTL = 60 * 60 * 24 * 7; // 7 days
 const PEER_LOST_MS = 15_000;
 
-export function swarmKvKey(swarmId) {
-  return `swarm:${swarmId}`;
+export function incidentKvKey(incidentId) {
+  return `incident:${incidentId}`;
 }
 
-export function randomSwarmCode() {
+export function randomIncidentCode() {
   const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   const bytes = crypto.getRandomValues(new Uint8Array(6));
   return Array.from(bytes, (b) => alphabet[b % alphabet.length]).join("");
 }
 
-export function emptySwarm({ swarmId, hostDeviceId, label }) {
+export function emptyIncident({ incidentId, hostDeviceId, label }) {
   const now = new Date().toISOString();
   return {
-    swarmId,
+    incidentId,
     createdAt: now,
     hostDeviceId,
     status: "open", // open | recording | closed
@@ -39,17 +39,17 @@ export function emptySwarm({ swarmId, hostDeviceId, label }) {
         at: now,
         type: "CREATED",
         deviceId: hostDeviceId,
-        detail: "Swarm created",
+        detail: "Incident created",
       },
     ],
   };
 }
 
 /** Mark peers silent too long as lost; append PEER_LOST once per gap. */
-export function applyPeerTimeouts(swarm, nowMs = Date.now()) {
+export function applyPeerTimeouts(incident, nowMs = Date.now()) {
   const events = [];
-  for (const m of Object.values(swarm.members || {})) {
-    const last = Date.parse(m.lastBeatAt || m.joinedAt || swarm.createdAt);
+  for (const m of Object.values(incident.members || {})) {
+    const last = Date.parse(m.lastBeatAt || m.joinedAt || incident.createdAt);
     const silent = Number.isFinite(last) && nowMs - last > PEER_LOST_MS;
     if (silent && m.recording && !m.peerLostAnnounced) {
       m.peerLostAnnounced = true;
@@ -60,32 +60,32 @@ export function applyPeerTimeouts(swarm, nowMs = Date.now()) {
         deviceId: m.deviceId,
         detail: `No heartbeat for >${PEER_LOST_MS / 1000}s while recording`,
       };
-      swarm.peerEvents = [...(swarm.peerEvents || []), ev].slice(-100);
+      incident.peerEvents = [...(incident.peerEvents || []), ev].slice(-100);
       events.push(ev);
     }
   }
   return events;
 }
 
-export function publicSwarmView(swarm) {
-  const members = Object.values(swarm.members || {}).map((m) => ({
+export function publicIncidentView(incident) {
+  const members = Object.values(incident.members || {}).map((m) => ({
     deviceId: m.deviceId,
     label: m.label,
     joinedAt: m.joinedAt,
     lastBeatAt: m.lastBeatAt,
     recording: !!m.recording,
     sessionId: m.sessionId || null,
-    stale: Date.now() - Date.parse(m.lastBeatAt || m.joinedAt || swarm.createdAt) > PEER_LOST_MS,
+    stale: Date.now() - Date.parse(m.lastBeatAt || m.joinedAt || incident.createdAt) > PEER_LOST_MS,
   }));
   return {
-    swarmId: swarm.swarmId,
-    status: swarm.status,
-    hostDeviceId: swarm.hostDeviceId,
-    signal: swarm.signal,
+    incidentId: incident.incidentId,
+    status: incident.status,
+    hostDeviceId: incident.hostDeviceId,
+    signal: incident.signal,
     members,
-    peerEvents: (swarm.peerEvents || []).slice(-30),
-    createdAt: swarm.createdAt,
+    peerEvents: (incident.peerEvents || []).slice(-30),
+    createdAt: incident.createdAt,
   };
 }
 
-export { SWARM_TTL, PEER_LOST_MS };
+export { INCIDENT_TTL, PEER_LOST_MS };

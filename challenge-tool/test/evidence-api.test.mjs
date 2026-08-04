@@ -256,31 +256,31 @@ describe("evidence API (wrangler local)", () => {
     assert.ok(ping.json.pingId);
   });
 
-  it("swarm create → join → start signal → heartbeat peer awareness", async () => {
-    const created = await api("/api/evidence/swarm/create", {
+  it("incident create → join → start signal → heartbeat peer awareness", async () => {
+    const created = await api("/api/evidence/incident/create", {
       method: "POST",
-      body: { deviceId: "swarm-host", label: "Host" },
+      body: { deviceId: "incident-host", label: "Host" },
     });
     assert.equal(created.status, 200, JSON.stringify(created.json));
-    assert.match(created.json.swarmId, /^[A-Z2-9]{6}$/);
+    assert.match(created.json.incidentId, /^[A-Z2-9]{6}$/);
     assert.equal(created.json.members.length, 1);
 
-    const joined = await api("/api/evidence/swarm/join", {
+    const joined = await api("/api/evidence/incident/join", {
       method: "POST",
       body: {
-        swarmId: created.json.swarmId,
-        deviceId: "swarm-peer",
+        incidentId: created.json.incidentId,
+        deviceId: "incident-peer",
         label: "Peer",
       },
     });
     assert.equal(joined.status, 200, JSON.stringify(joined.json));
     assert.equal(joined.json.members.length, 2);
 
-    const start = await api("/api/evidence/swarm/signal", {
+    const start = await api("/api/evidence/incident/signal", {
       method: "POST",
       body: {
-        swarmId: created.json.swarmId,
-        deviceId: "swarm-host",
+        incidentId: created.json.incidentId,
+        deviceId: "incident-host",
         type: "start",
       },
     });
@@ -288,18 +288,18 @@ describe("evidence API (wrangler local)", () => {
     assert.equal(start.json.signal.type, "start");
     assert.equal(start.json.status, "recording");
 
-    const beat = await api("/api/evidence/swarm/heartbeat", {
+    const beat = await api("/api/evidence/incident/heartbeat", {
       method: "POST",
       body: {
-        swarmId: created.json.swarmId,
-        deviceId: "swarm-peer",
+        incidentId: created.json.incidentId,
+        deviceId: "incident-peer",
         recording: true,
       },
     });
     assert.equal(beat.status, 200, JSON.stringify(beat.json));
     assert.equal(beat.json.signal.type, "start");
 
-    const got = await api(`/api/evidence/swarm/${created.json.swarmId}`);
+    const got = await api(`/api/evidence/incident/${created.json.incidentId}`);
     assert.equal(got.status, 200);
     assert.equal(got.json.members.length, 2);
   });

@@ -23,17 +23,17 @@ export async function buildQueuePackage(input: {
   scenario?: string;
   interrupted?: boolean;
   interruptReason?: string | null;
-  swarmId?: string | null;
+  incidentId?: string | null;
   peerLostNotes?: string;
 }): Promise<{ queueItem: QueueItem; transcriptText: string }> {
   let notes = (input.manualNotes || "").trim();
   if (input.peerLostNotes) {
     notes = notes ? `${notes}\n${input.peerLostNotes}` : input.peerLostNotes;
   }
-  if (input.swarmId) {
+  if (input.incidentId) {
     notes = notes
-      ? `${notes}\n[swarmId: ${input.swarmId}]`
-      : `[swarmId: ${input.swarmId}]`;
+      ? `${notes}\n[incidentId: ${input.incidentId}]`
+      : `[incidentId: ${input.incidentId}]`;
   }
   if (input.interrupted) {
     const tag = `[INTERRUPTED${input.interruptReason ? `: ${input.interruptReason}` : ""}]`;
@@ -91,7 +91,7 @@ export async function buildQueuePackage(input: {
     scenario: input.scenario,
     interrupted: !!input.interrupted,
     interruptReason: input.interruptReason || null,
-    swarmId: input.swarmId || null,
+    incidentId: input.incidentId || null,
     peerLostNotes: input.peerLostNotes || undefined,
     uploads: {},
     syncAttempts: 0,

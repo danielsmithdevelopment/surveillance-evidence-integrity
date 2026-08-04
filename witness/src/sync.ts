@@ -40,7 +40,7 @@ export async function syncLiteEvidence(input: {
   interrupted?: boolean;
   interruptReason?: string | null;
   scenario?: string;
-  swarmId?: string | null;
+  incidentId?: string | null;
 }): Promise<SyncLiteResult> {
   const gz = gzipTextToBase64(input.transcriptText);
   const res = await fetch(`${CTF_API}/api/evidence/sync-lite`, {
@@ -69,7 +69,7 @@ export async function syncLiteEvidence(input: {
       interrupted: !!input.interrupted,
       interruptReason: input.interruptReason || null,
       scenario: input.scenario || null,
-      swarmId: input.swarmId || null,
+      incidentId: input.incidentId || null,
       sync: "lite",
     }),
   });
@@ -125,7 +125,7 @@ export async function flushQueueItem(
       interrupted: !!item.interrupted,
       interruptReason: item.interruptReason || null,
       scenario: item.scenario,
-      swarmId: item.swarmId || null,
+      incidentId: item.incidentId || null,
     });
     item.sessionId = lite.sessionId;
     item.claimCode = lite.claimCode;
