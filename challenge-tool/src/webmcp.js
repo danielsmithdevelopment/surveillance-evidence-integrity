@@ -7,7 +7,8 @@
 const TOOLS = [
   {
     name: "ctf_list_vendors",
-    description: "List supported surveillance / ALPR vendors for challenge document generation.",
+    description:
+      "List footage categories and sources for challenge document generation (fixed/ALPR, body-worn, cellphone).",
     inputSchema: {
       type: "object",
       properties: {},
@@ -20,8 +21,10 @@ const TOOLS = [
             type: "text",
             text: JSON.stringify(
               {
-                vendors: ["flock", "axon", "motorola", "genetec", "verkada", "custom"],
+                footageCategories: ["fixed_surveillance", "body_worn", "cellphone"],
+                vendors: ["flock", "axon", "motorola", "genetec", "verkada", "cellphone", "custom"],
                 docs: "https://challengethefootage.com/llms.txt",
+                guide: "FOOTAGE-CHALLENGE.md",
               },
               null,
               2
