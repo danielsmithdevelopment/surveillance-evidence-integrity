@@ -5,11 +5,24 @@
   "userinfo_endpoint": "https://openidconnect.googleapis.com/v1/userinfo",
   "jwks_uri": "https://www.googleapis.com/oauth2/v3/certs",
   "revocation_endpoint": "https://oauth2.googleapis.com/revoke",
-  "response_types_supported": ["code", "id_token", "token", "code id_token"],
+  "device_authorization_endpoint": "https://oauth2.googleapis.com/device/code",
+  "response_types_supported": [
+    "code",
+    "id_token",
+    "token",
+    "code id_token",
+    "code token",
+    "token id_token",
+    "code token id_token",
+    "none"
+  ],
   "subject_types_supported": ["public"],
   "id_token_signing_alg_values_supported": ["RS256"],
   "scopes_supported": ["openid", "email", "profile"],
-  "token_endpoint_auth_methods_supported": ["client_secret_post", "client_secret_basic"],
+  "token_endpoint_auth_methods_supported": [
+    "client_secret_post",
+    "client_secret_basic"
+  ],
   "claims_supported": [
     "aud",
     "email",
@@ -21,11 +34,38 @@
     "picture",
     "sub"
   ],
-  "code_challenge_methods_supported": ["S256"],
-  "grant_types_supported": ["authorization_code", "refresh_token"],
+  "code_challenge_methods_supported": ["plain", "S256"],
+  "grant_types_supported": [
+    "authorization_code",
+    "refresh_token",
+    "urn:ietf:params:oauth:grant-type:device_code",
+    "urn:ietf:params:oauth:grant-type:jwt-bearer"
+  ],
   "agent_auth": {
     "skill": "https://challengethefootage.com/auth.md",
+    "register_uri": "https://challengethefootage.com/",
     "resource": "https://challengethefootage.com/",
-    "notes": "Challenge the Footage validates Google ID tokens (GIS). Agents must present a Bearer Google ID token whose aud matches GOOGLE_CLIENT_ID."
+    "identity_types_supported": ["identity_assertion", "anonymous"],
+    "identity_assertion": {
+      "assertion_types_supported": [
+        "urn:ietf:params:oauth:token-type:id-jag",
+        "verified_email"
+      ],
+      "credential_types_supported": ["bearer"]
+    },
+    "anonymous": {
+      "credential_types_supported": ["bearer"]
+    },
+    "methods": [
+      {
+        "type": "identity_assertion",
+        "description": "Google Sign-In ID token as Bearer; aud must match GOOGLE_CLIENT_ID."
+      },
+      {
+        "type": "anonymous",
+        "description": "Public discovery documents only."
+      }
+    ],
+    "notes": "Challenge the Footage validates Google ID tokens (GIS). Agents must present a Bearer Google ID token whose aud matches GOOGLE_CLIENT_ID for /api/generate."
   }
 }

@@ -9,6 +9,7 @@ import {
   btnSecondary,
   inputClass,
 } from "./Shell.jsx";
+import { registerWebMcpTools } from "./webmcp.js";
 
 const TOS_KEY = "surv_tos_v1";
 const API = typeof window !== "undefined" ? window.CTF_API_BASE || "" : "";
@@ -235,6 +236,8 @@ export default function App() {
       }));
     }
   }, []);
+
+  useEffect(() => registerWebMcpTools(), []);
 
   const onCredential = useCallback((cred) => {
     setToken(cred);

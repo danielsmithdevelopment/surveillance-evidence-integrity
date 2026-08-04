@@ -59,6 +59,7 @@ describe("challenge-tool artifacts", () => {
       ".well-known/mcp/server-card.json",
       ".well-known/agent-skills/index.json",
       ".well-known/oauth-protected-resource",
+      ".well-known/oauth-authorization-server",
       ".well-known/openid-configuration",
       ".well-known/acp.json",
     ]) {
@@ -69,7 +70,13 @@ describe("challenge-tool artifacts", () => {
     );
     assert.ok(Array.isArray(card.supportedInterfaces));
     assert.ok(card.supportedInterfaces.length > 0);
+    const oauthAs = JSON.parse(
+      readFileSync(join(root, "static", ".well-known/oauth-authorization-server"), "utf8")
+    );
+    assert.ok(oauthAs.agent_auth?.identity_types_supported?.includes("identity_assertion"));
     assert.match(workerSrc, /AGENT_LINK_HEADER/);
     assert.match(workerSrc, /wantsMarkdown/);
+    assert.match(workerSrc, /registerWebMcpTools|oauth-authorization-server/);
+    readFileSync(join(root, "src/webmcp.js"));
   });
 });

@@ -37,6 +37,7 @@ const AGENT_LINK_HEADER = [
   '</.well-known/api-catalog>; rel="api-catalog"',
   '</.well-known/agent-card.json>; rel="agent-card"; type="application/json"',
   '</.well-known/mcp/server-card.json>; rel="mcp-server-card"; type="application/json"',
+  '</.well-known/oauth-authorization-server>; rel="oauth-authorization-server"; type="application/json"',
   '</.well-known/acp.json>; rel="payment-method"',
   '</api/health>; rel="status"',
   '<https://github.com/danielsmithdevelopment/surveillance-evidence-integrity>; rel="describedby"',
@@ -45,6 +46,13 @@ const AGENT_LINK_HEADER = [
 const CONTENT_TYPE_OVERRIDES = {
   "/.well-known/api-catalog":
     'application/linkset+json; profile="https://www.rfc-editor.org/info/rfc9727"',
+  "/.well-known/agent-card.json": "application/json; charset=utf-8",
+  "/.well-known/mcp/server-card.json": "application/json; charset=utf-8",
+  "/.well-known/oauth-protected-resource": "application/json; charset=utf-8",
+  "/.well-known/oauth-authorization-server": "application/json; charset=utf-8",
+  "/.well-known/openid-configuration": "application/json; charset=utf-8",
+  "/.well-known/acp.json": "application/json; charset=utf-8",
+  "/.well-known/agent-skills/index.json": "application/json; charset=utf-8",
   "/openapi.json": "application/openapi+json; charset=utf-8",
   "/robots.txt": "text/plain; charset=utf-8",
   "/sitemap.xml": "application/xml; charset=utf-8",
