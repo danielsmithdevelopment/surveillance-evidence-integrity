@@ -1,16 +1,18 @@
 # Challenge the Footage
 
-> Free (first generation) / $9 legal document templates for challenging surveillance camera and ALPR evidence under FRE 901, FRE 702, the Fourth Amendment, and 42 U.S.C. § 1983. Not legal advice.
+> One account for evidence + legal document templates. Free first generation / $9 packs via Stripe. Public defenders free. Not legal advice. No crypto wallet required.
 
 This file helps AI agents find canonical entry points. Prefer `Accept: text/markdown` on HTML routes for machine-readable content.
 
 ## Primary pages
 
 - [Home / generator](https://challengethefootage.com/): Case details form + four document types
+- [Evidence](https://challengethefootage.com/evidence.html): Record encounters + evidence library
 - [Public defenders](https://challengethefootage.com/public-defenders.html): Free unlimited access program
 - [Terms of Service](https://challengethefootage.com/terms.html): Legal terms
 - [Agent instructions](https://challengethefootage.com/AGENTS.md): How agents should use this site
 - [Auth for agents](https://challengethefootage.com/auth.md): Google Sign-In / OAuth notes
+- [Product model](https://github.com/danielsmithdevelopment/surveillance-evidence-integrity/blob/main/challenge-tool/PRODUCT.md): Unified product (evidence + docs + Stripe)
 
 ## API & discovery
 
@@ -23,6 +25,6 @@ This file helps AI agents find canonical entry points. Prefer `Accept: text/mark
 
 ## Related open-source repo
 
-- [surveillance-evidence-integrity](https://github.com/danielsmithdevelopment/surveillance-evidence-integrity): Model contracts, legislation, Witness app, technical standards
-- [Witness](https://github.com/danielsmithdevelopment/surveillance-evidence-integrity/tree/main/witness): Civilian encounter recording app
-- [ClawQL](https://clawql.com): Inference, memory, Stripe payments gateway
+- [surveillance-evidence-integrity](https://github.com/danielsmithdevelopment/surveillance-evidence-integrity): Model contracts, legislation, technical standards
+- [Witness module](https://github.com/danielsmithdevelopment/surveillance-evidence-integrity/tree/main/witness): Optional native capture client for CTF
+- [ClawQL](https://clawql.com): Inference, memory, Stripe, independent evidence anchoring (invisible to end users)

@@ -382,8 +382,8 @@ export default function App() {
               <span className="italic text-teal-deep">the Footage</span>
             </h1>
             <p className="mt-6 max-w-md text-lg leading-relaxed text-ink-muted sm:text-xl">
-              Four legal templates for any major surveillance vendor — authentication, reliability,
-              access abuse, and civil damages.
+              Record encounters, secure evidence, and generate challenge documents — one account,
+              pay by card.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-4">
               {!token ? (
@@ -456,7 +456,11 @@ export default function App() {
             className="mb-6 rounded-xl border border-teal/25 bg-teal-soft/70 px-4 py-3 text-sm text-ink animate-fade"
             role="status"
           >
-            Witness session linked: <code className="font-mono">{witnessSession}</code>
+            Witness evidence linked: <code className="font-mono">{witnessSession}</code>
+            {" · "}
+            <a className="font-medium text-teal-deep underline" href="/evidence.html">
+              Evidence library
+            </a>
           </div>
         )}
 

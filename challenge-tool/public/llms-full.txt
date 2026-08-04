@@ -16,16 +16,23 @@ No major surveillance vendor (Flock Safety, Axon, Motorola/Vigilant, Genetec, Ve
 ## Pricing & access
 
 - Free first generation per Google account
-- $9 per additional generation (Stripe via ClawQL payments)
+- $9 per additional generation (Stripe via ClawQL payments — credit card only)
 - Public defenders: free unlimited — email pd@challengethefootage.com
+- Evidence recording is free to capture; users never need a crypto wallet
 
 ## API
 
-See [openapi.json](https://challengethefootage.com/openapi.json). All `/api/*` routes require `Authorization: Bearer <Google ID token>`.
+See [openapi.json](https://challengethefootage.com/openapi.json). Authenticated `/api/*` routes require `Authorization: Bearer <Google ID token>` (or local test auth when enabled).
 
 ### Generate
 
 `POST /api/generate` body includes `tosAccepted: true`, `vendor` (`flock|axon|motorola|genetec|verkada|custom`), case fields, and optional fact narratives. Returns `{ sessionId, docs: { motion, accuracy, access, civil } }`.
+
+### Evidence
+
+- `POST /api/evidence/secure` — store hashes / Merkle package for a recording; ClawQL anchors independently behind the scenes
+- `GET /api/evidence/sessions` — list evidence for the signed-in account
+- `GET /api/evidence/verify/{id}` — public verification status (no wallet UX)
 
 ## Integrity standards (for vendors / cities)
 
@@ -37,9 +44,9 @@ Canonical docs live in the open-source repo:
 - FOR-VENDORS.md
 - authentication-challenge-guide.md
 
-## Witness
+## Evidence capture
 
-The Witness mobile app records encounters, hashes artifacts, anchors Merkle roots to Arweave, and can hand off `?witnessSession=` to this site.
+Primary UX: [Evidence on Challenge the Footage](https://challengethefootage.com/evidence.html) (in-browser record + secure). Optional native module: `witness/` in the open-source repo — same product account, deep-link back with `?witnessSession=`.
 
 ## Contact
 

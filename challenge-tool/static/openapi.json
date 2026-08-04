@@ -3,7 +3,7 @@
   "info": {
     "title": "Challenge the Footage API",
     "version": "1.0.0",
-    "description": "Generate FRE 901 / FRE 702 / Fourth Amendment / §1983 document templates for surveillance evidence challenges. Not legal advice.",
+    "description": "Challenge the Footage — evidence capture APIs plus FRE 901 / FRE 702 / Fourth Amendment / §1983 document templates. Stripe for payments. ClawQL for inference and independent anchoring. Not legal advice.",
     "contact": {
       "name": "Challenge the Footage",
       "url": "https://challengethefootage.com",
@@ -177,6 +177,82 @@
         ],
         "responses": {
           "200": { "description": "Session content" },
+          "404": { "description": "Not found" }
+        }
+      }
+    },
+    "/api/evidence/secure": {
+      "post": {
+        "operationId": "secureEvidence",
+        "summary": "Secure a recording package to the signed-in account",
+        "description": "Stores hashes and Merkle root. ClawQL may independently anchor verification; end users are not asked for a crypto wallet.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["transcriptHash", "audioHash", "videoHash"],
+                "properties": {
+                  "transcriptHash": { "type": "string" },
+                  "audioHash": { "type": "string" },
+                  "videoHash": { "type": "string" },
+                  "transcriptText": { "type": "string" },
+                  "mimeType": { "type": "string" },
+                  "startedAt": { "type": "string", "format": "date-time" },
+                  "endedAt": { "type": "string", "format": "date-time" },
+                  "stateCode": { "type": "string" },
+                  "source": { "type": "string", "enum": ["web", "native"] }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Evidence secured",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "sessionId": { "type": "string" },
+                    "status": { "type": "string" },
+                    "verificationId": { "type": "string" },
+                    "securedAt": { "type": "string", "format": "date-time" }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "description": "Unauthorized" }
+        }
+      }
+    },
+    "/api/evidence/sessions": {
+      "get": {
+        "operationId": "listEvidenceSessions",
+        "summary": "List evidence sessions for the signed-in account",
+        "responses": {
+          "200": { "description": "Evidence session index" }
+        }
+      }
+    },
+    "/api/evidence/verify/{sessionId}": {
+      "get": {
+        "operationId": "verifyEvidence",
+        "summary": "Public verification status for an evidence session",
+        "security": [],
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Verification summary" },
           "404": { "description": "Not found" }
         }
       }

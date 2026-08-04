@@ -24,11 +24,11 @@ This repository is the response to that.
 
 ### For people facing charges or wrongful stops
 
-**[Witness](./witness/)** — A free mobile app (iOS + Android) that records police encounters, transcribes in real time on your device, uploads transcript → audio → video in priority order so evidence reaches safety even on a weak signal, and cryptographically anchors everything to Arweave for independent verification.
+**[challengethefootage.com](https://challengethefootage.com)** — One product for civilians and public defenders: **record** encounters, **secure** evidence (ClawQL handles independent verification behind the scenes — no crypto wallet), and **generate** four attorney-review legal templates (FRE 901, FRE 702, Fourth Amendment, § 1983). Sign in with Google. Pay with Stripe. Free first generation; PDs unlimited.
 
-**[challengethefootage.com](https://challengethefootage.com)** — A web tool that generates four legal document templates for any surveillance vendor: a motion in limine (FRE 901 authentication), a Daubert motion (FRE 702 accuracy), a Fourth Amendment suppression motion (access abuse pattern), and a Section 1983 civil demand letter (damages). Free first generation. Public defenders get free unlimited access.
+Source: **[challenge-tool/](./challenge-tool/)** · Product model: **[challenge-tool/PRODUCT.md](./challenge-tool/PRODUCT.md)** · Evidence UI: `/evidence.html`
 
-Source code: **[challenge-tool/](./challenge-tool/)**
+**[Witness](./witness/)** — Optional native (Expo) capture module for the same product. Prefer the website evidence flow for one-URL onboarding; keep native for offline / higher-reliability capture. Deep-links back to Challenge the Footage with `?witnessSession=`.
 
 ### For defense attorneys
 

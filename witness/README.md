@@ -1,31 +1,44 @@
-# Witness
+# Witness (capture module for Challenge the Footage)
 
-Civilian encounter recording app (iOS + Android via Expo). Records video + audio, transcribes on-device, uploads **transcript → audio → video** so evidence reaches safety on a weak signal, signs with a device key, and anchors a Merkle root to Arweave via the ClawQL gateway.
+Witness is the **encounter recording engine** for [Challenge the Footage](https://challengethefootage.com) — not a separate consumer product.
 
-Free to record. Document generation hands off to [challengethefootage.com](https://challengethefootage.com) ($9 / free for public defenders).
+**Product home:** [challengethefootage.com](https://challengethefootage.com)  
+**Evidence (web):** [challengethefootage.com/evidence.html](https://challengethefootage.com/evidence.html)  
+**Docs:** [challenge-tool/PRODUCT.md](../challenge-tool/PRODUCT.md)
+
+Users sign in and pay with **Stripe (credit card)** on the website. They never need a crypto wallet. ClawQL performs independent anchoring (e.g. Arweave) and storage behind the scenes.
+
+## Role of this folder
+
+Optional **native** (Expo iOS/Android) capture client for higher reliability than browser MediaRecorder:
+
+- Record video + audio during a police encounter
+- On-device transcript (Whisper — still stubbed)
+- Priority upload transcript → audio → video
+- Device signature + Merkle package
+- Hand off to `https://challengethefootage.com/?witnessSession=…` for document prep
+
+Prefer shipping **web recording on CTF** first so one URL covers account, evidence, and documents. Keep this native module for offline / background / enclave hardening.
 
 ## Architecture
 
 ```
-[Witness app]
-  record video + audio
-  on-device Whisper transcript
-  SHA-256 artifacts
-  device signature (secure store / enclave target)
-       |
-       | priority upload
-       v
-[Cloudflare Worker]  witness/worker/worker.js
-  POST /api/upload-url   → R2 key + upload URL
-  POST /api/anchor       → ClawQL /surveillance/witness/anchor → Arweave
-  GET  /api/session/:id
-  GET  /api/verify/:id   → public verification record (no auth)
+[CTF website /evidence.html]  ← primary UX
+[Witness native app]          ← optional capture client
        |
        v
-[challengethefootage.com/?witnessSession=…]
+[CTF Worker]  challenge-tool/worker.js
+  /api/evidence/secure|sessions|verify
+  /api/checkout (Stripe via ClawQL)
+  /api/generate
+       |
+       v
+[ClawQL]  inference · Stripe · independent anchor · memory
 ```
 
-## Setup
+Legacy routes in `witness/worker/` can be folded into the CTF Worker over time.
+
+## Setup (native)
 
 ```bash
 cd witness
@@ -33,41 +46,26 @@ npm install
 npx expo start
 ```
 
-Environment:
-
 | Variable | Purpose |
 |---|---|
-| `EXPO_PUBLIC_WITNESS_API` | Worker base URL |
-
-Worker secrets (`wrangler secret put` in `witness/worker`):
-
-- `CLAWQL_GATEWAY_URL`
-- `CLAWQL_API_KEY`
-- `R2_ACCOUNT_ID`
-- `R2_ACCESS_KEY_ID`
-- `R2_SECRET_ACCESS_KEY`
-- `R2_BUCKET_NAME`
-
-KV bindings: `SESSIONS_KV`, `DEVICE_REGISTRY_KV` (see `witness/worker/wrangler.toml`).
+| `EXPO_PUBLIC_WITNESS_API` | Prefer CTF Worker base URL (`https://challengethefootage.com`) once evidence APIs are deployed |
 
 ## Incomplete (known)
 
-1. **Audio extraction** — `stopAndProcess` uses a placeholder file. Wire `ffmpeg-kit-react-native` to extract AAC/WAV from the recorded video before hashing/upload.
-2. **R2 presigned PUT URLs** — Worker `handleUploadUrl` returns a placeholder URL. Implement AWS4 signing for R2.
-3. **Whisper** — `react-native-whisper` is listed in `package.json`; live streaming transcription is stubbed in `App.tsx`.
-4. **Device keys** — SecureStore HMAC placeholder; replace with secure-enclave / Keychain-backed signing keys before production.
-5. **File hashing** — `sha256File` hashes a size+head marker for MVP; replace with full-file SHA-256 before court use.
+1. **Audio extraction** — placeholder; wire ffmpeg before production
+2. **R2 presigned PUT** — AWS4 signing still TODO in legacy worker
+3. **Whisper** — stubbed live transcript
+4. **Device keys** — SecureStore placeholder; use enclave/Keychain for production
+5. **Full-file SHA-256** — MVP hashes a size+head marker; replace before court use
 
 ## Two-party consent
 
-First-run screen collects a state code and shows an all-party notice for CA, CT, FL, IL, MD, MA, MI, MT, NH, PA, WA. Recording laws vary — this is not legal advice.
+First-run / web evidence flow collects a state code and shows an all-party notice for CA, CT, FL, IL, MD, MA, MI, MT, NH, PA, WA. Not legal advice.
 
-## Verification
-
-Anyone with a session ID can call:
+## Verification (attorney / expert)
 
 ```
-GET /api/verify/:sessionId
+GET https://challengethefootage.com/api/evidence/verify/:sessionId
 ```
 
-Compare local SHA-256 of transcript/audio/video to the returned hashes, recompute `SHA-256(transcriptHash:audioHash:videoHash)`, and confirm the Merkle root matches the Arweave transaction at `https://arweave.net/{arweaveTxId}`.
+Primary UX only shows “Evidence secured” + a verification ID. Advanced hash / Merkle details are for counsel and experts — not everyday users.

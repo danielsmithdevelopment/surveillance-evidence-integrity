@@ -62,6 +62,10 @@ test.describe("WCAG axe scans", () => {
   test("public defenders page meets WCAG 2.2 AA (axe)", async ({ page }) => {
     await expectNoA11yViolations(page, "/public-defenders.html");
   });
+
+  test("evidence page meets WCAG 2.2 AA (axe)", async ({ page }) => {
+    await expectNoA11yViolations(page, "/evidence.html");
+  });
 });
 
 test.describe("keyboard & landmarks", () => {

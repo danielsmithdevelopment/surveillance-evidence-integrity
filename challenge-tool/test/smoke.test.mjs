@@ -38,12 +38,15 @@ describe("challenge-tool artifacts", () => {
       "index.html",
       "terms.html",
       "public-defenders.html",
+      "evidence.html",
       "src/App.jsx",
+      "src/EvidencePage.jsx",
       "src/index.css",
+      "PRODUCT.md",
     ]) {
       readFileSync(join(root, f));
     }
-    for (const f of ["index.html", "terms.html", "public-defenders.html"]) {
+    for (const f of ["index.html", "terms.html", "public-defenders.html", "evidence.html"]) {
       readFileSync(join(root, "static", f));
     }
   });
@@ -57,6 +60,7 @@ describe("challenge-tool artifacts", () => {
       "auth.md",
       "AGENTS.md",
       "index.md",
+      "evidence.md",
       ".well-known/api-catalog",
       ".well-known/agent-card.json",
       ".well-known/mcp/server-card.json",
@@ -79,7 +83,8 @@ describe("challenge-tool artifacts", () => {
     assert.ok(oauthAs.agent_auth?.identity_types_supported?.includes("identity_assertion"));
     assert.match(workerSrc, /AGENT_LINK_HEADER/);
     assert.match(workerSrc, /wantsMarkdown/);
-    assert.match(workerSrc, /registerWebMcpTools|oauth-authorization-server/);
+    assert.match(workerSrc, /handleEvidenceSecure/);
+    assert.match(workerSrc, /oauth-authorization-server/);
     readFileSync(join(root, "src/webmcp.js"));
   });
 });

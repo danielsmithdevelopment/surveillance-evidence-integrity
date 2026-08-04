@@ -83,6 +83,7 @@ function markdownAssetPath(pathname) {
   if (pathname === "/public-defenders.html" || pathname === "/public-defenders") {
     return "/public-defenders.md";
   }
+  if (pathname === "/evidence.html" || pathname === "/evidence") return "/evidence.md";
   return null;
 }
 
@@ -386,6 +387,15 @@ export default {
         return handleHistory(request, env);
       if (url.pathname.startsWith("/api/session/") && request.method === "GET") {
         return handleSession(request, env, url.pathname.split("/api/session/")[1]);
+      }
+      if (url.pathname === "/api/evidence/secure" && request.method === "POST") {
+        return handleEvidenceSecure(request, env);
+      }
+      if (url.pathname === "/api/evidence/sessions" && request.method === "GET") {
+        return handleEvidenceSessions(request, env);
+      }
+      if (url.pathname.startsWith("/api/evidence/verify/") && request.method === "GET") {
+        return handleEvidenceVerify(request, env, url.pathname.split("/api/evidence/verify/")[1]);
       }
       // Static assets (Pages / Workers assets binding) + agent-ready headers
       if (env.ASSETS) {
@@ -866,6 +876,169 @@ async function handleSession(request, env, sessionId) {
   const results = await recallMemory(env, user.userId, `session:${sessionId}`);
   if (!results) return json({ error: "Session not found" }, 404);
   return json({ content: results });
+}
+
+// ─── Evidence (web / Witness) — Stripe for docs; ClawQL anchors behind the scenes ─
+
+async function sha256Hex(text) {
+  const data = new TextEncoder().encode(text);
+  const digest = await crypto.subtle.digest("SHA-256", data);
+  return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+async function handleEvidenceSecure(request, env) {
+  let user;
+  try {
+    user = await resolveUser(request, env);
+  } catch (e) {
+    return json({ error: `Auth failed: ${e.message}` }, 401);
+  }
+
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return json({ error: "Invalid request body" }, 400);
+  }
+
+  const { transcriptHash, audioHash, videoHash } = body;
+  if (!transcriptHash || !audioHash || !videoHash) {
+    return json({ error: "transcriptHash, audioHash, and videoHash are required" }, 400);
+  }
+
+  const sessionId = `ev-${user.userId.slice(0, 12)}-${Date.now().toString(36)}`;
+  const merkleRoot = await sha256Hex(`${transcriptHash}:${audioHash}:${videoHash}`);
+  const securedAt = new Date().toISOString();
+
+  let status = "secured";
+  let verificationRef = null;
+  // ClawQL handles independent anchoring (e.g. Arweave). Users never see a wallet.
+  if (env.CLAWQL_GATEWAY_URL && env.CLAWQL_API_KEY && env.GENERATION_MODE !== "offline") {
+    try {
+      const anchored = await gwPost(env, "/surveillance/witness/anchor", {
+        sessionId,
+        userId: user.userId,
+        email: user.email,
+        merkleRoot,
+        transcriptHash,
+        audioHash,
+        videoHash,
+        source: body.source || "web",
+        startedAt: body.startedAt,
+        endedAt: body.endedAt || securedAt,
+        stateCode: body.stateCode,
+      });
+      verificationRef = anchored.arweaveTxId || anchored.txId || anchored.id || null;
+      if (verificationRef) status = "anchored";
+    } catch (e) {
+      console.warn("Evidence anchor via ClawQL:", e.message);
+      status = "secured_pending_anchor";
+    }
+  } else {
+    status = "secured_local";
+  }
+
+  const record = {
+    sessionId,
+    userId: user.userId,
+    email: user.email,
+    transcriptHash,
+    audioHash,
+    videoHash,
+    merkleRoot,
+    status,
+    verificationRef,
+    source: body.source || "web",
+    stateCode: body.stateCode || null,
+    startedAt: body.startedAt || null,
+    endedAt: body.endedAt || securedAt,
+    securedAt,
+    mimeType: body.mimeType || null,
+  };
+
+  try {
+    await env.RATE_LIMIT_KV.put(`evidence:${sessionId}`, JSON.stringify(record), {
+      expirationTtl: 60 * 60 * 24 * 365 * 5,
+    });
+    const indexKey = `evidence-index:${user.userId}`;
+    let index = [];
+    try {
+      index = (await env.RATE_LIMIT_KV.get(indexKey, { type: "json" })) || [];
+    } catch {
+      index = [];
+    }
+    if (!Array.isArray(index)) index = [];
+    index.unshift({
+      sessionId,
+      securedAt,
+      status,
+      source: record.source,
+    });
+    await env.RATE_LIMIT_KV.put(indexKey, JSON.stringify(index.slice(0, 100)), {
+      expirationTtl: 60 * 60 * 24 * 365 * 5,
+    });
+  } catch (e) {
+    console.warn("Evidence KV store:", e.message);
+  }
+
+  if (body.transcriptText && !wantsOfflineGeneration(env)) {
+    await ingestMemory(
+      env,
+      user.userId,
+      sessionId,
+      `# Evidence session ${sessionId}\nStatus: ${status}\nNotes:\n${String(body.transcriptText).slice(0, 2000)}`,
+      ["evidence", record.source].filter(Boolean)
+    );
+  }
+
+  return json({
+    sessionId,
+    status,
+    merkleRoot,
+    securedAt,
+    // Public UI should prefer sessionId; verificationRef is for advanced/attorney use.
+    verificationId: sessionId,
+  });
+}
+
+async function handleEvidenceSessions(request, env) {
+  let user;
+  try {
+    user = await resolveUser(request, env);
+  } catch (e) {
+    return json({ error: `Auth failed: ${e.message}` }, 401);
+  }
+  try {
+    const index =
+      (await env.RATE_LIMIT_KV.get(`evidence-index:${user.userId}`, { type: "json" })) || [];
+    return json({ sessions: Array.isArray(index) ? index : [] });
+  } catch (e) {
+    return json({ sessions: [], warning: e.message });
+  }
+}
+
+async function handleEvidenceVerify(request, env, sessionId) {
+  if (!sessionId) return json({ error: "Missing session id" }, 400);
+  try {
+    const raw = await env.RATE_LIMIT_KV.get(`evidence:${sessionId}`);
+    if (!raw) return json({ error: "Not found" }, 404);
+    const record = JSON.parse(raw);
+    return json({
+      sessionId: record.sessionId,
+      status: record.status,
+      securedAt: record.securedAt,
+      transcriptHash: record.transcriptHash,
+      audioHash: record.audioHash,
+      videoHash: record.videoHash,
+      merkleRoot: record.merkleRoot,
+      source: record.source,
+      // Intentionally omit raw chain URLs from the default payload shape;
+      // attorneys can request verificationRef via support if needed.
+      independentlyVerifiable: record.status === "anchored",
+    });
+  } catch (e) {
+    return json({ error: e.message }, 500);
+  }
 }
 
 function json(data, status = 200) {

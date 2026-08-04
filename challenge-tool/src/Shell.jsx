@@ -26,6 +26,14 @@ export function SiteNav() {
       <ul className="m-0 flex list-none items-center gap-5 p-0 text-sm font-medium text-ink">
         <li>
           <a
+            href="/evidence.html"
+            className="text-ink-muted transition hover:text-teal focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-teal"
+          >
+            Evidence
+          </a>
+        </li>
+        <li>
+          <a
             href="/public-defenders.html"
             className="text-ink-muted transition hover:text-teal focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-teal"
           >

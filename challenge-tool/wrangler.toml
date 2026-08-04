@@ -3,10 +3,12 @@ main = "worker.js"
 compatibility_date = "2025-06-01"
 workers_dev = true
 
-# Serve static assets (index.html, terms, public-defenders) alongside the Worker
+# Serve static assets (index.html, terms, evidence, public-defenders) alongside the Worker.
+# run_worker_first so Link headers, Markdown negotiation, and /api/* always hit worker.js.
 [assets]
 directory = "./static"
 binding = "ASSETS"
+run_worker_first = true
 
 [[kv_namespaces]]
 binding = "RATE_LIMIT_KV"
