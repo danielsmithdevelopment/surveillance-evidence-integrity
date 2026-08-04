@@ -44,4 +44,32 @@ describe("challenge-tool artifacts", () => {
       readFileSync(join(root, "static", f));
     }
   });
+
+  it("agent-ready discovery files are published into static/", () => {
+    for (const f of [
+      "robots.txt",
+      "sitemap.xml",
+      "llms.txt",
+      "openapi.json",
+      "auth.md",
+      "AGENTS.md",
+      "index.md",
+      ".well-known/api-catalog",
+      ".well-known/agent-card.json",
+      ".well-known/mcp/server-card.json",
+      ".well-known/agent-skills/index.json",
+      ".well-known/oauth-protected-resource",
+      ".well-known/openid-configuration",
+      ".well-known/acp.json",
+    ]) {
+      readFileSync(join(root, "static", f));
+    }
+    const card = JSON.parse(
+      readFileSync(join(root, "static", ".well-known/agent-card.json"), "utf8")
+    );
+    assert.ok(Array.isArray(card.supportedInterfaces));
+    assert.ok(card.supportedInterfaces.length > 0);
+    assert.match(workerSrc, /AGENT_LINK_HEADER/);
+    assert.match(workerSrc, /wantsMarkdown/);
+  });
 });

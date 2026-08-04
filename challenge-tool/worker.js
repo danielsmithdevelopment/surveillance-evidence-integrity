@@ -13,6 +13,9 @@
  *   POST /api/generate
  *   GET  /api/history
  *   GET  /api/session/:id
+ *   GET  /api/health
+ *
+ * Also: Link headers, Markdown negotiation (Accept: text/markdown), agent-ready well-known files.
  */
 
 const CORS_HEADERS = {
@@ -23,6 +26,94 @@ const CORS_HEADERS = {
 
 const FREE_GENERATIONS = 1;
 const FREE_TTL_S = 60 * 60 * 24 * 365;
+
+const AGENT_LINK_HEADER = [
+  '<https://challengethefootage.com/sitemap.xml>; rel="sitemap"',
+  '</llms.txt>; rel="alternate"; type="text/plain"',
+  '</llms-full.txt>; rel="alternate"; type="text/plain"',
+  '</auth.md>; rel="alternate"; type="text/markdown"',
+  '</AGENTS.md>; rel="author"',
+  '</openapi.json>; rel="service-desc"; type="application/openapi+json"',
+  '</.well-known/api-catalog>; rel="api-catalog"',
+  '</.well-known/agent-card.json>; rel="agent-card"; type="application/json"',
+  '</.well-known/mcp/server-card.json>; rel="mcp-server-card"; type="application/json"',
+  '</.well-known/acp.json>; rel="payment-method"',
+  '</api/health>; rel="status"',
+  '<https://github.com/danielsmithdevelopment/surveillance-evidence-integrity>; rel="describedby"',
+].join(", ");
+
+const CONTENT_TYPE_OVERRIDES = {
+  "/.well-known/api-catalog":
+    'application/linkset+json; profile="https://www.rfc-editor.org/info/rfc9727"',
+  "/openapi.json": "application/openapi+json; charset=utf-8",
+  "/robots.txt": "text/plain; charset=utf-8",
+  "/sitemap.xml": "application/xml; charset=utf-8",
+  "/llms.txt": "text/plain; charset=utf-8",
+  "/llms-full.txt": "text/plain; charset=utf-8",
+  "/auth.md": "text/markdown; charset=utf-8",
+  "/AGENTS.md": "text/markdown; charset=utf-8",
+};
+
+function wantsMarkdown(request) {
+  const accept = (request.headers.get("Accept") || "").toLowerCase();
+  if (!accept.includes("text/markdown")) return false;
+  const md = accept.indexOf("text/markdown");
+  const html = accept.indexOf("text/html");
+  if (html === -1) return true;
+  return md !== -1 && md < html;
+}
+
+function markdownAssetPath(pathname) {
+  if (pathname === "/" || pathname === "/index.html") return "/index.md";
+  if (pathname === "/terms.html" || pathname === "/terms") return "/terms.md";
+  if (pathname === "/public-defenders.html" || pathname === "/public-defenders") {
+    return "/public-defenders.md";
+  }
+  return null;
+}
+
+async function serveAssets(request, env) {
+  const url = new URL(request.url);
+  let assetRequest = request;
+
+  if (request.method === "GET" && wantsMarkdown(request)) {
+    const mdPath = markdownAssetPath(url.pathname);
+    if (mdPath) {
+      const mdUrl = new URL(mdPath, url.origin);
+      assetRequest = new Request(mdUrl, request);
+    }
+  }
+
+  let response = await env.ASSETS.fetch(assetRequest);
+  // Fallback: if markdown missing, serve HTML as usual
+  if (response.status === 404 && assetRequest.url !== request.url) {
+    response = await env.ASSETS.fetch(request);
+  }
+
+  const headers = new Headers(response.headers);
+  headers.set("Link", AGENT_LINK_HEADER);
+  headers.set("Vary", mergeVary(headers.get("Vary"), "Accept"));
+
+  const path = new URL(assetRequest.url).pathname;
+  if (CONTENT_TYPE_OVERRIDES[path]) {
+    headers.set("Content-Type", CONTENT_TYPE_OVERRIDES[path]);
+  } else if (path.endsWith(".md") || wantsMarkdown(request)) {
+    headers.set("Content-Type", "text/markdown; charset=utf-8");
+  }
+
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
+}
+
+function mergeVary(existing, value) {
+  if (!existing) return value;
+  const parts = existing.split(",").map((s) => s.trim().toLowerCase());
+  if (parts.includes(value.toLowerCase())) return existing;
+  return `${existing}, ${value}`;
+}
 
 // ─── Vendor profiles ──────────────────────────────────────────────────────────
 
@@ -262,6 +353,13 @@ export default {
     if (request.method === "OPTIONS") return new Response(null, { headers: CORS_HEADERS });
     const url = new URL(request.url);
     try {
+      if (url.pathname === "/api/health" && request.method === "GET") {
+        return json({
+          ok: true,
+          service: "challenge-the-footage",
+          time: new Date().toISOString(),
+        });
+      }
       if (url.pathname === "/api/checkout" && request.method === "POST")
         return handleCheckout(request, env);
       if (url.pathname === "/api/entitlement" && request.method === "GET")
@@ -273,9 +371,9 @@ export default {
       if (url.pathname.startsWith("/api/session/") && request.method === "GET") {
         return handleSession(request, env, url.pathname.split("/api/session/")[1]);
       }
-      // Static assets (Pages / Workers assets binding)
+      // Static assets (Pages / Workers assets binding) + agent-ready headers
       if (env.ASSETS) {
-        return env.ASSETS.fetch(request);
+        return serveAssets(request, env);
       }
       return json({ error: "Not found" }, 404);
     } catch (err) {

@@ -1,0 +1,14 @@
+{
+  "protocol": {
+    "name": "acp",
+    "version": "2026-01-30",
+    "supported_versions": ["2026-01-30"],
+    "documentation_url": "https://agenticcommerce.dev"
+  },
+  "api_base_url": "https://challengethefootage.com",
+  "transports": ["rest"],
+  "capabilities": {
+    "services": ["checkout"],
+    "notes": "Document generation purchases ($9) via Stripe Checkout through ClawQL payments (POST /api/checkout)."
+  }
+}

@@ -1,0 +1,195 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Challenge the Footage API",
+    "version": "1.0.0",
+    "description": "Generate FRE 901 / FRE 702 / Fourth Amendment / §1983 document templates for surveillance evidence challenges. Not legal advice.",
+    "contact": {
+      "name": "Challenge the Footage",
+      "url": "https://challengethefootage.com",
+      "email": "hello@clawql.com"
+    },
+    "license": {
+      "name": "See repository LICENSE",
+      "url": "https://github.com/danielsmithdevelopment/surveillance-evidence-integrity"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://challengethefootage.com",
+      "description": "Production"
+    }
+  ],
+  "security": [
+    {
+      "googleIdToken": []
+    }
+  ],
+  "paths": {
+    "/api/entitlement": {
+      "get": {
+        "operationId": "getEntitlement",
+        "summary": "Check generation entitlement",
+        "responses": {
+          "200": {
+            "description": "Entitlement status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "entitled": { "type": "boolean" },
+                    "isPD": { "type": "boolean" },
+                    "canGenerate": { "type": "boolean" },
+                    "freeUsed": { "type": "integer" },
+                    "freeAllowed": { "type": "integer" }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "description": "Missing or invalid Google token" }
+        }
+      }
+    },
+    "/api/checkout": {
+      "post": {
+        "operationId": "createCheckout",
+        "summary": "Create Stripe Checkout session ($9)",
+        "x-payment-info": {
+          "amount": 900,
+          "currency": "usd",
+          "provider": "stripe",
+          "via": "clawql-payments"
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "origin": { "type": "string" },
+                  "successUrl": { "type": "string" },
+                  "cancelUrl": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Checkout URL",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "checkoutUrl": { "type": "string", "format": "uri" }
+                  }
+                }
+              }
+            }
+          },
+          "402": { "description": "Payment required (if applicable)" }
+        }
+      }
+    },
+    "/api/generate": {
+      "post": {
+        "operationId": "generateDocuments",
+        "summary": "Generate all four legal document templates",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["tosAccepted"],
+                "properties": {
+                  "tosAccepted": { "type": "boolean" },
+                  "vendor": {
+                    "type": "string",
+                    "enum": ["flock", "axon", "motorola", "genetec", "verkada", "custom"]
+                  },
+                  "customVendorName": { "type": "string" },
+                  "caseNumber": { "type": "string" },
+                  "defendant": { "type": "string" },
+                  "court": { "type": "string" },
+                  "jurisdiction": { "type": "string" },
+                  "city": { "type": "string" },
+                  "cameraType": { "type": "string" },
+                  "additionalFacts": { "type": "string" },
+                  "searchFacts": { "type": "string" },
+                  "civilHarm": { "type": "string" },
+                  "additionalVendorFacts": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Generated documents",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "sessionId": { "type": "string" },
+                    "docs": {
+                      "type": "object",
+                      "properties": {
+                        "motion": { "type": "string" },
+                        "accuracy": { "type": "string" },
+                        "access": { "type": "string" },
+                        "civil": { "type": "string" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "402": { "description": "Payment required — free generation exhausted" }
+        }
+      }
+    },
+    "/api/history": {
+      "get": {
+        "operationId": "listHistory",
+        "summary": "List prior generation session previews",
+        "responses": {
+          "200": { "description": "Session previews" }
+        }
+      }
+    },
+    "/api/session/{sessionId}": {
+      "get": {
+        "operationId": "getSession",
+        "summary": "Recall one generation session",
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Session content" },
+          "404": { "description": "Not found" }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "googleIdToken": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Google Sign-In ID token (aud must match GOOGLE_CLIENT_ID)"
+      }
+    }
+  }
+}

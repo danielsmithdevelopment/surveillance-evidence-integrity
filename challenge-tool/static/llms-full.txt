@@ -1,0 +1,48 @@
+# Challenge the Footage — full agent brief
+
+> Document templates for challenging surveillance evidence. **Not legal advice.** Attorney review required before filing.
+
+## Problem
+
+No major surveillance vendor (Flock Safety, Axon, Motorola/Vigilant, Genetec, Verkada) publicly documents cryptographic integrity controls (hash-at-capture in camera HSE, Merkle chaining, external immutable anchoring). Industry ALPR misidentification ~10%. FOIA-derived Flock logs show ~84% of queries without case numbers. Institute for Justice has documented wrongful stops and officer romantic-tracking abuse.
+
+## Four documents generated
+
+1. **FRE 901 motion in limine** — authentication / chain of custody
+2. **FRE 702 / Daubert motion** — reliability; proposed ≤0.1% error floor
+3. **Fourth Amendment suppression** — undocumented / abusive ALPR access
+4. **§ 1983 demand letter** — civil damages for wrongful stop/detention
+
+## Pricing & access
+
+- Free first generation per Google account
+- $9 per additional generation (Stripe via ClawQL payments)
+- Public defenders: free unlimited — email pd@challengethefootage.com
+
+## API
+
+See [openapi.json](https://challengethefootage.com/openapi.json). All `/api/*` routes require `Authorization: Bearer <Google ID token>`.
+
+### Generate
+
+`POST /api/generate` body includes `tosAccepted: true`, `vendor` (`flock|axon|motorola|genetec|verkada|custom`), case fields, and optional fact narratives. Returns `{ sessionId, docs: { motion, accuracy, access, civil } }`.
+
+## Integrity standards (for vendors / cities)
+
+Canonical docs live in the open-source repo:
+
+- technical-standards.md
+- model-contract-language.md
+- model-legislation.md
+- FOR-VENDORS.md
+- authentication-challenge-guide.md
+
+## Witness
+
+The Witness mobile app records encounters, hashes artifacts, anchors Merkle roots to Arweave, and can hand off `?witnessSession=` to this site.
+
+## Contact
+
+- pd@challengethefootage.com — public defender access
+- sponsor@challengethefootage.com — sponsor generations
+- hello@clawql.com — technical / ToS questions

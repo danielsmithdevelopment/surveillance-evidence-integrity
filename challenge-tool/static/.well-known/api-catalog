@@ -1,0 +1,33 @@
+{
+  "linkset": [
+    {
+      "anchor": "https://challengethefootage.com/",
+      "service-desc": [
+        {
+          "href": "https://challengethefootage.com/openapi.json",
+          "type": "application/openapi+json"
+        }
+      ],
+      "service-doc": [
+        {
+          "href": "https://challengethefootage.com/AGENTS.md",
+          "type": "text/markdown"
+        },
+        {
+          "href": "https://challengethefootage.com/llms.txt",
+          "type": "text/plain"
+        },
+        {
+          "href": "https://github.com/danielsmithdevelopment/surveillance-evidence-integrity",
+          "type": "text/html"
+        }
+      ],
+      "status": [
+        {
+          "href": "https://challengethefootage.com/api/health",
+          "type": "application/json"
+        }
+      ]
+    }
+  ]
+}

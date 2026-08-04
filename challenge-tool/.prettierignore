@@ -7,3 +7,6 @@ coverage
 playwright-report
 test-results
 *.md
+public/*.txt
+public/robots.txt
+public/sitemap.xml

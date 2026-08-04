@@ -75,3 +75,7 @@ wrangler kv:key put --binding=RATE_LIMIT_KV "pd_whitelist:{email}" "true"
 ## ToS acceptance
 
 Frontend stores acceptance under localStorage key `surv_tos_v1`. Increment to `v2` if terms change materially.
+
+## Agent readiness (isitagentready.com)
+
+See [AGENT-READY.md](./AGENT-READY.md). Static discovery files live in `public/` (copied into `static/` on build). The Worker adds `Link` headers and Markdown content negotiation.

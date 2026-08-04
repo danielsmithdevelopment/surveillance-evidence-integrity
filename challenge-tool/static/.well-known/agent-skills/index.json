@@ -1,0 +1,12 @@
+{
+  "$schema": "https://schemas.agentskills.io/discovery/0.2.0/schema.json",
+  "skills": [
+    {
+      "name": "challenge-the-footage",
+      "type": "skill-md",
+      "description": "Generate FRE 901, FRE 702, Fourth Amendment, and §1983 templates for challenging surveillance / ALPR evidence via challengethefootage.com.",
+      "url": "/.well-known/agent-skills/challenge-the-footage/SKILL.md",
+      "digest": "sha256:34e75534ed6404d93cd2e7b7f3d2cbc838a3f5c829e2f3129b1bcb21b17775c3"
+    }
+  ]
+}

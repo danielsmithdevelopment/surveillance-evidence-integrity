@@ -101,7 +101,7 @@ export const inputClass =
   "w-full rounded-xl border border-line bg-white px-3.5 py-2.5 text-[0.95rem] font-normal text-ink outline-none transition placeholder:text-ink-muted/70 focus:border-teal focus:ring-2 focus:ring-teal/25 disabled:cursor-not-allowed disabled:bg-paper disabled:opacity-70";
 
 export const btnPrimary =
-  "inline-flex items-center justify-center rounded-xl bg-teal px-5 py-3 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-teal-deep focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-45";
+  "inline-flex items-center justify-center rounded-xl bg-teal-deep px-5 py-3 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-teal focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-45";
 
 export const btnSecondary =
   "inline-flex items-center justify-center rounded-xl bg-ink px-5 py-3 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-ink/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-45";
