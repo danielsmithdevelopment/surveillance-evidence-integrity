@@ -36,3 +36,11 @@ Users brand-perceive **Challenge the Footage**, not a separate crypto/Arweave ap
 4. ~~R2 upload via Worker-proxied PUT~~
 5. EAS Build / TestFlight / Play internal track (`eas.json` scaffolded)
 6. Revisit enclave-backed keys / Rust crypto module if counsel requires it
+
+## Testing
+
+Worker evidence APIs (including device claim + upload) are covered in `challenge-tool/test/` — see [TESTING.md](../challenge-tool/TESTING.md).
+
+Native hashing must produce the same lowercase hex SHA-256 as the Worker (`witness/src/hash.ts` ↔ `challenge-tool/evidence-crypto.js`). Merkle root on the server is `SHA-256(transcriptHash:audioHash:videoHash)`.
+
+Expo/EAS device tests are manual until a native CI job is added.

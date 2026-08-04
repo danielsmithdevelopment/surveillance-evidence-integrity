@@ -66,3 +66,7 @@ Native record (no Google mid-encounter)
 - Ship **web recording** for one-URL onboarding; ship **Expo native** for reliability (full-file SHA-256, parallel audio, Worker→R2 uploads).
 - Never surface “connect wallet”, token tickers, or Arweave TX IDs in primary UI. Optional advanced “Independent verification” panel may show a verification ID for attorneys/experts.
 - Consider Rust only as a crypto/hash native module later — not as the app shell.
+
+## Testing & quality
+
+See [TESTING.md](./TESTING.md). CI runs format, lint, unit/API tests (including evidence secure/claim/upload via local Worker), Playwright a11y, and Lighthouse.

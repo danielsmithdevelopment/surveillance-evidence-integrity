@@ -23,6 +23,7 @@
  */
 
 import { buildOfflineDocs } from "./offline-docs.js";
+import { evidenceMerkleRoot, randomClaimCode, sha256Hex } from "./evidence-crypto.js";
 import { r2Configured, r2PutObject } from "./r2.js";
 
 const CORS_HEADERS = {
@@ -895,12 +896,6 @@ async function handleSession(request, env, sessionId) {
 
 // ─── Evidence (web / Witness) — Stripe for docs; ClawQL anchors behind the scenes ─
 
-async function sha256Hex(text) {
-  const data = new TextEncoder().encode(text);
-  const digest = await crypto.subtle.digest("SHA-256", data);
-  return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
-}
-
 async function handleEvidenceSecure(request, env) {
   let user;
   try {
@@ -1240,16 +1235,12 @@ async function handleEvidenceObjectPut(request, env, sessionId, artifactType) {
   });
 }
 
-function randomClaimCode() {
-  const bytes = new Uint8Array(18);
-  crypto.getRandomValues(bytes);
-  return [...bytes].map((b) => b.toString(16).padStart(2, "0")).join("");
-}
-
 async function persistEvidenceRecord(env, input) {
   const securedAt = new Date().toISOString();
-  const merkleRoot = await sha256Hex(
-    `${input.transcriptHash}:${input.audioHash}:${input.videoHash}`
+  const merkleRoot = await evidenceMerkleRoot(
+    input.transcriptHash,
+    input.audioHash,
+    input.videoHash
   );
 
   let status = "secured";

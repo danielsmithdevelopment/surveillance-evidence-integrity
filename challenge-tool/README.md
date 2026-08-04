@@ -39,13 +39,13 @@ Never set `ALLOW_TEST_AUTH` in production.
 ```bash
 npm run format:check   # Prettier
 npm run lint           # ESLint + jsx-a11y strict
-npm test               # smoke tests
+npm test               # smoke + offline docs + evidence crypto/API
 npm run test:a11y      # Playwright + axe WCAG 2.2 A/AA
 npm run lighthouse     # Lighthouse CI (a11y 100, BP/SEO ≥90)
 npm run ci             # all of the above
 ```
 
-GitHub Actions: `.github/workflows/ci.yml` runs the same suite on PRs and pushes.
+Full walkthrough: [TESTING.md](./TESTING.md). GitHub Actions: `.github/workflows/ci.yml`.
 
 ### Accessibility policy
 
@@ -77,8 +77,12 @@ Automated tools cannot prove full WCAG conformance. Before each release, manuall
 ```
 challenge-tool/
 ├── src/                 # React + Tailwind UI
-├── test/e2e/            # Playwright + axe WCAG suites
-├── worker.js            # Auth, entitlement, payment, generation
+├── test/                # node:test + Playwright + Lighthouse
+├── evidence-crypto.js   # Shared SHA-256 / merkle helpers
+├── worker.js            # Auth, entitlement, payment, generation, evidence
+├── r2.js                # Optional R2 PUT signing
+├── PRODUCT.md           # Product model
+├── TESTING.md           # How to run / what CI covers
 ├── eslint.config.js
 ├── lighthouserc.cjs
 ├── playwright.config.js

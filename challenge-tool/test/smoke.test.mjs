@@ -26,6 +26,7 @@ describe("challenge-tool artifacts", () => {
     assert.match(workerSrc, /ALLOW_TEST_AUTH/);
     assert.match(workerSrc, /buildOfflineDocs/);
     assert.match(workerSrc, /wantsOfflineGeneration/);
+    assert.match(workerSrc, /from "\.\/evidence-crypto\.js"/);
   });
 
   it("disclaimer names Challenge the Footage", () => {
@@ -89,6 +90,8 @@ describe("challenge-tool artifacts", () => {
     assert.match(workerSrc, /handleEvidenceUploadUrl/);
     assert.match(workerSrc, /handleEvidenceObjectPut/);
     readFileSync(join(root, "r2.js"));
+    readFileSync(join(root, "evidence-crypto.js"));
+    readFileSync(join(root, "TESTING.md"));
     assert.match(workerSrc, /oauth-authorization-server/);
     readFileSync(join(root, "src/webmcp.js"));
   });
