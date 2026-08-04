@@ -10,17 +10,19 @@ import {
   inputClass,
 } from "./Shell.jsx";
 import { registerWebMcpTools } from "./webmcp.js";
+import { FOOTAGE_CATEGORIES, getFootageCategory } from "../footage-modes.js";
 
 const TOS_KEY = "surv_tos_v1";
 const API = typeof window !== "undefined" ? window.CTF_API_BASE || "" : "";
 
-const VENDORS = [
+const ALL_VENDORS = [
   { id: "flock", label: "Flock Safety" },
   { id: "axon", label: "Axon" },
   { id: "motorola", label: "Motorola Solutions (Vigilant)" },
   { id: "genetec", label: "Genetec" },
   { id: "verkada", label: "Verkada" },
-  { id: "custom", label: "Other / custom vendor" },
+  { id: "cellphone", label: "Cell phone / personal device" },
+  { id: "custom", label: "Other / custom source" },
 ];
 
 const DOC_TABS = [
@@ -220,6 +222,7 @@ export default function App() {
   const [tosOk, setTosOk] = useState(() => !!localStorage.getItem(TOS_KEY));
   const [entitlement, setEntitlement] = useState(null);
   const [allowTestAuth, setAllowTestAuth] = useState(false);
+  const [footageCategory, setFootageCategory] = useState("fixed_surveillance");
   const [vendor, setVendor] = useState("flock");
   const [customVendorName, setCustomVendorName] = useState("");
   const [form, setForm] = useState({
@@ -234,6 +237,8 @@ export default function App() {
     civilHarm: "",
     additionalVendorFacts: "",
   });
+  const categoryMeta = getFootageCategory(footageCategory);
+  const vendorOptions = ALL_VENDORS.filter((v) => categoryMeta.vendorIds.includes(v.id));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
   const [sessionId, setSessionId] = useState(null);
@@ -321,8 +326,14 @@ export default function App() {
         token,
         body: {
           tosAccepted: true,
+          footageCategory,
           vendor: vendor === "custom" ? "custom" : vendor,
-          customVendorName: vendor === "custom" ? customVendorName : undefined,
+          customVendorName:
+            vendor === "custom"
+              ? customVendorName
+              : vendor === "cellphone"
+                ? customVendorName || undefined
+                : undefined,
           ...form,
         },
       });
@@ -484,8 +495,35 @@ export default function App() {
             </p>
           </div>
 
+          <div className="mb-4">
+            <Field label="Footage category">
+              {(id) => (
+                <select
+                  id={id}
+                  className={inputClass}
+                  value={footageCategory}
+                  disabled={!token}
+                  onChange={(e) => {
+                    const next = e.target.value;
+                    setFootageCategory(next);
+                    const meta = getFootageCategory(next);
+                    setVendor(meta.defaultVendor);
+                    setCustomVendorName("");
+                  }}
+                >
+                  {FOOTAGE_CATEGORIES.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.label}
+                    </option>
+                  ))}
+                </select>
+              )}
+            </Field>
+            <p className="mt-2 text-sm text-ink-muted">{categoryMeta.description}</p>
+          </div>
+
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Vendor">
+            <Field label={categoryMeta.sourceLabel}>
               {(id) => (
                 <select
                   id={id}
@@ -494,7 +532,7 @@ export default function App() {
                   onChange={(e) => setVendor(e.target.value)}
                   disabled={!token}
                 >
-                  {VENDORS.map((v) => (
+                  {vendorOptions.map((v) => (
                     <option key={v.id} value={v.id}>
                       {v.label}
                     </option>
@@ -502,15 +540,21 @@ export default function App() {
                 </select>
               )}
             </Field>
-            {vendor === "custom" && (
-              <Field label="Custom vendor name">
+            {(vendor === "custom" || vendor === "cellphone") && (
+              <Field
+                label={vendor === "cellphone" ? "Optional device label" : "Custom source name"}
+              >
                 {(id) => (
                   <input
                     id={id}
                     className={inputClass}
                     value={customVendorName}
                     onChange={(e) => setCustomVendorName(e.target.value)}
-                    placeholder="Vendor legal name"
+                    placeholder={
+                      vendor === "cellphone"
+                        ? "e.g. witness iPhone, officer personal phone"
+                        : "Vendor / source legal name"
+                    }
                     autoComplete="organization"
                   />
                 )}
@@ -577,7 +621,7 @@ export default function App() {
                   className={inputClass}
                   value={form.cameraType}
                   onChange={(e) => updateField("cameraType", e.target.value)}
-                  placeholder="ALPR hit, fixed CCTV, body-worn…"
+                  placeholder={categoryMeta.cameraPlaceholder}
                 />
               )}
             </Field>
@@ -594,14 +638,14 @@ export default function App() {
               />
             )}
           </Field>
-          <Field label="Search / access facts (Fourth Amendment)" className="mt-4">
+          <Field label="Search / access / custody facts (Fourth Amendment)" className="mt-4">
             {(id) => (
               <textarea
                 id={id}
                 className={`${inputClass} min-h-24 resize-y`}
                 value={form.searchFacts}
                 onChange={(e) => updateField("searchFacts", e.target.value)}
-                placeholder="Case number on the query? Stated purpose? Officer query history if known…"
+                placeholder={categoryMeta.searchPlaceholder}
               />
             )}
           </Field>
@@ -612,18 +656,30 @@ export default function App() {
                 className={`${inputClass} min-h-24 resize-y`}
                 value={form.civilHarm}
                 onChange={(e) => updateField("civilHarm", e.target.value)}
-                placeholder="Wrongful stop, detention at gunpoint, arrest, lost wages, injury…"
+                placeholder={categoryMeta.civilPlaceholder}
               />
             )}
           </Field>
-          {vendor === "custom" && (
-            <Field label="Additional vendor facts" className="mt-4">
+          {(vendor === "custom" || vendor === "cellphone") && (
+            <Field
+              label={
+                footageCategory === "cellphone"
+                  ? "Additional phone / provenance facts"
+                  : "Additional vendor facts"
+              }
+              className="mt-4"
+            >
               {(id) => (
                 <textarea
                   id={id}
                   className={`${inputClass} min-h-24 resize-y`}
                   value={form.additionalVendorFacts}
                   onChange={(e) => updateField("additionalVendorFacts", e.target.value)}
+                  placeholder={
+                    footageCategory === "cellphone"
+                      ? "Known edits, share path, extraction tool, missing original file…"
+                      : undefined
+                  }
                 />
               )}
             </Field>

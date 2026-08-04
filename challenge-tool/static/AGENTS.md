@@ -34,7 +34,7 @@ Send `Accept: text/markdown` on `/`, `/evidence.html`, `/terms.html`, or `/publi
 |---|---|---|
 | GET | `/api/entitlement` | Free / paid / PD status |
 | POST | `/api/checkout` | Stripe Checkout ($9) via ClawQL payments |
-| POST | `/api/generate` | Generate FRE 901 / 702 / 4th Am / §1983 docs |
+| POST | `/api/generate` | Generate FRE 901 / 702 / 4th Am / §1983 docs (`footageCategory`: fixed_surveillance \| body_worn \| cellphone) |
 | GET | `/api/history` | Prior session previews |
 | GET | `/api/session/:id` | Recall one generation session |
 | POST | `/api/evidence/secure` | Secure a recording package to the user account |

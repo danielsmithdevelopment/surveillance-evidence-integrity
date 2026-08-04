@@ -20,7 +20,7 @@ npm run ci               # all of the above
 | Suite | File(s) | Scope |
 |---|---|---|
 | Smoke | `test/smoke.test.mjs` | Vendor keys, API route strings, static agent-ready files, evidence handlers |
-| Offline docs | `test/offline-docs.test.mjs` | Deterministic FRE templates without ClawQL |
+| Offline docs | `test/offline-docs.test.mjs` | Deterministic FRE templates for fixed / body-worn / cellphone modes |
 | Evidence crypto | `test/evidence-crypto.test.mjs` | SHA-256 + merkle commitment shared with Worker |
 | Evidence gzip | `test/evidence-gzip.test.mjs` | Transcript gzip+base64 for rural sync-lite |
 | Incident helpers | `test/incident.test.mjs` | Multi-device incident codes + `PEER_LOST` timeouts |
@@ -39,6 +39,18 @@ npm run generate:sample          # writes .artifacts/sample-generation/
 Test bearer: `Authorization: Bearer test:<userId>:<email>`.
 
 **Never** set `ALLOW_TEST_AUTH` in production.
+
+## Document generation modes
+
+`POST /api/generate` accepts `footageCategory`:
+
+| Value | Pressure focus |
+|---|---|
+| `fixed_surveillance` (default) | ALPR / fixed cam hash, error rate, query abuse |
+| `body_worn` | Mute/dock/export integrity; clawql-surveillance-class bar |
+| `cellphone` | Cryptographic proof against AI alteration; Riley / selective clips |
+
+Offline coverage in `test/offline-docs.test.mjs`. See `FOOTAGE-CHALLENGE.md`.
 
 ## Evidence flow under test
 

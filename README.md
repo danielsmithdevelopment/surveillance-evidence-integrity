@@ -24,9 +24,9 @@ This repository is the response to that.
 
 ### For people facing charges or wrongful stops
 
-**[challengethefootage.com](https://challengethefootage.com)** — One product for civilians and public defenders: **record** encounters, **secure** evidence (ClawQL handles independent verification behind the scenes — no crypto wallet), and **generate** four attorney-review legal templates (FRE 901, FRE 702, Fourth Amendment, § 1983). Sign in with Google. Pay with Stripe. Free first generation; PDs unlimited.
+**[challengethefootage.com](https://challengethefootage.com)** — One product for civilians and public defenders: **record** encounters, **secure** evidence (ClawQL handles independent verification behind the scenes — no crypto wallet), and **generate** four attorney-review legal templates (FRE 901, FRE 702, Fourth Amendment, § 1983) for **fixed/ALPR, body-worn, and cell phone** footage. Sign in with Google. Pay with Stripe. Free first generation; PDs unlimited.
 
-Source: **[challenge-tool/](./challenge-tool/)** · Product model: **[challenge-tool/PRODUCT.md](./challenge-tool/PRODUCT.md)** · Challenge-grade vision: **[challenge-tool/CHALLENGE-GRADE.md](./challenge-tool/CHALLENGE-GRADE.md)** · Testing: **[challenge-tool/TESTING.md](./challenge-tool/TESTING.md)** · Evidence UI: `/evidence.html`
+Source: **[challenge-tool/](./challenge-tool/)** · Product model: **[challenge-tool/PRODUCT.md](./challenge-tool/PRODUCT.md)** · Challenge-grade vision: **[challenge-tool/CHALLENGE-GRADE.md](./challenge-tool/CHALLENGE-GRADE.md)** · Footage pressure: **[challenge-tool/FOOTAGE-CHALLENGE.md](./challenge-tool/FOOTAGE-CHALLENGE.md)** · Testing: **[challenge-tool/TESTING.md](./challenge-tool/TESTING.md)** · Evidence UI: `/evidence.html`
 
 **[Witness](./witness/)** — Optional native (Expo) capture module for the same product: offline / 2G-first sync, personal-safety alerts, and optional **multi-device incident** capture (shared `incidentId`, coordinated start, `PEER_LOST`). Prefer the website for one-URL onboarding; keep native for higher-reliability field capture. Deep-links back to Challenge the Footage with `?witnessSession=`.
 

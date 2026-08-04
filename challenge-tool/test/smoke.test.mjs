@@ -96,7 +96,11 @@ describe("challenge-tool artifacts", () => {
     readFileSync(join(root, "evidence-crypto.js"));
     readFileSync(join(root, "evidence-gzip.js"));
     readFileSync(join(root, "incident.js"));
+    readFileSync(join(root, "footage-modes.js"));
+    readFileSync(join(root, "FOOTAGE-CHALLENGE.md"));
     readFileSync(join(root, "CHALLENGE-GRADE.md"));
+    assert.match(workerSrc, /footageCategory/);
+    assert.match(workerSrc, /resolveFootageProfile/);
     readFileSync(join(root, "TESTING.md"));
     assert.match(workerSrc, /oauth-authorization-server/);
     readFileSync(join(root, "src/webmcp.js"));
