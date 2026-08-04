@@ -25,7 +25,9 @@
 import { buildOfflineDocs } from "./offline-docs.js";
 import {
   FOOTAGE_CATEGORY_IDS,
+  bodyCamRatchetLine,
   getFootageCategory,
+  normalizeBodyCamRecordingStatus,
   resolveFootageProfile,
 } from "./footage-modes.js";
 import { evidenceMerkleRoot, randomClaimCode, sha256Hex } from "./evidence-crypto.js";
@@ -700,22 +702,52 @@ async function incrementFree(env, userId) {
 function gatewayPrompts(vendorName, ctx, base) {
   const cat = ctx.footageCategory || "fixed_surveillance";
   if (cat === "body_worn") {
-    return {
-      motion: `Draft a motion in limine to exclude ${vendorName} body-worn / in-car footage on authentication grounds under FRE 901.
+    const rec = ctx.bodyCamRecordingStatus || "recorded";
+    const ratchet = bodyCamRatchetLine(rec);
+    if (rec === "missing") {
+      return {
+        motion: `Draft a TWO-STAGE body-worn motion: Stage 1 failure-to-record / adverse inference, Stage 2 FRE 901 authenticity ratchet for any later-produced footage.
 ${base}
+Recording status: NO usable ${vendorName} recording was produced (never activated / camera off).
+Operator facts: ${ctx.searchFacts || "discovery will establish duty to activate and device audit trail"}
+Ratchet: ${ratchet}
+Requirements:
+1. Caption 2. Intro seeking (a) adverse inference / statutory presumption for missing BWC (cite Colo. § 24-31-902 / People v. Havens; Ill. 50 ILCS 706 / People v. Tompkins where helpful), (b) limit officer testimony filling the gap, (c) FRE 901 hearing for any clip still offered
+3. Facts: duty to record under policy/statute; no file produced; camera assignment
+4. Stage 1 legal standard — duty to record + inferences/presumptions + due process
+5. Stage 2 — any existing/other-officer ${vendorName} media still needs hash-before-leave-device and independent verification (clawql-surveillance-class)
+6. Ten discovery requests focused on device audit trail, activation duty, other officers' cameras
+7. Prayer 8. Signature
+Write the complete motion. Number paragraphs.`,
+        accuracy: `Draft FRE 702 motion: a body-worn "system" that fails to record required encounters is unreliable.
+${base}
+Recording status: missing. Ratchet: ${ratchet}
+Requirements: duty-to-record as reliability; Chicago COPA / CBS Left in the Dark style systemic non-activation; proposed Challenge-grade auditability minimum; ten discovery requests; prayer; signature.`,
+        access: `Draft Brady/spoliation motion to compel device audit trails and sanctions for missing required ${vendorName} body-worn footage.
+${base}
+Additional facts: ${ctx.searchFacts || "not specified"}
+Ratchet: ${ratchet}
+Requirements: spoliation/Brady when required recording absent; compel Evidence.com device audit trail; Billings-style camera-off examples; ten discovery requests; prayer; signature.`,
+      };
+    }
+    return {
+      motion: `Draft a motion in limine to exclude ${vendorName} body-worn / in-car footage on authentication grounds under FRE 901, preserving Stage 1 failure-to-record remedies if activation logs show gaps${rec === "partial" ? " (PARTIAL/MUTE GAPS are the primary Stage 1 issue)" : ""}.
+${base}
+Recording status: ${rec}. Ratchet: ${ratchet}
 Requirements:
 1. Caption block with full case details
-2. Introduction stating relief sought (exclude body-worn footage lacking Challenge-grade integrity)
-3. Factual background: device/vendor, docking/cloud path, how prosecution will use the video
+2. Introduction stating relief sought (exclude body-worn footage lacking Challenge-grade integrity; adverse inference for mute/off intervals)
+3. Factual background: device/vendor, docking/cloud path, how prosecution will use the video; note any mute/late-activation gaps
 4. FRE 901(a) and 901(b)(9) standard — process/system reliability
 5. Argue absence of: (a) cryptographic hash before leave-device, (b) tamper-evident activation/mute/dock logs, (c) Merkle or equivalent audit chain, (d) external immutable anchor independent of the evidence cloud
-6. Explain why Evidence.com-class portals as sole oracle are vendor assertion; reference commercial undetectable-alteration risk (Toka / Haaretz 2022) and demand clawql-surveillance-class controls
+6. Explain why Evidence.com-class portals as sole oracle are vendor assertion; demand clawql-surveillance-class controls
 7. Ten discovery requests on body-worn integrity (hash, mute/dock, export, re-encode)
 8. Prayer: exclusion or evidentiary hearing with live independent verification
 9. Signature placeholder
 Write the complete motion. Number paragraphs.`,
       accuracy: `Draft a FRE 702 / Daubert motion challenging reliability of ${vendorName} body-worn footage and any AI assist output (transcript/redaction/search).
 ${base}
+Recording status: ${rec}. Ratchet: ${ratchet}
 Requirements:
 1. Caption 2. Intro independent of authentication motion
 3. FRE 702 / Daubert gatekeeping for completeness and AI-derived descriptions
@@ -729,10 +761,11 @@ Write the complete motion.`,
       access: `Draft a motion to suppress / compel complete ${vendorName} body-worn evidence on Fourth Amendment and Brady grounds.
 ${base}
 Additional facts: ${ctx.searchFacts || "not specified — include discovery to establish activation, mute, exports, multi-officer angles"}
+Recording status: ${rec}. Ratchet: ${ratchet}
 Requirements:
 1. Caption 2. Intro 3. Legal standard (exclusionary rule + Brady completeness)
 4. Vault access/export/retention failures; failure-to-activate as constitutional issue in force cases
-5. Ten discovery requests on vault logs, retention, redactions vs masters, personal-phone sidecars
+5. Ten discovery requests on vault logs, retention, redacted vs masters, personal-phone sidecars
 6. Prayer for suppression or complete production with integrity proofs
 7. Signature placeholder
 Write the complete motion.`,
@@ -825,10 +858,13 @@ async function generateAllDocs(env, system, ctx, enriched, vendorName, profile) 
   }
 
   const mode = getFootageCategory(ctx.footageCategory);
+  const recStatus =
+    ctx.footageCategory === "body_worn" ? ctx.bodyCamRecordingStatus || "recorded" : null;
   const base = `
 Footage category: ${mode.label}
 Source / vendor: ${vendorName}
 Camera / footage type: ${ctx.cameraType || mode.label}
+Body-cam recording status: ${recStatus || "n/a"}
 Case: ${ctx.caseNumber} | ${ctx.defendant} | ${ctx.court} | ${ctx.jurisdiction}
 ${enriched}`;
 
@@ -1012,6 +1048,10 @@ async function handleGenerate(request, env) {
     searchFacts: form.searchFacts || "",
     civilHarm: form.civilHarm || "",
     footageCategory,
+    bodyCamRecordingStatus: normalizeBodyCamRecordingStatus(
+      form.bodyCamRecordingStatus,
+      footageCategory
+    ),
   };
 
   let docs;

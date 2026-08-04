@@ -181,6 +181,11 @@
                     "type": "string",
                     "enum": ["fixed_surveillance", "body_worn", "cellphone"],
                     "description": "Capture class: fixed/ALPR, body-worn, or cell phone footage"
+                  },
+                  "bodyCamRecordingStatus": {
+                    "type": "string",
+                    "enum": ["missing", "partial", "recorded"],
+                    "description": "For body_worn: Stage 1 failure-to-record vs Stage 2 authenticity of existing file"
                   }
                 }
               }
