@@ -17,7 +17,7 @@ async function expectNoA11yViolations(page, path) {
     });
     if (await checkbox.isVisible().catch(() => false)) {
       await checkbox.check();
-      await page.getByRole("button", { name: "Continue" }).click();
+      await page.getByRole("button", { name: "Continue", exact: true }).click();
       await expect(page.getByRole("heading", { name: /Challenge/i })).toBeVisible();
     }
   }
