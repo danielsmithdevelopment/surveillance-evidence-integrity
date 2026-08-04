@@ -4,12 +4,12 @@
 
 ## Why not Tauri / “Rust mobile”?
 
-| Option | Fit for police-encounter recording |
-|---|---|
-| **Expo / React Native** | Strong camera/mic/permissions, App Store + Play path, already scaffolded here. Best near-term. |
-| **Tauri 2 mobile** | Real, but early for production camera capture; stronger on desktop shells than iOS/Android media apps today. |
-| **Pure Rust (JNI / Swift bridge)** | Maximum control, maximum cost. Revisit only if RN cannot meet integrity/enclave requirements. |
-| **Flutter** | Fine technically; would discard the existing Expo app for little gain. |
+| Option                             | Fit for police-encounter recording                                                                           |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| **Expo / React Native**            | Strong camera/mic/permissions, App Store + Play path, already scaffolded here. Best near-term.               |
+| **Tauri 2 mobile**                 | Real, but early for production camera capture; stronger on desktop shells than iOS/Android media apps today. |
+| **Pure Rust (JNI / Swift bridge)** | Maximum control, maximum cost. Revisit only if RN cannot meet integrity/enclave requirements.                |
+| **Flutter**                        | Fine technically; would discard the existing Expo app for little gain.                                       |
 
 We can still use **Rust where it matters later** (hashing, signing) via a native module — without rewriting the whole UX in Rust.
 
@@ -34,13 +34,23 @@ Users brand-perceive **Challenge the Footage**, not a separate crypto/Arweave ap
 2. ~~Device-first secure + claim on website~~
 3. ~~Full-file SHA-256 + parallel audio (ffmpeg optional)~~
 4. ~~R2 upload via Worker-proxied PUT~~
-5. EAS Build / TestFlight / Play internal track (`eas.json` scaffolded)
-6. Revisit enclave-backed keys / Rust crypto module if counsel requires it
+5. ~~Whisper module scaffold (stub + optional whisper.rn)~~
+6. EAS Build / TestFlight / Play internal track (`eas.json` scaffolded; needs `eas init`)
+7. Bundle a Whisper model in the EAS profile + verify live STT on device
+8. Revisit enclave-backed keys / Rust crypto module if counsel requires it
 
 ## Testing
 
 Worker evidence APIs (including device claim + upload) are covered in `challenge-tool/test/` — see [TESTING.md](../challenge-tool/TESTING.md).
 
-Native hashing must produce the same lowercase hex SHA-256 as the Worker (`witness/src/hash.ts` ↔ `challenge-tool/evidence-crypto.js`). Merkle root on the server is `SHA-256(transcriptHash:audioHash:videoHash)`.
+Native:
+
+```bash
+cd witness && npm test
+```
+
+Hashing must produce the same lowercase hex SHA-256 as the Worker (`witness/src/hash.ts` ↔ `challenge-tool/evidence-crypto.js`). Merkle root on the server is `SHA-256(transcriptHash:audioHash:videoHash)`.
+
+Transcript packaging never invents speech when Whisper is unavailable (`TRANSCRIPT_PENDING` marker via `src/whisper-format.js`).
 
 Expo/EAS device tests are manual until a native CI job is added.

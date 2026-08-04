@@ -48,16 +48,15 @@ Merkle root = `SHA-256(transcriptHash + ":" + audioHash + ":" + videoHash)` (see
 
 ## Native app
 
-`witness/` is Expo. Automated native CI is not in this repo yet. Manually:
+`witness/` is Expo. Automated coverage today:
 
 ```bash
 cd witness
-npm install
-npx tsc --noEmit   # when TypeScript is configured
-# Device: eas build / Expo Go against CTF Worker with ALLOW_TEST_AUTH for claim only
+npm test                 # transcript packaging + Whisper wiring contract
+npx tsc --noEmit         # when dependencies are installed
 ```
 
-Hashing must stay aligned with Worker hex digests (`@noble/hashes` full-file SHA-256).
+Hashing must stay aligned with Worker hex digests (`@noble/hashes` full-file SHA-256). Whisper defaults to an honest `TRANSCRIPT_PENDING` stub unless `EXPO_PUBLIC_WHISPER=1` + a native module are present.
 
 ## Production checklist (not automated)
 

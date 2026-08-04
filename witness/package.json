@@ -6,7 +6,9 @@
   "scripts": {
     "start": "expo start",
     "android": "expo run:android",
-    "ios": "expo run:ios"
+    "ios": "expo run:ios",
+    "test": "node --test test/*.test.mjs",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@noble/hashes": "^1.8.0",

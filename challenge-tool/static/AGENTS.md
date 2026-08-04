@@ -47,6 +47,8 @@ Send `Accept: text/markdown` on `/`, `/evidence.html`, `/terms.html`, or `/publi
 
 Authorization: `Bearer <Google ID token>` matching `GOOGLE_CLIENT_ID`.
 
+Local testing (never production): `ALLOW_TEST_AUTH=true` accepts `Bearer test:<userId>:<email>`. See [TESTING.md](https://github.com/danielsmithdevelopment/surveillance-evidence-integrity/blob/main/challenge-tool/TESTING.md).
+
 ## Do not
 
 - Treat generated documents as filed legal work product

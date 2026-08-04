@@ -42,6 +42,11 @@ import {
   type AudioCapture,
 } from "./src/audio";
 import { secureDeviceEvidence, uploadEvidenceObject } from "./src/api";
+import {
+  formatEvidenceTranscript,
+  getWhisperEngine,
+  liveTranscriptBanner,
+} from "./src/whisper";
 
 const CONSENT_KEY = "ctf_evidence_consent_v1";
 const DEVICE_KEY = "ctf_evidence_device_id";
@@ -70,6 +75,7 @@ interface SessionResult {
   verificationId: string;
   uploads?: { transcript?: boolean; audio?: boolean; video?: boolean };
   audioSource?: "parallel" | "ffmpeg" | "pending";
+  transcriptEngine?: "stub" | "native";
 }
 
 function randomId(prefix: string) {
@@ -100,6 +106,8 @@ export default function App() {
   const locationRef = useRef<{ latitude: number; longitude: number } | null>(
     null,
   );
+  const whisperEngineId = useRef<"stub" | "native">("stub");
+  const manualNotesRef = useRef("");
 
   useEffect(() => {
     (async () => {
@@ -162,6 +170,11 @@ export default function App() {
       setRecording(true);
       setStatus("Recording…");
 
+      const engine = await getWhisperEngine();
+      whisperEngineId.current = engine.id;
+      setTranscript(liveTranscriptBanner(engine.id));
+      setStatus(engine.label);
+
       audioRef.current = await startParallelAudio();
 
       const cam = cameraRef.current;
@@ -177,12 +190,6 @@ export default function App() {
           setPhase("idle");
           setRecording(false);
         });
-
-      setTranscript(
-        (t) =>
-          t ||
-          "[Live transcript placeholder — on-device Whisper will appear here in a later build]\n",
-      );
     } catch (e: any) {
       Alert.alert("Cannot start", e.message || String(e));
     }
@@ -215,10 +222,33 @@ export default function App() {
         if (audioUri) audioSource = "ffmpeg";
       }
 
-      setStatus("Writing transcript…");
-      const transcriptText =
-        transcript ||
-        `[Evidence transcript — ${startedAt.current} → ${endedAt}]\nOn-device Whisper output will appear here.`;
+      setStatus("Transcribing…");
+      const engine = await getWhisperEngine();
+      whisperEngineId.current = engine.id;
+      let modelText = "";
+      if (audioUri && engine.id === "native") {
+        try {
+          const spoken = await engine.transcribeFile(audioUri);
+          modelText = spoken.text || "";
+        } catch (e: any) {
+          console.warn("Whisper transcribe:", e?.message || e);
+        }
+      }
+
+      // Treat edits in the live box as operator notes (strip our banners).
+      const manualNotes = transcript
+        .replace(/\[Transcript\][^\n]*\n?/g, "")
+        .trim();
+      manualNotesRef.current = manualNotes;
+
+      const transcriptText = formatEvidenceTranscript({
+        startedAt: startedAt.current!,
+        endedAt,
+        engine: engine.id,
+        modelText,
+        manualNotes,
+      });
+      setTranscript(transcriptText);
       const transcriptPath = `${FileSystem.cacheDirectory}transcript-${Date.now()}.txt`;
       await FileSystem.writeAsStringAsync(transcriptPath, transcriptText);
 
@@ -306,6 +336,7 @@ export default function App() {
         verificationId: secured.verificationId || secured.sessionId,
         uploads,
         audioSource,
+        transcriptEngine: whisperEngineId.current,
       });
       setPhase("secured");
       setStatus("Evidence secured.");
@@ -440,6 +471,11 @@ export default function App() {
             {result.audioSource === "pending"
               ? "pending extract"
               : result.audioSource}
+            {" · "}
+            Transcript:{" "}
+            {result.transcriptEngine === "native"
+              ? "on-device Whisper"
+              : "pending (audio authoritative)"}
             {" · "}
             Uploads:{" "}
             {[

@@ -31,11 +31,11 @@ export EXPO_PUBLIC_CTF_WEB=http://127.0.0.1:8787
 npx expo start
 ```
 
-| Variable | Purpose |
-|---|---|
-| `EXPO_PUBLIC_CTF_API` | CTF Worker base (default production site) |
-| `EXPO_PUBLIC_CTF_WEB` | Website base for claim / docs deep links |
-| `EXPO_PUBLIC_WITNESS_API` | Legacy alias for `EXPO_PUBLIC_CTF_API` |
+| Variable                  | Purpose                                   |
+| ------------------------- | ----------------------------------------- |
+| `EXPO_PUBLIC_CTF_API`     | CTF Worker base (default production site) |
+| `EXPO_PUBLIC_CTF_WEB`     | Website base for claim / docs deep links  |
+| `EXPO_PUBLIC_WITNESS_API` | Legacy alias for `EXPO_PUBLIC_CTF_API`    |
 
 ## EAS / TestFlight / Play
 
@@ -51,11 +51,30 @@ Profiles live in [`eas.json`](./eas.json): `development` (dev client), `preview`
 
 ## Incomplete (known)
 
-1. Live Whisper transcript
+1. ~~Whisper module scaffold~~ — stub + optional `whisper.rn` path (`EXPO_PUBLIC_WHISPER=1`); live model still needs a custom dev client + model asset
 2. Enclave / Keychain-backed device keys
 3. Production R2 bucket binding + secrets on the CTF Worker
 4. Replace `extra.eas.projectId` placeholder after `eas init`
 5. Background recording / shake-to-activate shortcuts
+
+## Whisper
+
+Default builds use an **honest stub**: transcript files are marked `TRANSCRIPT_PENDING` so courts never see invented speech. Audio/video hashes remain authoritative.
+
+To enable on-device STT in a **custom Expo dev client / EAS build**:
+
+```bash
+# after linking a Whisper native module (e.g. whisper.rn) and bundling a model:
+export EXPO_PUBLIC_WHISPER=1
+export EXPO_PUBLIC_WHISPER_MODEL=/path/in/bundle/ggml-small.bin
+npx expo run:ios   # or eas build --profile development
+```
+
+`src/whisper.ts` probes `whisper.rn` and falls back to the stub when the module or model is missing.
+
+```bash
+npm test   # node:test for transcript packaging
+```
 
 ## Legacy worker
 
