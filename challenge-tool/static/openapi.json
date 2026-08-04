@@ -3,7 +3,7 @@
   "info": {
     "title": "Challenge the Footage API",
     "version": "1.0.0",
-    "description": "Challenge the Footage — evidence capture APIs plus FRE 901 / FRE 702 / Fourth Amendment / §1983 document templates. Stripe for payments. ClawQL for inference and independent anchoring. Not legal advice.",
+    "description": "Challenge the Footage \u2014 evidence capture APIs plus FRE 901 / FRE 702 / Fourth Amendment / \u00a71983 document templates. Stripe for payments. ClawQL for inference and independent anchoring. Not legal advice.",
     "contact": {
       "name": "Challenge the Footage",
       "url": "https://challengethefootage.com",
@@ -38,17 +38,29 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "entitled": { "type": "boolean" },
-                    "isPD": { "type": "boolean" },
-                    "canGenerate": { "type": "boolean" },
-                    "freeUsed": { "type": "integer" },
-                    "freeAllowed": { "type": "integer" }
+                    "entitled": {
+                      "type": "boolean"
+                    },
+                    "isPD": {
+                      "type": "boolean"
+                    },
+                    "canGenerate": {
+                      "type": "boolean"
+                    },
+                    "freeUsed": {
+                      "type": "integer"
+                    },
+                    "freeAllowed": {
+                      "type": "integer"
+                    }
                   }
                 }
               }
             }
           },
-          "401": { "description": "Missing or invalid Google token" }
+          "401": {
+            "description": "Missing or invalid Google token"
+          }
         }
       }
     },
@@ -68,9 +80,15 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "origin": { "type": "string" },
-                  "successUrl": { "type": "string" },
-                  "cancelUrl": { "type": "string" }
+                  "origin": {
+                    "type": "string"
+                  },
+                  "successUrl": {
+                    "type": "string"
+                  },
+                  "cancelUrl": {
+                    "type": "string"
+                  }
                 }
               }
             }
@@ -84,13 +102,18 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "checkoutUrl": { "type": "string", "format": "uri" }
+                    "checkoutUrl": {
+                      "type": "string",
+                      "format": "uri"
+                    }
                   }
                 }
               }
             }
           },
-          "402": { "description": "Payment required (if applicable)" }
+          "402": {
+            "description": "Payment required (if applicable)"
+          }
         }
       }
     },
@@ -106,22 +129,46 @@
                 "type": "object",
                 "required": ["tosAccepted"],
                 "properties": {
-                  "tosAccepted": { "type": "boolean" },
+                  "tosAccepted": {
+                    "type": "boolean"
+                  },
                   "vendor": {
                     "type": "string",
                     "enum": ["flock", "axon", "motorola", "genetec", "verkada", "custom"]
                   },
-                  "customVendorName": { "type": "string" },
-                  "caseNumber": { "type": "string" },
-                  "defendant": { "type": "string" },
-                  "court": { "type": "string" },
-                  "jurisdiction": { "type": "string" },
-                  "city": { "type": "string" },
-                  "cameraType": { "type": "string" },
-                  "additionalFacts": { "type": "string" },
-                  "searchFacts": { "type": "string" },
-                  "civilHarm": { "type": "string" },
-                  "additionalVendorFacts": { "type": "string" }
+                  "customVendorName": {
+                    "type": "string"
+                  },
+                  "caseNumber": {
+                    "type": "string"
+                  },
+                  "defendant": {
+                    "type": "string"
+                  },
+                  "court": {
+                    "type": "string"
+                  },
+                  "jurisdiction": {
+                    "type": "string"
+                  },
+                  "city": {
+                    "type": "string"
+                  },
+                  "cameraType": {
+                    "type": "string"
+                  },
+                  "additionalFacts": {
+                    "type": "string"
+                  },
+                  "searchFacts": {
+                    "type": "string"
+                  },
+                  "civilHarm": {
+                    "type": "string"
+                  },
+                  "additionalVendorFacts": {
+                    "type": "string"
+                  }
                 }
               }
             }
@@ -135,14 +182,24 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "sessionId": { "type": "string" },
+                    "sessionId": {
+                      "type": "string"
+                    },
                     "docs": {
                       "type": "object",
                       "properties": {
-                        "motion": { "type": "string" },
-                        "accuracy": { "type": "string" },
-                        "access": { "type": "string" },
-                        "civil": { "type": "string" }
+                        "motion": {
+                          "type": "string"
+                        },
+                        "accuracy": {
+                          "type": "string"
+                        },
+                        "access": {
+                          "type": "string"
+                        },
+                        "civil": {
+                          "type": "string"
+                        }
                       }
                     }
                   }
@@ -150,7 +207,9 @@
               }
             }
           },
-          "402": { "description": "Payment required — free generation exhausted" }
+          "402": {
+            "description": "Payment required \u2014 free generation exhausted"
+          }
         }
       }
     },
@@ -159,7 +218,9 @@
         "operationId": "listHistory",
         "summary": "List prior generation session previews",
         "responses": {
-          "200": { "description": "Session previews" }
+          "200": {
+            "description": "Session previews"
+          }
         }
       }
     },
@@ -172,12 +233,18 @@
             "name": "sessionId",
             "in": "path",
             "required": true,
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
-          "200": { "description": "Session content" },
-          "404": { "description": "Not found" }
+          "200": {
+            "description": "Session content"
+          },
+          "404": {
+            "description": "Not found"
+          }
         }
       }
     },
@@ -194,15 +261,36 @@
                 "type": "object",
                 "required": ["transcriptHash", "audioHash", "videoHash"],
                 "properties": {
-                  "transcriptHash": { "type": "string" },
-                  "audioHash": { "type": "string" },
-                  "videoHash": { "type": "string" },
-                  "transcriptText": { "type": "string" },
-                  "mimeType": { "type": "string" },
-                  "startedAt": { "type": "string", "format": "date-time" },
-                  "endedAt": { "type": "string", "format": "date-time" },
-                  "stateCode": { "type": "string" },
-                  "source": { "type": "string", "enum": ["web", "native"] }
+                  "transcriptHash": {
+                    "type": "string"
+                  },
+                  "audioHash": {
+                    "type": "string"
+                  },
+                  "videoHash": {
+                    "type": "string"
+                  },
+                  "transcriptText": {
+                    "type": "string"
+                  },
+                  "mimeType": {
+                    "type": "string"
+                  },
+                  "startedAt": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "endedAt": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "stateCode": {
+                    "type": "string"
+                  },
+                  "source": {
+                    "type": "string",
+                    "enum": ["web", "native"]
+                  }
                 }
               }
             }
@@ -216,16 +304,27 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "sessionId": { "type": "string" },
-                    "status": { "type": "string" },
-                    "verificationId": { "type": "string" },
-                    "securedAt": { "type": "string", "format": "date-time" }
+                    "sessionId": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string"
+                    },
+                    "verificationId": {
+                      "type": "string"
+                    },
+                    "securedAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
                   }
                 }
               }
             }
           },
-          "401": { "description": "Unauthorized" }
+          "401": {
+            "description": "Unauthorized"
+          }
         }
       }
     },
@@ -243,12 +342,25 @@
                 "type": "object",
                 "required": ["deviceId", "transcriptHash", "audioHash", "videoHash"],
                 "properties": {
-                  "deviceId": { "type": "string" },
-                  "transcriptHash": { "type": "string" },
-                  "audioHash": { "type": "string" },
-                  "videoHash": { "type": "string" },
-                  "transcriptText": { "type": "string" },
-                  "source": { "type": "string", "enum": ["native", "web"] }
+                  "deviceId": {
+                    "type": "string"
+                  },
+                  "transcriptHash": {
+                    "type": "string"
+                  },
+                  "audioHash": {
+                    "type": "string"
+                  },
+                  "videoHash": {
+                    "type": "string"
+                  },
+                  "transcriptText": {
+                    "type": "string"
+                  },
+                  "source": {
+                    "type": "string",
+                    "enum": ["native", "web"]
+                  }
                 }
               }
             }
@@ -275,15 +387,36 @@
                 "type": "object",
                 "required": ["deviceId", "transcriptHash", "audioHash", "videoHash"],
                 "properties": {
-                  "deviceId": { "type": "string" },
-                  "transcriptHash": { "type": "string" },
-                  "audioHash": { "type": "string" },
-                  "videoHash": { "type": "string" },
-                  "transcriptEncoding": { "type": "string", "enum": ["gzip+base64"] },
-                  "transcriptGzipB64": { "type": "string" },
-                  "transcriptText": { "type": "string" },
-                  "linkTier": { "type": "string", "enum": ["offline", "constrained", "ok"] },
-                  "source": { "type": "string", "enum": ["native", "web"] }
+                  "deviceId": {
+                    "type": "string"
+                  },
+                  "transcriptHash": {
+                    "type": "string"
+                  },
+                  "audioHash": {
+                    "type": "string"
+                  },
+                  "videoHash": {
+                    "type": "string"
+                  },
+                  "transcriptEncoding": {
+                    "type": "string",
+                    "enum": ["gzip+base64"]
+                  },
+                  "transcriptGzipB64": {
+                    "type": "string"
+                  },
+                  "transcriptText": {
+                    "type": "string"
+                  },
+                  "linkTier": {
+                    "type": "string",
+                    "enum": ["offline", "constrained", "ok"]
+                  },
+                  "source": {
+                    "type": "string",
+                    "enum": ["native", "web"]
+                  }
                 }
               }
             }
@@ -310,24 +443,40 @@
                 "type": "object",
                 "required": ["deviceId", "kind"],
                 "properties": {
-                  "deviceId": { "type": "string" },
+                  "deviceId": {
+                    "type": "string"
+                  },
                   "kind": {
                     "type": "string",
                     "enum": ["deadman", "interrupt", "manual", "checkin_ok"]
                   },
-                  "message": { "type": "string" },
-                  "scenario": { "type": "string" },
-                  "location": { "type": "object" },
-                  "sessionId": { "type": "string" },
-                  "localId": { "type": "string" },
-                  "interruptReason": { "type": "string" }
+                  "message": {
+                    "type": "string"
+                  },
+                  "scenario": {
+                    "type": "string"
+                  },
+                  "location": {
+                    "type": "object"
+                  },
+                  "sessionId": {
+                    "type": "string"
+                  },
+                  "localId": {
+                    "type": "string"
+                  },
+                  "interruptReason": {
+                    "type": "string"
+                  }
                 }
               }
             }
           }
         },
         "responses": {
-          "200": { "description": "ok + pingId" }
+          "200": {
+            "description": "ok + pingId"
+          }
         }
       }
     },
@@ -343,17 +492,27 @@
                 "type": "object",
                 "required": ["sessionId", "claimCode"],
                 "properties": {
-                  "sessionId": { "type": "string" },
-                  "claimCode": { "type": "string" }
+                  "sessionId": {
+                    "type": "string"
+                  },
+                  "claimCode": {
+                    "type": "string"
+                  }
                 }
               }
             }
           }
         },
         "responses": {
-          "200": { "description": "Claimed" },
-          "403": { "description": "Invalid claim code" },
-          "409": { "description": "Already linked to another account" }
+          "200": {
+            "description": "Claimed"
+          },
+          "403": {
+            "description": "Invalid claim code"
+          },
+          "409": {
+            "description": "Already linked to another account"
+          }
         }
       }
     },
@@ -370,19 +529,34 @@
                 "type": "object",
                 "required": ["sessionId", "artifactType", "contentType", "sha256"],
                 "properties": {
-                  "sessionId": { "type": "string" },
-                  "artifactType": { "type": "string", "enum": ["transcript", "audio", "video"] },
-                  "contentType": { "type": "string" },
-                  "sha256": { "type": "string" },
-                  "deviceId": { "type": "string" },
-                  "claimCode": { "type": "string" }
+                  "sessionId": {
+                    "type": "string"
+                  },
+                  "artifactType": {
+                    "type": "string",
+                    "enum": ["transcript", "audio", "video"]
+                  },
+                  "contentType": {
+                    "type": "string"
+                  },
+                  "sha256": {
+                    "type": "string"
+                  },
+                  "deviceId": {
+                    "type": "string"
+                  },
+                  "claimCode": {
+                    "type": "string"
+                  }
                 }
               }
             }
           }
         },
         "responses": {
-          "200": { "description": "uploadUrl + storage key" }
+          "200": {
+            "description": "uploadUrl + storage key"
+          }
         }
       }
     },
@@ -392,16 +566,28 @@
         "summary": "Upload evidence bytes (Worker proxies to R2 when configured)",
         "security": [],
         "parameters": [
-          { "name": "sessionId", "in": "path", "required": true, "schema": { "type": "string" } },
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
           {
             "name": "artifactType",
             "in": "path",
             "required": true,
-            "schema": { "type": "string", "enum": ["transcript", "audio", "video"] }
+            "schema": {
+              "type": "string",
+              "enum": ["transcript", "audio", "video"]
+            }
           }
         ],
         "responses": {
-          "200": { "description": "Stored (or metadata-only when R2 unset)" }
+          "200": {
+            "description": "Stored (or metadata-only when R2 unset)"
+          }
         }
       }
     },
@@ -410,7 +596,9 @@
         "operationId": "listEvidenceSessions",
         "summary": "List evidence sessions for the signed-in account",
         "responses": {
-          "200": { "description": "Evidence session index" }
+          "200": {
+            "description": "Evidence session index"
+          }
         }
       }
     },
@@ -424,12 +612,88 @@
             "name": "sessionId",
             "in": "path",
             "required": true,
-            "schema": { "type": "string" }
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
-          "200": { "description": "Verification summary" },
-          "404": { "description": "Not found" }
+          "200": {
+            "description": "Verification summary"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      }
+    },
+    "/api/evidence/incident/create": {
+      "post": {
+        "operationId": "createEvidenceIncident",
+        "summary": "Create a multi-device evidence incident (multi-angle / multi-mic)",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "incidentId + members"
+          }
+        }
+      }
+    },
+    "/api/evidence/incident/join": {
+      "post": {
+        "operationId": "joinEvidenceIncident",
+        "summary": "Join an evidence incident by code",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Updated incident view"
+          }
+        }
+      }
+    },
+    "/api/evidence/incident/heartbeat": {
+      "post": {
+        "operationId": "evidenceIncidentHeartbeat",
+        "summary": "Heartbeat while in an incident; may return newPeerLost events",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Incident view + ack"
+          }
+        }
+      }
+    },
+    "/api/evidence/incident/signal": {
+      "post": {
+        "operationId": "evidenceIncidentSignal",
+        "summary": "Broadcast start/stop/idle to incident members",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Updated incident view"
+          }
+        }
+      }
+    },
+    "/api/evidence/incident/{incidentId}": {
+      "get": {
+        "operationId": "getEvidenceIncident",
+        "summary": "Get incident status",
+        "security": [],
+        "parameters": [
+          {
+            "name": "incidentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Incident view"
+          }
         }
       }
     }

@@ -26,6 +26,14 @@ import { buildOfflineDocs } from "./offline-docs.js";
 import { evidenceMerkleRoot, randomClaimCode, sha256Hex } from "./evidence-crypto.js";
 import { gunzipBase64ToText } from "./evidence-gzip.js";
 import { r2Configured, r2PutObject } from "./r2.js";
+import {
+  INCIDENT_TTL,
+  applyPeerTimeouts,
+  emptyIncident,
+  publicIncidentView,
+  randomIncidentCode,
+  incidentKvKey,
+} from "./incident.js";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
@@ -403,6 +411,24 @@ export default {
       }
       if (url.pathname === "/api/evidence/safety-ping" && request.method === "POST") {
         return handleEvidenceSafetyPing(request, env);
+      }
+      if (url.pathname === "/api/evidence/incident/create" && request.method === "POST") {
+        return handleIncidentCreate(request, env);
+      }
+      if (url.pathname === "/api/evidence/incident/join" && request.method === "POST") {
+        return handleIncidentJoin(request, env);
+      }
+      if (url.pathname === "/api/evidence/incident/heartbeat" && request.method === "POST") {
+        return handleIncidentHeartbeat(request, env);
+      }
+      if (url.pathname === "/api/evidence/incident/signal" && request.method === "POST") {
+        return handleIncidentSignal(request, env);
+      }
+      if (url.pathname.startsWith("/api/evidence/incident/") && request.method === "GET") {
+        const id = url.pathname.split("/api/evidence/incident/")[1];
+        if (id && !["create", "join", "heartbeat", "signal"].includes(id)) {
+          return handleIncidentGet(request, env, id);
+        }
       }
       if (url.pathname === "/api/evidence/claim" && request.method === "POST") {
         return handleEvidenceClaim(request, env);
@@ -1072,6 +1098,7 @@ async function handleEvidenceSyncLite(request, env) {
     claimable: true,
     claimCodeHash,
     location: body.location || null,
+    incidentId: body.incidentId || null,
   });
 
   // Inline store transcript so a second PUT is not required on 2G.
@@ -1090,6 +1117,7 @@ async function handleEvidenceSyncLite(request, env) {
   record.interrupted = !!body.interrupted;
   record.interruptReason = body.interruptReason || null;
   record.scenario = body.scenario || null;
+  record.incidentId = body.incidentId || null;
 
   try {
     await env.RATE_LIMIT_KV.put(`evidence:${sessionId}`, JSON.stringify(record), {
@@ -1100,6 +1128,9 @@ async function handleEvidenceSyncLite(request, env) {
       JSON.stringify({ deviceId, lastSessionId: sessionId, seenAt: new Date().toISOString() }),
       { expirationTtl: 60 * 60 * 24 * 365 * 5 }
     );
+    if (body.incidentId) {
+      await linkSessionToIncident(env, body.incidentId, deviceId, sessionId);
+    }
   } catch (e) {
     console.warn("sync-lite KV:", e.message);
   }
@@ -1115,6 +1146,7 @@ async function handleEvidenceSyncLite(request, env) {
     transcriptStored: true,
     mediaPending: true,
     interrupted: !!record.interrupted,
+    incidentId: record.incidentId || null,
     sync: "lite",
   });
 }
@@ -1174,6 +1206,232 @@ async function handleEvidenceSafetyPing(request, env) {
   }
 
   return json({ ok: true, pingId, stored: true });
+}
+
+async function loadIncident(env, incidentId) {
+  const raw = await env.RATE_LIMIT_KV.get(incidentKvKey(incidentId));
+  if (!raw) return null;
+  return typeof raw === "string" ? JSON.parse(raw) : raw;
+}
+
+async function saveIncident(env, incident) {
+  await env.RATE_LIMIT_KV.put(incidentKvKey(incident.incidentId), JSON.stringify(incident), {
+    expirationTtl: INCIDENT_TTL,
+  });
+}
+
+async function handleIncidentCreate(request, env) {
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return json({ error: "Invalid request body" }, 400);
+  }
+  const deviceId = body.deviceId ? String(body.deviceId) : "";
+  if (!deviceId) return json({ error: "deviceId is required" }, 400);
+
+  const incidentId = randomIncidentCode();
+  const incident = emptyIncident({
+    incidentId,
+    hostDeviceId: deviceId,
+    label: body.label || "Host",
+  });
+  try {
+    await saveIncident(env, incident);
+  } catch (e) {
+    return json({ error: e.message }, 500);
+  }
+  return json({
+    ...publicIncidentView(incident),
+    joinUrl: `https://challengethefootage.com/evidence.html?incident=${encodeURIComponent(incidentId)}`,
+  });
+}
+
+async function handleIncidentJoin(request, env) {
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return json({ error: "Invalid request body" }, 400);
+  }
+  const deviceId = body.deviceId ? String(body.deviceId) : "";
+  const incidentId = body.incidentId ? String(body.incidentId).toUpperCase() : "";
+  if (!deviceId || !incidentId) return json({ error: "deviceId and incidentId are required" }, 400);
+
+  let incident;
+  try {
+    incident = await loadIncident(env, incidentId);
+  } catch (e) {
+    return json({ error: e.message }, 500);
+  }
+  if (!incident) return json({ error: "Incident not found" }, 404);
+  if (incident.status === "closed") return json({ error: "Incident is closed" }, 409);
+
+  const now = new Date().toISOString();
+  if (!incident.members[deviceId]) {
+    incident.members[deviceId] = {
+      deviceId,
+      label: body.label || `Device ${Object.keys(incident.members).length + 1}`,
+      joinedAt: now,
+      lastBeatAt: now,
+      recording: false,
+      sessionId: null,
+      peerLostAnnounced: false,
+    };
+    incident.peerEvents = [
+      ...(incident.peerEvents || []),
+      { at: now, type: "PEER_JOIN", deviceId, detail: "Joined incident" },
+    ].slice(-100);
+  } else {
+    incident.members[deviceId].lastBeatAt = now;
+    incident.members[deviceId].peerLostAnnounced = false;
+    if (body.label) incident.members[deviceId].label = body.label;
+  }
+
+  const newLost = applyPeerTimeouts(incident);
+  try {
+    await saveIncident(env, incident);
+  } catch (e) {
+    return json({ error: e.message }, 500);
+  }
+  return json({ ...publicIncidentView(incident), newPeerLost: newLost });
+}
+
+async function handleIncidentHeartbeat(request, env) {
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return json({ error: "Invalid request body" }, 400);
+  }
+  const deviceId = body.deviceId ? String(body.deviceId) : "";
+  const incidentId = body.incidentId ? String(body.incidentId).toUpperCase() : "";
+  if (!deviceId || !incidentId) return json({ error: "deviceId and incidentId are required" }, 400);
+
+  let incident;
+  try {
+    incident = await loadIncident(env, incidentId);
+  } catch (e) {
+    return json({ error: e.message }, 500);
+  }
+  if (!incident) return json({ error: "Incident not found" }, 404);
+  if (!incident.members[deviceId]) {
+    return json({ error: "Not a member — join first" }, 403);
+  }
+
+  const now = new Date().toISOString();
+  incident.members[deviceId].lastBeatAt = now;
+  incident.members[deviceId].peerLostAnnounced = false;
+  if (typeof body.recording === "boolean") {
+    incident.members[deviceId].recording = body.recording;
+  }
+  if (body.sessionId) incident.members[deviceId].sessionId = body.sessionId;
+  if (body.label) incident.members[deviceId].label = body.label;
+
+  const newLost = applyPeerTimeouts(incident);
+  try {
+    await saveIncident(env, incident);
+  } catch (e) {
+    return json({ error: e.message }, 500);
+  }
+  return json({
+    ...publicIncidentView(incident),
+    newPeerLost: newLost,
+    ackAt: now,
+  });
+}
+
+async function handleIncidentSignal(request, env) {
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return json({ error: "Invalid request body" }, 400);
+  }
+  const deviceId = body.deviceId ? String(body.deviceId) : "";
+  const incidentId = body.incidentId ? String(body.incidentId).toUpperCase() : "";
+  const type = body.type ? String(body.type) : "";
+  if (!deviceId || !incidentId || !type) {
+    return json({ error: "deviceId, incidentId, and type are required" }, 400);
+  }
+  if (!["start", "stop", "idle"].includes(type)) {
+    return json({ error: "type must be start|stop|idle" }, 400);
+  }
+
+  let incident;
+  try {
+    incident = await loadIncident(env, incidentId);
+  } catch (e) {
+    return json({ error: e.message }, 500);
+  }
+  if (!incident) return json({ error: "Incident not found" }, 404);
+  if (!incident.members[deviceId]) {
+    return json({ error: "Not a member" }, 403);
+  }
+
+  const now = new Date().toISOString();
+  incident.signal = { type, at: now, byDeviceId: deviceId };
+  if (type === "start") {
+    incident.status = "recording";
+    for (const m of Object.values(incident.members)) {
+      m.peerLostAnnounced = false;
+    }
+  } else if (type === "stop") {
+    incident.status = "closed";
+    for (const m of Object.values(incident.members)) {
+      m.recording = false;
+    }
+  } else {
+    incident.status = "open";
+  }
+  incident.peerEvents = [
+    ...(incident.peerEvents || []),
+    {
+      at: now,
+      type: type === "start" ? "START" : type === "stop" ? "STOP" : "IDLE",
+      deviceId,
+      detail: `Signal ${type}`,
+    },
+  ].slice(-100);
+
+  try {
+    await saveIncident(env, incident);
+  } catch (e) {
+    return json({ error: e.message }, 500);
+  }
+  return json(publicIncidentView(incident));
+}
+
+async function handleIncidentGet(_request, env, incidentId) {
+  const id = String(incidentId || "").toUpperCase();
+  if (!id) return json({ error: "Missing incident id" }, 400);
+  let incident;
+  try {
+    incident = await loadIncident(env, id);
+  } catch (e) {
+    return json({ error: e.message }, 500);
+  }
+  if (!incident) return json({ error: "Not found" }, 404);
+  applyPeerTimeouts(incident);
+  try {
+    await saveIncident(env, incident);
+  } catch {
+    // still return view
+  }
+  return json(publicIncidentView(incident));
+}
+
+async function linkSessionToIncident(env, incidentId, deviceId, sessionId) {
+  if (!incidentId || !deviceId || !sessionId) return;
+  try {
+    const incident = await loadIncident(env, String(incidentId).toUpperCase());
+    if (!incident || !incident.members[deviceId]) return;
+    incident.members[deviceId].sessionId = sessionId;
+    incident.members[deviceId].lastBeatAt = new Date().toISOString();
+    await saveIncident(env, incident);
+  } catch (e) {
+    console.warn("linkSessionToIncident:", e.message);
+  }
 }
 
 async function handleEvidenceClaim(request, env) {
@@ -1467,6 +1725,7 @@ async function persistEvidenceRecord(env, input) {
     location: input.location || null,
     claimable: !!input.claimable,
     claimCodeHash: input.claimCodeHash || null,
+    incidentId: input.incidentId || null,
   };
 
   try {
@@ -1551,6 +1810,7 @@ async function handleEvidenceVerify(request, env, sessionId) {
       interrupted: !!record.interrupted,
       interruptReason: record.interruptReason || null,
       scenario: record.scenario || null,
+      incidentId: record.incidentId || null,
       sync: record.sync || null,
       objects: record.objects
         ? Object.fromEntries(

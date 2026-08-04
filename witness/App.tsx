@@ -71,6 +71,14 @@ import {
   type SafetyContact,
   type SafetyScenario,
 } from "./src/safety";
+import {
+  createIncident,
+  formatPeerLostNotes,
+  joinIncident,
+  incidentHeartbeat,
+  incidentSignal,
+  type IncidentView,
+} from "./src/incident";
 
 const CONSENT_KEY = "ctf_evidence_consent_v1";
 const DEVICE_KEY = "ctf_evidence_device_id";
@@ -109,6 +117,7 @@ interface SessionResult {
   interruptReason?: string | null;
   scenario?: SafetyScenario;
   safetyAlertSent?: boolean;
+  incidentId?: string | null;
 }
 
 function randomId(prefix: string) {
@@ -148,6 +157,10 @@ export default function App() {
   const [contactName, setContactName] = useState("");
   const [contactPhone, setContactPhone] = useState("");
   const [checkInLeft, setCheckInLeft] = useState<number | null>(null);
+  const [incidentId, setIncidentId] = useState<string | null>(null);
+  const [incidentJoinCode, setIncidentJoinCode] = useState("");
+  const [incidentView, setIncidentView] = useState<IncidentView | null>(null);
+  const [incidentLabel, setIncidentLabel] = useState("Phone");
   const startedAt = useRef<string | null>(null);
   const locationRef = useRef<{ latitude: number; longitude: number } | null>(
     null,
@@ -158,6 +171,11 @@ export default function App() {
   const checkInTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const checkInDeadlineRef = useRef<number | null>(null);
   const activeLocalIdRef = useRef<string | null>(null);
+  const incidentIdRef = useRef<string | null>(null);
+  const peerLostNotesRef = useRef("");
+  const incidentBeatTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const incidentAutoStartRef = useRef(false);
+  const phaseRef = useRef<Phase>("consent");
   const stopAndProcessRef = useRef<
     | ((
         videoUri?: string,
@@ -165,6 +183,15 @@ export default function App() {
       ) => Promise<void>)
     | null
   >(null);
+  const startRecordingRef = useRef<(() => Promise<void>) | null>(null);
+
+  useEffect(() => {
+    phaseRef.current = phase;
+  }, [phase]);
+
+  useEffect(() => {
+    incidentIdRef.current = incidentId;
+  }, [incidentId]);
 
   useEffect(() => {
     (async () => {
@@ -323,6 +350,71 @@ export default function App() {
     [clearCheckInTimer, scenario],
   );
 
+  const rememberPeerLost = useCallback((view: IncidentView) => {
+    const notes = formatPeerLostNotes(view.newPeerLost || []);
+    if (notes) {
+      peerLostNotesRef.current = peerLostNotesRef.current
+        ? `${peerLostNotesRef.current}\n${notes}`
+        : notes;
+    }
+    // Also surface historical PEER_LOST from events while we are live.
+    const fromLog = formatPeerLostNotes(
+      (view.peerEvents || []).filter((e) => e.type === "PEER_LOST"),
+    );
+    if (fromLog && !peerLostNotesRef.current.includes("[PEER_LOST")) {
+      peerLostNotesRef.current = peerLostNotesRef.current
+        ? `${peerLostNotesRef.current}\n${fromLog}`
+        : fromLog;
+    }
+  }, []);
+
+  const tickIncident = useCallback(async () => {
+    const id = incidentIdRef.current;
+    if (!id) return;
+    try {
+      const deviceId = await ensureDeviceId();
+      const view = await incidentHeartbeat({
+        incidentId: id,
+        deviceId,
+        recording: phaseRef.current === "recording",
+        label: incidentLabel,
+      });
+      setIncidentView(view);
+      rememberPeerLost(view);
+      if (
+        view.signal?.type === "start" &&
+        phaseRef.current === "idle" &&
+        !incidentAutoStartRef.current
+      ) {
+        incidentAutoStartRef.current = true;
+        setStatus("Incident start signal — beginning recording…");
+        void startRecordingRef.current?.();
+      }
+    } catch (e) {
+      console.warn("Incident heartbeat:", e);
+    }
+  }, [rememberPeerLost, incidentLabel]);
+
+  useEffect(() => {
+    if (!incidentId) {
+      if (incidentBeatTimerRef.current) {
+        clearInterval(incidentBeatTimerRef.current);
+        incidentBeatTimerRef.current = null;
+      }
+      return;
+    }
+    tickIncident();
+    incidentBeatTimerRef.current = setInterval(() => {
+      tickIncident();
+    }, 4000);
+    return () => {
+      if (incidentBeatTimerRef.current) {
+        clearInterval(incidentBeatTimerRef.current);
+        incidentBeatTimerRef.current = null;
+      }
+    };
+  }, [incidentId, tickIncident]);
+
   const acceptConsent = async () => {
     await SecureStore.setItemAsync(
       CONSENT_KEY,
@@ -369,12 +461,25 @@ export default function App() {
         deviceId,
       });
       await saveScenario(scenario);
+      peerLostNotesRef.current = peerLostNotesRef.current || "";
 
       setTranscript("");
       setPhase("recording");
       setRecording(true);
       setStatus("Recording…");
 
+      if (incidentIdRef.current) {
+        try {
+          const signaled = await incidentSignal(
+            incidentIdRef.current,
+            deviceId,
+            "start",
+          );
+          setIncidentView(signaled);
+        } catch (e) {
+          console.warn("Incident start signal:", e);
+        }
+      }
       const engine = await getWhisperEngine();
       whisperEngineId.current = engine.id;
       liveModelTextRef.current = "";
@@ -420,6 +525,7 @@ export default function App() {
       Alert.alert("Cannot start", e.message || String(e));
     }
   };
+  startRecordingRef.current = startRecording;
 
   const requestStop = () => {
     userStopRef.current = true;
@@ -521,9 +627,29 @@ export default function App() {
         scenario,
         interrupted,
         interruptReason,
+        incidentId: incidentIdRef.current,
+        peerLostNotes: peerLostNotesRef.current || undefined,
       });
       setTranscript(transcriptText);
       await saveQueueItem(queueItem);
+
+      if (incidentIdRef.current) {
+        try {
+          await incidentHeartbeat({
+            incidentId: incidentIdRef.current,
+            deviceId,
+            recording: false,
+            sessionId: queueItem.sessionId,
+            label: incidentLabel,
+          });
+          if (userStopRef.current) {
+            await incidentSignal(incidentIdRef.current, deviceId, "stop");
+          }
+        } catch (e) {
+          console.warn("Incident end beat:", e);
+        }
+        incidentAutoStartRef.current = false;
+      }
 
       if (interrupted) {
         setStatus("Interrupted — securing what we have + alerting contacts…");
@@ -562,6 +688,7 @@ export default function App() {
         interruptReason,
         scenario,
         safetyAlertSent: queueItem.safetyAlertSent,
+        incidentId: incidentIdRef.current,
       };
 
       if (plan.syncLite) {
@@ -606,6 +733,7 @@ export default function App() {
             interruptReason,
             scenario,
             safetyAlertSent: queueItem.safetyAlertSent,
+            incidentId: incidentIdRef.current,
           };
         } catch (syncErr: any) {
           console.warn("Sync failed — kept on device:", syncErr);
@@ -787,6 +915,97 @@ export default function App() {
             </Pressable>
           ))}
 
+          <Text style={styles.label}>Multi-device incident (optional)</Text>
+          <Text style={styles.body}>
+            Like multiple body cams: each phone records its own angle and mic.
+            Share a code so everyone starts together; if a peer goes dark, others
+            log PEER_LOST.
+          </Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Label for this phone"
+            value={incidentLabel}
+            onChangeText={setIncidentLabel}
+          />
+          {incidentId ? (
+            <View>
+              <Text style={styles.body}>
+                Incident {incidentId} · {incidentView?.members?.length || 1} device(s) ·{" "}
+                {incidentView?.status || "…"}
+              </Text>
+              <Text style={styles.monoInline}>{incidentId}</Text>
+              <Pressable
+                style={styles.btnGhost}
+                onPress={async () => {
+                  await Clipboard.setStringAsync(incidentId);
+                  Alert.alert("Copied", "Incident code copied");
+                }}
+              >
+                <Text style={styles.link}>Copy incident code</Text>
+              </Pressable>
+              <Pressable
+                style={styles.btnGhost}
+                onPress={() => {
+                  setIncidentId(null);
+                  setIncidentView(null);
+                  incidentAutoStartRef.current = false;
+                }}
+              >
+                <Text style={styles.link}>Leave incident</Text>
+              </Pressable>
+            </View>
+          ) : (
+            <View>
+              <Pressable
+                style={styles.btnGhost}
+                onPress={async () => {
+                  try {
+                    const deviceId = await ensureDeviceId();
+                    const view = await createIncident(deviceId, incidentLabel);
+                    setIncidentId(view.incidentId);
+                    setIncidentView(view);
+                    peerLostNotesRef.current = "";
+                    Alert.alert(
+                      "Incident created",
+                      `Code ${view.incidentId} — share with other phones, then Start recording on any device.`,
+                    );
+                  } catch (e: any) {
+                    Alert.alert("Incident", e.message || String(e));
+                  }
+                }}
+              >
+                <Text style={styles.link}>Create incident</Text>
+              </Pressable>
+              <TextInput
+                style={styles.input}
+                autoCapitalize="characters"
+                placeholder="Join code"
+                value={incidentJoinCode}
+                onChangeText={setIncidentJoinCode}
+              />
+              <Pressable
+                style={styles.btnGhost}
+                onPress={async () => {
+                  try {
+                    const deviceId = await ensureDeviceId();
+                    const view = await joinIncident(
+                      incidentJoinCode.trim(),
+                      deviceId,
+                      incidentLabel,
+                    );
+                    setIncidentId(view.incidentId);
+                    setIncidentView(view);
+                    peerLostNotesRef.current = "";
+                  } catch (e: any) {
+                    Alert.alert("Join failed", e.message || String(e));
+                  }
+                }}
+              >
+                <Text style={styles.link}>Join incident</Text>
+              </Pressable>
+            </View>
+          )}
+
           <Text style={styles.label}>Check-in timer (minutes, 0 = off)</Text>
           <TextInput
             style={styles.input}
@@ -957,6 +1176,9 @@ export default function App() {
             <Text style={styles.body}>
               Situation: {SCENARIO_LABELS[result.scenario] || result.scenario}
             </Text>
+          ) : null}
+          {result.incidentId ? (
+            <Text style={styles.body}>Incident / multi-angle id: {result.incidentId}</Text>
           ) : null}
           <Text style={styles.body}>
             Verification ID{"\n"}

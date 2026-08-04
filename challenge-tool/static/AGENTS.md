@@ -41,6 +41,11 @@ Send `Accept: text/markdown` on `/`, `/evidence.html`, `/terms.html`, or `/publi
 | POST | `/api/evidence/secure-device` | Native record-first secure (returns claimCode) |
 | POST | `/api/evidence/sync-lite` | Rural/2G: hashes + gzip transcript in one request |
 | POST | `/api/evidence/safety-ping` | Dead-man / interrupt safety alert audit ping |
+| POST | `/api/evidence/incident/create` | Create multi-device incident (multi-angle) |
+| POST | `/api/evidence/incident/join` | Join incident by code |
+| POST | `/api/evidence/incident/heartbeat` | Peer heartbeat (+ PEER_LOST detection) |
+| POST | `/api/evidence/incident/signal` | Coordinated start/stop |
+| GET | `/api/evidence/incident/:id` | Incident status |
 | POST | `/api/evidence/claim` | Link a device session to the signed-in account |
 | POST | `/api/evidence/upload-url` | Create Worker-proxied blob upload URL |
 | PUT | `/api/evidence/object/:id/:type` | Upload transcript/audio/video bytes (→ R2 when configured) |

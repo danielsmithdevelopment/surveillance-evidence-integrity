@@ -255,4 +255,52 @@ describe("evidence API (wrangler local)", () => {
     assert.equal(ping.json.ok, true);
     assert.ok(ping.json.pingId);
   });
+
+  it("incident create → join → start signal → heartbeat peer awareness", async () => {
+    const created = await api("/api/evidence/incident/create", {
+      method: "POST",
+      body: { deviceId: "incident-host", label: "Host" },
+    });
+    assert.equal(created.status, 200, JSON.stringify(created.json));
+    assert.match(created.json.incidentId, /^[A-Z2-9]{6}$/);
+    assert.equal(created.json.members.length, 1);
+
+    const joined = await api("/api/evidence/incident/join", {
+      method: "POST",
+      body: {
+        incidentId: created.json.incidentId,
+        deviceId: "incident-peer",
+        label: "Peer",
+      },
+    });
+    assert.equal(joined.status, 200, JSON.stringify(joined.json));
+    assert.equal(joined.json.members.length, 2);
+
+    const start = await api("/api/evidence/incident/signal", {
+      method: "POST",
+      body: {
+        incidentId: created.json.incidentId,
+        deviceId: "incident-host",
+        type: "start",
+      },
+    });
+    assert.equal(start.status, 200, JSON.stringify(start.json));
+    assert.equal(start.json.signal.type, "start");
+    assert.equal(start.json.status, "recording");
+
+    const beat = await api("/api/evidence/incident/heartbeat", {
+      method: "POST",
+      body: {
+        incidentId: created.json.incidentId,
+        deviceId: "incident-peer",
+        recording: true,
+      },
+    });
+    assert.equal(beat.status, 200, JSON.stringify(beat.json));
+    assert.equal(beat.json.signal.type, "start");
+
+    const got = await api(`/api/evidence/incident/${created.json.incidentId}`);
+    assert.equal(got.status, 200);
+    assert.equal(got.json.members.length, 2);
+  });
 });
