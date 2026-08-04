@@ -229,6 +229,64 @@
         }
       }
     },
+    "/api/evidence/secure-device": {
+      "post": {
+        "operationId": "secureEvidenceDevice",
+        "summary": "Secure evidence from the native app without Google (record-first)",
+        "security": [],
+        "description": "Returns sessionId + one-time claimCode. User claims on the website after sign-in.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["deviceId", "transcriptHash", "audioHash", "videoHash"],
+                "properties": {
+                  "deviceId": { "type": "string" },
+                  "transcriptHash": { "type": "string" },
+                  "audioHash": { "type": "string" },
+                  "videoHash": { "type": "string" },
+                  "transcriptText": { "type": "string" },
+                  "source": { "type": "string", "enum": ["native", "web"] }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Secured; includes claimCode and claimUrl"
+          }
+        }
+      }
+    },
+    "/api/evidence/claim": {
+      "post": {
+        "operationId": "claimEvidence",
+        "summary": "Link a device-secured session to the signed-in account",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["sessionId", "claimCode"],
+                "properties": {
+                  "sessionId": { "type": "string" },
+                  "claimCode": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Claimed" },
+          "403": { "description": "Invalid claim code" },
+          "409": { "description": "Already linked to another account" }
+        }
+      }
+    },
     "/api/evidence/sessions": {
       "get": {
         "operationId": "listEvidenceSessions",

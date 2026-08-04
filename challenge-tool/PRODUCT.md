@@ -32,7 +32,7 @@ challengethefootage.com/
   /api/*            Auth, entitlement, Stripe checkout, generate, evidence
 ```
 
-Native `witness/` remains an optional high-reliability capture client that **signs into the same product** and deep-links back to the website. Branding and account live on Challenge the Footage.
+Native `witness/` is the **Expo / React Native** companion for high-reliability capture (see [witness/NATIVE.md](../witness/NATIVE.md)). Branding and account live on Challenge the Footage. Tauri / pure Rust mobile are deferred.
 
 ## Payments
 
@@ -43,7 +43,7 @@ Native `witness/` remains an optional high-reliability capture client that **sig
 ## Backend split of responsibility
 
 ```
-Browser / Witness app
+Browser / Native (Expo) app
   → Challenge the Footage Worker (public API)
       → ClawQL gateway
            → chat / memory (docs)
@@ -52,8 +52,17 @@ Browser / Witness app
       → Object storage (R2) for artifacts
 ```
 
+### Record-first (native)
+
+```
+Native record (no Google mid-encounter)
+  → POST /api/evidence/secure-device  → sessionId + claimCode
+  → Open challengethefootage.com/evidence.html?claim=…&code=…
+  → User signs in → POST /api/evidence/claim → evidence appears in their library
+```
+
 ## Roadmap notes
 
-- Prefer **web recording on CTF** so one URL covers signup, evidence, and docs.
-- Keep native Witness for offline / background / enclave hardening once productized under the same account.
+- Ship **web recording** for one-URL onboarding; ship **Expo native** for reliability.
 - Never surface “connect wallet”, token tickers, or Arweave TX IDs in primary UI. Optional advanced “Independent verification” panel may show a verification ID for attorneys/experts.
+- Consider Rust only as a crypto/hash native module later — not as the app shell.

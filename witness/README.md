@@ -1,71 +1,44 @@
-# Witness (capture module for Challenge the Footage)
+# Challenge the Footage — Evidence (native)
 
-Witness is the **encounter recording engine** for [Challenge the Footage](https://challengethefootage.com) — not a separate consumer product.
+Expo / React Native companion for [challengethefootage.com](https://challengethefootage.com).
 
-**Product home:** [challengethefootage.com](https://challengethefootage.com)  
-**Evidence (web):** [challengethefootage.com/evidence.html](https://challengethefootage.com/evidence.html)  
-**Docs:** [challenge-tool/PRODUCT.md](../challenge-tool/PRODUCT.md)
+**Stack decision:** Expo/RN (not Tauri / pure Rust mobile) — see [NATIVE.md](./NATIVE.md).
 
-Users sign in and pay with **Stripe (credit card)** on the website. They never need a crypto wallet. ClawQL performs independent anchoring (e.g. Arweave) and storage behind the scenes.
+## What users do
 
-## Role of this folder
+1. Open the app → consent by state → **Start recording** (no Google required)
+2. Stop → app secures hashes via `POST /api/evidence/secure-device`
+3. **Link to my account on the website** → sign in → claim session
+4. Prepare documents / pay with Stripe on the website
 
-Optional **native** (Expo iOS/Android) capture client for higher reliability than browser MediaRecorder:
+No crypto wallet. ClawQL anchors independently behind the scenes.
 
-- Record video + audio during a police encounter
-- On-device transcript (Whisper — still stubbed)
-- Priority upload transcript → audio → video
-- Device signature + Merkle package
-- Hand off to `https://challengethefootage.com/?witnessSession=…` for document prep
-
-Prefer shipping **web recording on CTF** first so one URL covers account, evidence, and documents. Keep this native module for offline / background / enclave hardening.
-
-## Architecture
-
-```
-[CTF website /evidence.html]  ← primary UX
-[Witness native app]          ← optional capture client
-       |
-       v
-[CTF Worker]  challenge-tool/worker.js
-  /api/evidence/secure|sessions|verify
-  /api/checkout (Stripe via ClawQL)
-  /api/generate
-       |
-       v
-[ClawQL]  inference · Stripe · independent anchor · memory
-```
-
-Legacy routes in `witness/worker/` can be folded into the CTF Worker over time.
-
-## Setup (native)
+## Develop
 
 ```bash
 cd witness
 npm install
+# Point at local CTF worker while developing:
+# export EXPO_PUBLIC_CTF_API=http://127.0.0.1:8787
+# export EXPO_PUBLIC_CTF_WEB=http://127.0.0.1:8787
 npx expo start
 ```
 
 | Variable | Purpose |
 |---|---|
-| `EXPO_PUBLIC_WITNESS_API` | Prefer CTF Worker base URL (`https://challengethefootage.com`) once evidence APIs are deployed |
+| `EXPO_PUBLIC_CTF_API` | CTF Worker base (default production site) |
+| `EXPO_PUBLIC_CTF_WEB` | Website base for claim / docs deep links |
+| `EXPO_PUBLIC_WITNESS_API` | Legacy alias for `EXPO_PUBLIC_CTF_API` |
 
 ## Incomplete (known)
 
-1. **Audio extraction** — placeholder; wire ffmpeg before production
-2. **R2 presigned PUT** — AWS4 signing still TODO in legacy worker
-3. **Whisper** — stubbed live transcript
-4. **Device keys** — SecureStore placeholder; use enclave/Keychain for production
-5. **Full-file SHA-256** — MVP hashes a size+head marker; replace before court use
+1. ffmpeg audio extraction from video
+2. Full-file SHA-256 (MVP uses size+head marker)
+3. Live Whisper transcript
+4. Enclave / Keychain-backed device keys
+5. R2 binary upload of full video (hashes secured first; blob upload next)
+6. EAS Build / TestFlight / Play internal track
 
-## Two-party consent
+## Legacy worker
 
-First-run / web evidence flow collects a state code and shows an all-party notice for CA, CT, FL, IL, MD, MA, MI, MT, NH, PA, WA. Not legal advice.
-
-## Verification (attorney / expert)
-
-```
-GET https://challengethefootage.com/api/evidence/verify/:sessionId
-```
-
-Primary UX only shows “Evidence secured” + a verification ID. Advanced hash / Merkle details are for counsel and experts — not everyday users.
+`witness/worker/` is deprecated in favor of `challenge-tool/worker.js` evidence APIs. Keep only until production cutover.

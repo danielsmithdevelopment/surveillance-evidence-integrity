@@ -391,6 +391,12 @@ export default {
       if (url.pathname === "/api/evidence/secure" && request.method === "POST") {
         return handleEvidenceSecure(request, env);
       }
+      if (url.pathname === "/api/evidence/secure-device" && request.method === "POST") {
+        return handleEvidenceSecureDevice(request, env);
+      }
+      if (url.pathname === "/api/evidence/claim" && request.method === "POST") {
+        return handleEvidenceClaim(request, env);
+      }
       if (url.pathname === "/api/evidence/sessions" && request.method === "GET") {
         return handleEvidenceSessions(request, env);
       }
@@ -907,26 +913,194 @@ async function handleEvidenceSecure(request, env) {
   }
 
   const sessionId = `ev-${user.userId.slice(0, 12)}-${Date.now().toString(36)}`;
-  const merkleRoot = await sha256Hex(`${transcriptHash}:${audioHash}:${videoHash}`);
+  const record = await persistEvidenceRecord(env, {
+    sessionId,
+    userId: user.userId,
+    email: user.email,
+    transcriptHash,
+    audioHash,
+    videoHash,
+    transcriptText: body.transcriptText,
+    mimeType: body.mimeType,
+    startedAt: body.startedAt,
+    endedAt: body.endedAt,
+    stateCode: body.stateCode,
+    source: body.source || "web",
+    claimable: false,
+  });
+
+  return json({
+    sessionId: record.sessionId,
+    status: record.status,
+    merkleRoot: record.merkleRoot,
+    securedAt: record.securedAt,
+    verificationId: record.sessionId,
+  });
+}
+
+/**
+ * Native / emergency path: record without Google mid-encounter.
+ * Returns a one-time claimCode so the user can attach the session after sign-in.
+ */
+async function handleEvidenceSecureDevice(request, env) {
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return json({ error: "Invalid request body" }, 400);
+  }
+
+  const { deviceId, transcriptHash, audioHash, videoHash } = body;
+  if (!deviceId || !transcriptHash || !audioHash || !videoHash) {
+    return json({ error: "deviceId, transcriptHash, audioHash, and videoHash are required" }, 400);
+  }
+
+  const sessionId = `ev-dev-${String(deviceId).slice(0, 8)}-${Date.now().toString(36)}`;
+  const claimCode = randomClaimCode();
+  const claimCodeHash = await sha256Hex(claimCode);
+
+  const record = await persistEvidenceRecord(env, {
+    sessionId,
+    userId: null,
+    email: null,
+    deviceId: String(deviceId),
+    transcriptHash,
+    audioHash,
+    videoHash,
+    transcriptText: body.transcriptText,
+    mimeType: body.mimeType,
+    startedAt: body.startedAt,
+    endedAt: body.endedAt,
+    stateCode: body.stateCode,
+    source: body.source || "native",
+    claimable: true,
+    claimCodeHash,
+    location: body.location || null,
+  });
+
+  try {
+    await env.RATE_LIMIT_KV.put(
+      `device:${deviceId}`,
+      JSON.stringify({ deviceId, lastSessionId: sessionId, seenAt: new Date().toISOString() }),
+      { expirationTtl: 60 * 60 * 24 * 365 * 5 }
+    );
+  } catch (e) {
+    console.warn("device registry:", e.message);
+  }
+
+  return json({
+    sessionId: record.sessionId,
+    status: record.status,
+    merkleRoot: record.merkleRoot,
+    securedAt: record.securedAt,
+    verificationId: record.sessionId,
+    claimCode,
+    claimUrl: `https://challengethefootage.com/evidence.html?claim=${encodeURIComponent(sessionId)}&code=${encodeURIComponent(claimCode)}`,
+  });
+}
+
+async function handleEvidenceClaim(request, env) {
+  let user;
+  try {
+    user = await resolveUser(request, env);
+  } catch (e) {
+    return json({ error: `Auth failed: ${e.message}` }, 401);
+  }
+
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return json({ error: "Invalid request body" }, 400);
+  }
+
+  const { sessionId, claimCode } = body;
+  if (!sessionId || !claimCode) {
+    return json({ error: "sessionId and claimCode are required" }, 400);
+  }
+
+  let record;
+  try {
+    const raw = await env.RATE_LIMIT_KV.get(`evidence:${sessionId}`);
+    if (!raw) return json({ error: "Not found" }, 404);
+    record = JSON.parse(raw);
+  } catch (e) {
+    return json({ error: e.message }, 500);
+  }
+
+  if (record.userId && record.userId !== user.userId) {
+    return json({ error: "Evidence already linked to another account" }, 409);
+  }
+  if (record.userId === user.userId) {
+    return json({ sessionId, status: record.status, alreadyClaimed: true });
+  }
+  if (!record.claimable || !record.claimCodeHash) {
+    return json({ error: "This session cannot be claimed" }, 400);
+  }
+
+  const givenHash = await sha256Hex(String(claimCode));
+  if (givenHash !== record.claimCodeHash) {
+    return json({ error: "Invalid claim code" }, 403);
+  }
+
+  record.userId = user.userId;
+  record.email = user.email;
+  record.claimable = false;
+  record.claimCodeHash = null;
+  record.claimedAt = new Date().toISOString();
+
+  try {
+    await env.RATE_LIMIT_KV.put(`evidence:${sessionId}`, JSON.stringify(record), {
+      expirationTtl: 60 * 60 * 24 * 365 * 5,
+    });
+    await appendEvidenceIndex(env, user.userId, {
+      sessionId,
+      securedAt: record.securedAt,
+      status: record.status,
+      source: record.source,
+      claimedAt: record.claimedAt,
+    });
+  } catch (e) {
+    return json({ error: `Failed to claim: ${e.message}` }, 500);
+  }
+
+  return json({
+    sessionId,
+    status: record.status,
+    claimedAt: record.claimedAt,
+    verificationId: sessionId,
+  });
+}
+
+function randomClaimCode() {
+  const bytes = new Uint8Array(18);
+  crypto.getRandomValues(bytes);
+  return [...bytes].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+async function persistEvidenceRecord(env, input) {
   const securedAt = new Date().toISOString();
+  const merkleRoot = await sha256Hex(
+    `${input.transcriptHash}:${input.audioHash}:${input.videoHash}`
+  );
 
   let status = "secured";
   let verificationRef = null;
-  // ClawQL handles independent anchoring (e.g. Arweave). Users never see a wallet.
   if (env.CLAWQL_GATEWAY_URL && env.CLAWQL_API_KEY && env.GENERATION_MODE !== "offline") {
     try {
       const anchored = await gwPost(env, "/surveillance/witness/anchor", {
-        sessionId,
-        userId: user.userId,
-        email: user.email,
+        sessionId: input.sessionId,
+        userId: input.userId,
+        email: input.email,
+        deviceId: input.deviceId,
         merkleRoot,
-        transcriptHash,
-        audioHash,
-        videoHash,
-        source: body.source || "web",
-        startedAt: body.startedAt,
-        endedAt: body.endedAt || securedAt,
-        stateCode: body.stateCode,
+        transcriptHash: input.transcriptHash,
+        audioHash: input.audioHash,
+        videoHash: input.videoHash,
+        source: input.source,
+        startedAt: input.startedAt,
+        endedAt: input.endedAt || securedAt,
+        stateCode: input.stateCode,
       });
       verificationRef = anchored.arweaveTxId || anchored.txId || anchored.id || null;
       if (verificationRef) status = "anchored";
@@ -939,65 +1113,69 @@ async function handleEvidenceSecure(request, env) {
   }
 
   const record = {
-    sessionId,
-    userId: user.userId,
-    email: user.email,
-    transcriptHash,
-    audioHash,
-    videoHash,
+    sessionId: input.sessionId,
+    userId: input.userId,
+    email: input.email,
+    deviceId: input.deviceId || null,
+    transcriptHash: input.transcriptHash,
+    audioHash: input.audioHash,
+    videoHash: input.videoHash,
     merkleRoot,
     status,
     verificationRef,
-    source: body.source || "web",
-    stateCode: body.stateCode || null,
-    startedAt: body.startedAt || null,
-    endedAt: body.endedAt || securedAt,
+    source: input.source || "web",
+    stateCode: input.stateCode || null,
+    startedAt: input.startedAt || null,
+    endedAt: input.endedAt || securedAt,
     securedAt,
-    mimeType: body.mimeType || null,
+    mimeType: input.mimeType || null,
+    location: input.location || null,
+    claimable: !!input.claimable,
+    claimCodeHash: input.claimCodeHash || null,
   };
 
   try {
-    await env.RATE_LIMIT_KV.put(`evidence:${sessionId}`, JSON.stringify(record), {
+    await env.RATE_LIMIT_KV.put(`evidence:${input.sessionId}`, JSON.stringify(record), {
       expirationTtl: 60 * 60 * 24 * 365 * 5,
     });
-    const indexKey = `evidence-index:${user.userId}`;
-    let index = [];
-    try {
-      index = (await env.RATE_LIMIT_KV.get(indexKey, { type: "json" })) || [];
-    } catch {
-      index = [];
+    if (input.userId) {
+      await appendEvidenceIndex(env, input.userId, {
+        sessionId: input.sessionId,
+        securedAt,
+        status,
+        source: record.source,
+      });
     }
-    if (!Array.isArray(index)) index = [];
-    index.unshift({
-      sessionId,
-      securedAt,
-      status,
-      source: record.source,
-    });
-    await env.RATE_LIMIT_KV.put(indexKey, JSON.stringify(index.slice(0, 100)), {
-      expirationTtl: 60 * 60 * 24 * 365 * 5,
-    });
   } catch (e) {
     console.warn("Evidence KV store:", e.message);
   }
 
-  if (body.transcriptText && !wantsOfflineGeneration(env)) {
+  if (input.transcriptText && input.userId && !wantsOfflineGeneration(env)) {
     await ingestMemory(
       env,
-      user.userId,
-      sessionId,
-      `# Evidence session ${sessionId}\nStatus: ${status}\nNotes:\n${String(body.transcriptText).slice(0, 2000)}`,
+      input.userId,
+      input.sessionId,
+      `# Evidence session ${input.sessionId}\nStatus: ${status}\nNotes:\n${String(input.transcriptText).slice(0, 2000)}`,
       ["evidence", record.source].filter(Boolean)
     );
   }
 
-  return json({
-    sessionId,
-    status,
-    merkleRoot,
-    securedAt,
-    // Public UI should prefer sessionId; verificationRef is for advanced/attorney use.
-    verificationId: sessionId,
+  return record;
+}
+
+async function appendEvidenceIndex(env, userId, entry) {
+  const indexKey = `evidence-index:${userId}`;
+  let index = [];
+  try {
+    index = (await env.RATE_LIMIT_KV.get(indexKey, { type: "json" })) || [];
+  } catch {
+    index = [];
+  }
+  if (!Array.isArray(index)) index = [];
+  index = index.filter((e) => e.sessionId !== entry.sessionId);
+  index.unshift(entry);
+  await env.RATE_LIMIT_KV.put(indexKey, JSON.stringify(index.slice(0, 100)), {
+    expirationTtl: 60 * 60 * 24 * 365 * 5,
   });
 }
 
@@ -1032,8 +1210,7 @@ async function handleEvidenceVerify(request, env, sessionId) {
       videoHash: record.videoHash,
       merkleRoot: record.merkleRoot,
       source: record.source,
-      // Intentionally omit raw chain URLs from the default payload shape;
-      // attorneys can request verificationRef via support if needed.
+      claimable: !!record.claimable,
       independentlyVerifiable: record.status === "anchored",
     });
   } catch (e) {

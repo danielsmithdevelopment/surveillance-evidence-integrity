@@ -142,9 +142,9 @@ See [challenge-tool/README.md](./challenge-tool/README.md). Cloudflare Pages fro
 
 ### Witness (the mobile app)
 
-See [witness/README.md](./witness/README.md). React Native (Expo), Cloudflare Worker backend, ClawQL gateway for Arweave anchoring, Cloudflare R2 for artifact storage.
+See [witness/README.md](./witness/README.md) and [witness/NATIVE.md](./witness/NATIVE.md). **Expo / React Native** companion for Challenge the Footage (record-first, claim on the website). Not Tauri for v1.
 
-Both tools can be self-hosted. The ClawQL integration is optional but provides memory-layer context across sessions and Arweave anchoring for permanent independent verification.
+Both tools can be self-hosted. The ClawQL integration is optional but provides memory-layer context across sessions and independent evidence anchoring — users never need a crypto wallet.
 
 ---
 

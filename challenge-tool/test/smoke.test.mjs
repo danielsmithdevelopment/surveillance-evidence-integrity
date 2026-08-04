@@ -84,6 +84,8 @@ describe("challenge-tool artifacts", () => {
     assert.match(workerSrc, /AGENT_LINK_HEADER/);
     assert.match(workerSrc, /wantsMarkdown/);
     assert.match(workerSrc, /handleEvidenceSecure/);
+    assert.match(workerSrc, /handleEvidenceSecureDevice/);
+    assert.match(workerSrc, /handleEvidenceClaim/);
     assert.match(workerSrc, /oauth-authorization-server/);
     readFileSync(join(root, "src/webmcp.js"));
   });

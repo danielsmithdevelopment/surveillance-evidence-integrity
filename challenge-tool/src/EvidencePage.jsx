@@ -108,6 +108,8 @@ export default function EvidencePage() {
   const [session, setSession] = useState(null);
   const [sessions, setSessions] = useState([]);
   const [live, setLive] = useState(false);
+  const [claimInfo, setClaimInfo] = useState(null);
+  const [claimStatus, setClaimStatus] = useState(null);
 
   const videoRef = useRef(null);
   const mediaRef = useRef(null);
@@ -122,6 +124,13 @@ export default function EvidencePage() {
       .catch(() => setAllowTestAuth(false));
   }, []);
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const claim = params.get("claim");
+    const code = params.get("code");
+    if (claim && code) setClaimInfo({ sessionId: claim, claimCode: code });
+  }, []);
+
   const refreshSessions = useCallback(() => {
     if (!token) return;
     api("/api/evidence/sessions", { token })
@@ -132,6 +141,41 @@ export default function EvidencePage() {
   useEffect(() => {
     refreshSessions();
   }, [refreshSessions]);
+
+  useEffect(() => {
+    if (!token || !claimInfo) return;
+    let cancelled = false;
+    setClaimStatus("Linking native evidence to your account…");
+    api("/api/evidence/claim", {
+      method: "POST",
+      token,
+      body: claimInfo,
+    })
+      .then((d) => {
+        if (cancelled) return;
+        setClaimStatus(
+          d.alreadyClaimed
+            ? "This evidence was already linked to your account."
+            : "Native evidence linked to your account."
+        );
+        setSession({
+          sessionId: d.sessionId,
+          status: d.status,
+          verificationId: d.verificationId || d.sessionId,
+        });
+        refreshSessions();
+        const url = new URL(window.location.href);
+        url.searchParams.delete("claim");
+        url.searchParams.delete("code");
+        window.history.replaceState({}, "", url.pathname + url.search);
+      })
+      .catch((e) => {
+        if (!cancelled) setClaimStatus(e.message || "Could not link evidence");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [token, claimInfo, refreshSessions]);
 
   const onCredential = (cred, mail) => {
     setToken(cred);
@@ -247,8 +291,9 @@ export default function EvidencePage() {
             Record the encounter. Keep the proof.
           </h1>
           <p className="animate-rise-delay mt-5 max-w-xl text-lg text-ink-muted">
-            Capture video on your phone, secure it to your Challenge the Footage account, then
-            prepare documents — paid with a normal card. No crypto wallet.
+            Capture video on your phone in the browser, or use the native Evidence app when you need
+            offline / one-tap capture. Secure it to your account, then prepare documents — paid with
+            a normal card. No crypto wallet.
           </p>
           <div className="mt-8 flex flex-wrap items-center gap-3">
             {!token ? (
@@ -265,6 +310,13 @@ export default function EvidencePage() {
               Prepare documents
             </a>
           </div>
+          {claimInfo && (
+            <p className="mt-4 text-sm text-ink" role="status">
+              {token
+                ? claimStatus || "Linking…"
+                : "Sign in to link the native recording waiting for this account."}
+            </p>
+          )}
         </div>
       </header>
 

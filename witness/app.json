@@ -1,33 +1,46 @@
 {
   "expo": {
-    "name": "Witness",
-    "slug": "witness",
-    "version": "0.1.0",
+    "name": "Challenge the Footage",
+    "slug": "challenge-the-footage-evidence",
+    "version": "0.2.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
+    "scheme": "challengethefootage",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.challengethefootage.witness",
+      "bundleIdentifier": "com.challengethefootage.evidence",
       "infoPlist": {
-        "NSCameraUsageDescription": "Witness records video of encounters for your own evidence.",
-        "NSMicrophoneUsageDescription": "Witness records audio and transcribes it on your device.",
+        "NSCameraUsageDescription": "Challenge the Footage records video of encounters for your own evidence.",
+        "NSMicrophoneUsageDescription": "Challenge the Footage records audio for your own evidence.",
         "NSLocationWhenInUseUsageDescription": "Optional location is attached to the evidence package."
       }
     },
     "android": {
-      "package": "com.challengethefootage.witness",
+      "package": "com.challengethefootage.evidence",
       "permissions": [
         "CAMERA",
         "RECORD_AUDIO",
         "ACCESS_FINE_LOCATION"
+      ],
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "challengethefootage"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
       ]
     },
     "plugins": [
       [
         "expo-camera",
         {
-          "cameraPermission": "Allow Witness to record video evidence.",
-          "microphonePermission": "Allow Witness to record audio evidence.",
+          "cameraPermission": "Allow Challenge the Footage to record video evidence.",
+          "microphonePermission": "Allow Challenge the Footage to record audio evidence.",
           "recordAudioAndroid": true
         }
       ]
