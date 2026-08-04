@@ -53,8 +53,46 @@ export const FOOTAGE_CATEGORIES = [
 
 export const FOOTAGE_CATEGORY_IDS = FOOTAGE_CATEGORIES.map((c) => c.id);
 
+/**
+ * Body-cam recording posture — Stage 1 (duty / failure to record) then Stage 2 (authenticity).
+ * Agencies often require activation for public contacts; statutes increasingly attach inferences.
+ */
+export const BODY_CAM_RECORDING_STATUSES = [
+  {
+    id: "missing",
+    label: "No usable recording (never activated / camera off)",
+    stage:
+      "Stage 1 primary — duty to record violated; adverse inference / statutory presumption; then Stage 2 authenticity for any later-produced or other-officer video",
+  },
+  {
+    id: "partial",
+    label: "Partial / mute gaps / late activation",
+    stage: "Stage 1 for the gaps + Stage 2 authenticity of whatever fragment remains",
+  },
+  {
+    id: "recorded",
+    label: "Recording exists (challenge authenticity / completeness)",
+    stage:
+      "Stage 2 primary — FRE 901 integrity of the file; keep Stage 1 ready if activation logs show gaps",
+  },
+];
+
+export const BODY_CAM_RECORDING_STATUS_IDS = BODY_CAM_RECORDING_STATUSES.map((s) => s.id);
+
 export function getFootageCategory(id) {
   return FOOTAGE_CATEGORIES.find((c) => c.id === id) || FOOTAGE_CATEGORIES[0];
+}
+
+export function normalizeBodyCamRecordingStatus(status, footageCategory) {
+  if (footageCategory !== "body_worn") return null;
+  if (BODY_CAM_RECORDING_STATUS_IDS.includes(status)) return status;
+  return "recorded";
+}
+
+export function bodyCamRatchetLine(status) {
+  const s =
+    BODY_CAM_RECORDING_STATUSES.find((x) => x.id === status) || BODY_CAM_RECORDING_STATUSES[2];
+  return `Pressure ratchet: ${s.stage}. Full auditability (hash-before-leave-device, tamper-evident activation/mute/dock logs, third-party verifiable export) is the only durable answer to both stages.`;
 }
 
 /**
@@ -219,8 +257,37 @@ export function resolveFootageProfile(footageCategory, vendorKey, vendorProfile,
 }
 
 /** Mode-specific discovery requests (10 each) for offline + prompt guidance. */
-export function discoveryRequests(vendorName, kind, footageCategory) {
+export function failureToRecordDiscovery(vendorName) {
+  return [
+    `Department body-worn camera policy and state statute (if any) requiring activation for the type of encounter at issue, including sanctions for non-activation.`,
+    `Device audit trail for the involved officer's ${vendorName} camera covering the shift: power on/off, docking, event-button presses, mute toggles, battery state, and any automatic-activation triggers (holster, lights, siren).`,
+    `Explanation — under oath — for why no recording (or no audio / late activation) exists for the encounter with ${vendorName} device(s) assigned that day.`,
+    `All other officers' body-worn / in-car footage of the same incident, including those who did activate.`,
+    `CAD/RMS timestamps for the call versus camera activation timestamps; identify every minute that should have been recorded under policy.`,
+    `Prior complaints, IA findings, or discipline for the involved officer(s) regarding BWC non-activation or mute abuse.`,
+    `Agency-wide activation-compliance audits for the prior 12 months (COPA/OIG-style reports if any).`,
+    `Whether the jurisdiction recognizes a permissive inference or presumption of inadmissibility for missing BWC footage (e.g. Colo. § 24-31-902; Ill. 50 ILCS 706/10-30) and the agency's training on those consequences.`,
+    `Any personal-phone or third-party recordings of the same incident that the agency obtained or reviewed.`,
+    `Preservation hold confirming the camera, dock logs, and Evidence.com (or equivalent) metadata have not been purged.`,
+  ];
+}
+
+export function discoveryRequests(vendorName, kind, footageCategory, recordingStatus) {
   const mode = footageCategory || "fixed_surveillance";
+
+  if (mode === "body_worn" && (recordingStatus === "missing" || recordingStatus === "partial")) {
+    if (kind === "auth" || kind === "access") {
+      // Stage 1 discovery: duty to record + device audit trail (then vault for access).
+      const fail = failureToRecordDiscovery(vendorName);
+      if (kind === "auth") return fail;
+      return [
+        ...fail.slice(0, 7),
+        `Complete evidence-vault access / share / export log for the case file for 90 days surrounding the incident.`,
+        `List of roles/accounts with permission to permanently delete footage or metadata.`,
+        `Communications with ${vendorName} about preservation holds for this case.`,
+      ];
+    }
+  }
 
   if (mode === "body_worn") {
     const blocks = {

@@ -94,6 +94,37 @@ describe("offline document templates", () => {
     assert.match(docs.motion, /10\. /);
   });
 
+  it("body-worn missing recording uses Stage 1 failure-to-record then authenticity ratchet", () => {
+    const axon = {
+      name: "Axon (formerly TASER)",
+      authFacts: ["No public hardware hash before dock."],
+      errorRateFacts: ["COPA sustained BWC non-compliance in sample investigations."],
+      accessAbuseFacts: ["Billings officers removed cameras during a stop."],
+      civilFacts: ["§ 1983 for missing force video."],
+      sources: ["Axon docs"],
+    };
+    const resolved = resolveFootageProfile("body_worn", "axon", axon, null);
+    const docs = buildOfflineDocs({
+      vendorName: resolved.vendorName,
+      profile: resolved.profile,
+      ctx: {
+        ...ctx,
+        footageCategory: "body_worn",
+        bodyCamRecordingStatus: "missing",
+        cameraType: "Axon Body 3",
+        searchFacts: "Officer never activated camera during the takedown.",
+      },
+      enriched: "",
+    });
+    assert.match(docs.motion, /FAILURE TO RECORD|ADVERSE INFERENCE/i);
+    assert.match(docs.motion, /STAGE 1/i);
+    assert.match(docs.motion, /STAGE 2|AUTHENTICITY RATCHET/i);
+    assert.match(docs.motion, /Havens|24-31-902/i);
+    assert.match(docs.access, /SPOLIATION|Brady|device audit trail/i);
+    assert.match(docs.accuracy, /DUTY-TO-RECORD|duty to record/i);
+    assert.match(docs.motion, /10\. /);
+  });
+
   it("cellphone mode cites Puloka, Mendones, and Riley", () => {
     const docs = buildOfflineDocs({
       vendorName: CELLPHONE_PROFILE.name,

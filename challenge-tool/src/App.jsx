@@ -10,7 +10,11 @@ import {
   inputClass,
 } from "./Shell.jsx";
 import { registerWebMcpTools } from "./webmcp.js";
-import { FOOTAGE_CATEGORIES, getFootageCategory } from "../footage-modes.js";
+import {
+  BODY_CAM_RECORDING_STATUSES,
+  FOOTAGE_CATEGORIES,
+  getFootageCategory,
+} from "../footage-modes.js";
 
 const TOS_KEY = "surv_tos_v1";
 const API = typeof window !== "undefined" ? window.CTF_API_BASE || "" : "";
@@ -223,6 +227,7 @@ export default function App() {
   const [entitlement, setEntitlement] = useState(null);
   const [allowTestAuth, setAllowTestAuth] = useState(false);
   const [footageCategory, setFootageCategory] = useState("fixed_surveillance");
+  const [bodyCamRecordingStatus, setBodyCamRecordingStatus] = useState("missing");
   const [vendor, setVendor] = useState("flock");
   const [customVendorName, setCustomVendorName] = useState("");
   const [form, setForm] = useState({
@@ -327,6 +332,8 @@ export default function App() {
         body: {
           tosAccepted: true,
           footageCategory,
+          bodyCamRecordingStatus:
+            footageCategory === "body_worn" ? bodyCamRecordingStatus : undefined,
           vendor: vendor === "custom" ? "custom" : vendor,
           customVendorName:
             vendor === "custom"
@@ -509,6 +516,7 @@ export default function App() {
                     const meta = getFootageCategory(next);
                     setVendor(meta.defaultVendor);
                     setCustomVendorName("");
+                    if (next === "body_worn") setBodyCamRecordingStatus("missing");
                   }}
                 >
                   {FOOTAGE_CATEGORIES.map((c) => (
@@ -521,6 +529,31 @@ export default function App() {
             </Field>
             <p className="mt-2 text-sm text-ink-muted">{categoryMeta.description}</p>
           </div>
+
+          {footageCategory === "body_worn" && (
+            <div className="mb-4">
+              <Field label="Body-cam recording status">
+                {(id) => (
+                  <select
+                    id={id}
+                    className={inputClass}
+                    value={bodyCamRecordingStatus}
+                    disabled={!token}
+                    onChange={(e) => setBodyCamRecordingStatus(e.target.value)}
+                  >
+                    {BODY_CAM_RECORDING_STATUSES.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.label}
+                      </option>
+                    ))}
+                  </select>
+                )}
+              </Field>
+              <p className="mt-2 text-sm text-ink-muted">
+                {BODY_CAM_RECORDING_STATUSES.find((s) => s.id === bodyCamRecordingStatus)?.stage}
+              </p>
+            </div>
+          )}
 
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label={categoryMeta.sourceLabel}>

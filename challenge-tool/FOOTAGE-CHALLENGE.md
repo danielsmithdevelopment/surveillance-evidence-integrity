@@ -38,9 +38,21 @@ See [authentication-challenge-guide.md](../authentication-challenge-guide.md). B
 | **NACDL Champion** (Harlan Yu, 2019) | Defense should demand Evidence.com **evidence audit trail** and **device audit trail** with every production |
 | **S.D.N.Y. City letters** (Feb. 2022) | NYPD bulk Evidence.com audit-trail production blocked by technical errors; bulk download required pulling every associated video |
 
+### Pressure ratchet (failure to record → authenticity)
+
+Yes — it makes sense, and many agencies **are required** (by policy and increasingly by statute) to activate BWCs for public contacts. The generator supports `bodyCamRecordingStatus`:
+
+| Status | Stage 1 | Stage 2 |
+|---|---|---|
+| **`missing`** | Duty to record violated; adverse inference / statutory presumption (Havens / Tompkins); limit officer testimony that fills the silence; Brady/spoliation | Any later-produced or other-officer clip still needs FRE 901 hash-before-leave-device + independent verification |
+| **`partial`** | Mute / late-activation gaps as Stage 1 | Authenticity of the fragment that remains |
+| **`recorded`** | Keep Stage 1 ready if device audit trail shows gaps | FRE 901 / 702 authenticity & completeness of the file |
+
+**Why this ratchets toward full auditability:** if they didn’t record, they face inference/spoliation pressure; if they did, they face authenticity pressure. The only durable answer to *both* stages is Challenge-grade controls (tamper-evident activation/mute/dock logs + hash-before-leave-device + third-party verifiable export — [clawql-surveillance](https://docs.clawql.com/surveillance) class).
+
 ### Pressure ask
 
-Procurement + discovery: Challenge-grade controls (hash before leave-device, mute/dock/export audit, third-party verifiable export — [clawql-surveillance](https://docs.clawql.com/surveillance) class). If proofs do not exist → FRE 901(b)(9) exclusion / hearing; cite Havens/Tompkins-style consequences for missing video.
+Procurement + discovery: those Challenge-grade controls. If proofs do not exist → Stage 1 remedies and/or FRE 901(b)(9) exclusion / hearing.
 
 ---
 
