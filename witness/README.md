@@ -52,7 +52,9 @@ npx expo start
 
 ## EAS / TestFlight / Play
 
-See **[BUILD.md](./BUILD.md)** for the full Whisper + EAS flow.
+**New to native?** → **[FIRST-NATIVE-DEPLOY.md](./FIRST-NATIVE-DEPLOY.md)**
+
+Also see **[BUILD.md](./BUILD.md)** for Whisper + EAS profiles.
 
 ```bash
 npm i -g eas-cli
