@@ -1,9 +1,9 @@
 /**
- * Rural sync plan + gzip size sanity (no Expo runtime).
+ * Rural sync plan + gzip size sanity (no Expo runtime / no npm install required).
  */
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { gzipSync, strToU8 } from "fflate";
+import { gzipSync } from "node:zlib";
 import { uploadPlan } from "../src/sync-plan.js";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -49,9 +49,9 @@ describe("transcript gzip for 2G", () => {
       "Driver declined to consent to a vehicle search.",
       "Backup arrived approximately two minutes later.",
     ].join("\n");
-    const gz = gzipSync(strToU8(text), { level: 9 });
+    const gz = gzipSync(Buffer.from(text, "utf8"), { level: 9 });
     assert.ok(gz.byteLength < 500, `gzip ${gz.byteLength} too large for 2G-first sync`);
-    assert.ok(gz.byteLength < text.length);
+    assert.ok(gz.byteLength < Buffer.byteLength(text));
   });
 
   it("App wires sync-lite / queue / probe", () => {
