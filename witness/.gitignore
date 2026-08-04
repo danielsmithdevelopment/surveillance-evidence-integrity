@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+
+# Whisper weights (fetched by scripts/fetch-whisper-model.mjs; too large for git)
+assets/models/*.bin
+assets/models/*.bin.*
+
+# EAS / secrets
+google-service-account.json
+.env
+.env.*
+!.env.example
+
+# Expo / native
+.expo/
+dist/
+web-build/
+ios/
+android/
+*.jks
+*.p8
+*.p12
+*.mobileprovision
+*.pem
+
+# OS / IDE
+.DS_Store
+*.log

@@ -72,3 +72,34 @@ export async function extractAudioWithFfmpeg(
     return null;
   }
 }
+
+/**
+ * Convert captured audio to 16 kHz mono WAV for whisper.rn file transcription.
+ * Returns null when ffmpeg is not linked (realtime Whisper still works).
+ */
+export async function prepareWavForWhisper(
+  audioUri: string,
+): Promise<string | null> {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const mod = require("ffmpeg-kit-react-native");
+    if (!mod?.FFmpegKit) return null;
+    const out = `${FileSystem.cacheDirectory}ctf-whisper-${Date.now()}.wav`;
+    const session = await mod.FFmpegKit.execute(
+      `-y -i "${audioUri}" -ar 16000 -ac 1 -c:a pcm_s16le "${out}"`,
+    );
+    const code = await session.getReturnCode();
+    if (mod.ReturnCode.isSuccess(code)) {
+      const info = await FileSystem.getInfoAsync(out);
+      return info.exists ? out : null;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+export function asFileUrl(uri: string): string {
+  if (uri.startsWith("file://") || uri.startsWith("data:")) return uri;
+  return `file://${uri}`;
+}

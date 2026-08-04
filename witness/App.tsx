@@ -45,6 +45,9 @@ import {
   formatEvidenceTranscript,
   getWhisperEngine,
   liveTranscriptBanner,
+  downloadWhisperModel,
+  isWhisperModelReady,
+  resetWhisperEngine,
 } from "./src/whisper";
 import { probeLink, uploadPlan } from "./src/connectivity";
 import { flushQueueItem } from "./src/sync";
@@ -112,10 +115,17 @@ export default function App() {
   const [micPerm, requestMicPerm] = useMicrophonePermissions();
   const cameraRef = useRef<CameraView>(null);
   const audioRef = useRef<AudioCapture | null>(null);
+  const stopRealtimeRef = useRef<null | (() => Promise<{
+    text: string;
+    audioPath: string | null;
+  }>)>(null);
+  const liveModelTextRef = useRef("");
   const [recording, setRecording] = useState(false);
   const [transcript, setTranscript] = useState("");
   const [status, setStatus] = useState("");
   const [result, setResult] = useState<SessionResult | null>(null);
+  const [whisperReady, setWhisperReady] = useState(false);
+  const [modelPct, setModelPct] = useState<number | null>(null);
   const startedAt = useRef<string | null>(null);
   const locationRef = useRef<{ latitude: number; longitude: number } | null>(
     null,
@@ -127,6 +137,11 @@ export default function App() {
     (async () => {
       const consented = await SecureStore.getItemAsync(CONSENT_KEY);
       if (consented) setPhase("idle");
+      try {
+        setWhisperReady(await isWhisperModelReady());
+      } catch {
+        setWhisperReady(false);
+      }
     })();
   }, []);
 
@@ -210,10 +225,21 @@ export default function App() {
 
       const engine = await getWhisperEngine();
       whisperEngineId.current = engine.id;
+      liveModelTextRef.current = "";
+      stopRealtimeRef.current = null;
       setTranscript(liveTranscriptBanner(engine.id));
       setStatus(engine.label);
 
-      audioRef.current = await startParallelAudio();
+      if (engine.id === "native" && engine.supportsRealtime) {
+        // Whisper owns the mic (and can write a WAV for hashing).
+        stopRealtimeRef.current = await engine.startRealtime((partial) => {
+          liveModelTextRef.current = partial;
+          setTranscript(`${liveTranscriptBanner("native")}${partial}\n`);
+        });
+        audioRef.current = null;
+      } else {
+        audioRef.current = await startParallelAudio();
+      }
 
       const cam = cameraRef.current;
       if (!cam) throw new Error("Camera not ready");
@@ -248,11 +274,32 @@ export default function App() {
       if (!videoUri) throw new Error("No video captured");
 
       setStatus("Finalizing audio…");
-      let audioUri = audioRef.current ? await audioRef.current.stop() : null;
-      audioRef.current = null;
-      let audioSource: SessionResult["audioSource"] = audioUri
-        ? "parallel"
-        : "pending";
+      let audioUri: string | null = null;
+      let audioSource: SessionResult["audioSource"] = "pending";
+      let modelText = "";
+
+      if (stopRealtimeRef.current) {
+        setStatus("Finalizing on-device transcript…");
+        try {
+          const live = await stopRealtimeRef.current();
+          modelText = live.text || liveModelTextRef.current || "";
+          if (live.audioPath) {
+            audioUri = live.audioPath;
+            audioSource = "parallel";
+          }
+        } catch (e) {
+          console.warn("Realtime Whisper stop:", e);
+        }
+        stopRealtimeRef.current = null;
+      }
+
+      if (!audioUri && audioRef.current) {
+        audioUri = await audioRef.current.stop();
+        audioRef.current = null;
+        if (audioUri) audioSource = "parallel";
+      } else {
+        audioRef.current = null;
+      }
 
       if (!audioUri) {
         setStatus("Trying ffmpeg audio extract…");
@@ -263,22 +310,22 @@ export default function App() {
       setStatus("Transcribing…");
       const engine = await getWhisperEngine();
       whisperEngineId.current = engine.id;
-      let modelText = "";
-      if (audioUri) {
+      if (!modelText && audioUri) {
         try {
           const spoken = await engine.transcribeFile(audioUri);
           modelText = spoken.text || "";
-          if (modelText) {
-            setTranscript((t) => `${liveTranscriptBanner(engine.id)}${modelText}\n`);
-          }
         } catch (e: any) {
           console.warn("Whisper transcribe:", e?.message || e);
         }
       }
+      if (modelText) {
+        setTranscript(`${liveTranscriptBanner(engine.id)}${modelText}\n`);
+      }
 
-      // Treat edits in the live box as operator notes (strip our banners).
+      // Treat edits in the live box as operator notes (strip our banners / model text).
       const manualNotes = transcript
         .replace(/\[Transcript\][^\n]*\n?/g, "")
+        .replace(modelText, "")
         .trim();
       manualNotesRef.current = manualNotes;
 
@@ -406,6 +453,28 @@ export default function App() {
     }
   };
 
+  const prepSpeechModel = useCallback(async () => {
+    try {
+      setModelPct(0);
+      setStatus("Downloading on-device speech model on Wi‑Fi…");
+      await downloadWhisperModel({
+        onProgress: (p) => setModelPct(p.pct),
+      });
+      resetWhisperEngine();
+      setWhisperReady(true);
+      setModelPct(null);
+      setStatus("Speech model ready for offline use.");
+      Alert.alert(
+        "Speech model ready",
+        "On-device Whisper can run without a network. Over 2G we still only sync the compressed transcript until the link improves.",
+      );
+    } catch (e: any) {
+      setModelPct(null);
+      Alert.alert("Model download", e.message || String(e));
+      setStatus(e.message || String(e));
+    }
+  }, []);
+
   const openClaimOnWeb = useCallback(() => {
     if (!result || result.localOnly || !result.claimCode) {
       Alert.alert(
@@ -506,10 +575,31 @@ export default function App() {
         <View style={styles.panel}>
           <Text style={styles.h2}>Ready</Text>
           <Text style={styles.body}>
-            Tap to start recording. Video and audio are captured together,
-            hashed with full-file SHA-256, then secured to Challenge the
-            Footage.
+            Tap to start recording. Capture works offline. On a weak (2G) link we
+            sync a compressed transcript first; video waits for a better
+            connection.
           </Text>
+          <Text style={styles.body}>
+            Speech model:{" "}
+            {whisperReady
+              ? "ready (on-device Whisper)"
+              : modelPct !== null
+                ? `downloading… ${modelPct}%`
+                : "not installed — download on Wi‑Fi before rural use"}
+          </Text>
+          {!whisperReady && (
+            <Pressable
+              style={[styles.btn, styles.recordBtn]}
+              onPress={prepSpeechModel}
+              disabled={modelPct !== null}
+            >
+              <Text style={styles.btnText}>
+                {modelPct !== null
+                  ? `Downloading model… ${modelPct}%`
+                  : "Download speech model (Wi‑Fi, ~75MB)"}
+              </Text>
+            </Pressable>
+          )}
           <Pressable
             style={[styles.btn, styles.recordBtn]}
             onPress={startRecording}

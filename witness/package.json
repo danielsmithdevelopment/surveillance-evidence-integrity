@@ -8,16 +8,24 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "test": "node --test test/*.test.mjs",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "whisper:fetch": "node scripts/fetch-whisper-model.mjs",
+    "eas-build-pre-install": "node scripts/fetch-whisper-model.mjs",
+    "eas:preview:ios": "eas build --profile preview --platform ios",
+    "eas:preview:android": "eas build --profile preview --platform android",
+    "eas:dev:ios": "eas build --profile development --platform ios"
   },
   "dependencies": {
     "@noble/hashes": "^1.8.0",
     "base64-js": "^1.5.1",
     "expo": "~51.0.0",
+    "expo-asset": "~10.0.0",
     "expo-av": "~14.0.0",
     "expo-camera": "~15.0.0",
     "expo-clipboard": "~6.0.0",
+    "expo-constants": "~16.0.0",
     "expo-crypto": "~13.0.0",
+    "expo-dev-client": "~4.0.0",
     "expo-file-system": "~17.0.0",
     "expo-location": "~17.0.0",
     "expo-network": "~6.0.0",
@@ -31,5 +39,8 @@
     "@babel/core": "^7.24.0",
     "@types/react": "~18.2.0",
     "typescript": "^5.3.0"
+  },
+  "optionalDependencies": {
+    "whisper.rn": "^0.4.0"
   }
 }

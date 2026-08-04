@@ -37,8 +37,8 @@ Users brand-perceive **Challenge the Footage**, not a separate crypto/Arweave ap
 4. ~~R2 upload via Worker-proxied PUT~~
 5. ~~Whisper module scaffold (stub + optional whisper.rn)~~
 6. ~~Rural / 2G sync-lite (gzip transcript first, media later)~~
-7. EAS Build / TestFlight / Play internal track (`eas.json` scaffolded; needs `eas init`)
-8. Bundle a Whisper model in the EAS profile + verify live STT on device
+7. ~~EAS + Whisper model fetch/bundle (`BUILD.md`, `eas-build-pre-install`)~~
+8. Run `eas init` + preview TestFlight/Play with a real Apple/Google account
 9. Revisit enclave-backed keys / Rust crypto module if counsel requires it
 
 ## Testing
@@ -51,8 +51,10 @@ Native:
 cd witness && npm test
 ```
 
+Build / Whisper ops: [BUILD.md](./BUILD.md).
+
 Hashing must produce the same lowercase hex SHA-256 as the Worker (`witness/src/hash.ts` ↔ `challenge-tool/evidence-crypto.js`). Merkle root on the server is `SHA-256(transcriptHash:audioHash:videoHash)`.
 
 Transcript packaging never invents speech when Whisper is unavailable (`TRANSCRIPT_PENDING` marker via `src/whisper-format.js`). On constrained links, only the gzip transcript + hashes leave the device.
 
-Expo/EAS device tests are manual until a native CI job is added.
+Expo/EAS device tests are manual until a signed preview build is produced.

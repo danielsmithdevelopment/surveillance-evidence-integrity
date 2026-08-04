@@ -54,44 +54,37 @@ npx expo start
 
 ## EAS / TestFlight / Play
 
+See **[BUILD.md](./BUILD.md)** for the full Whisper + EAS flow.
+
 ```bash
-npm i -g eas-cli   # or use local ./node_modules/.bin/eas
+npm i -g eas-cli
 eas login
-eas init           # writes real projectId into app.json extra.eas
-eas build --profile preview --platform ios
-eas submit --profile production --platform ios
+eas init
+npm run whisper:fetch          # or rely on eas-build-pre-install
+npm run eas:preview:ios
 ```
 
-Profiles live in [`eas.json`](./eas.json): `development` (dev client), `preview` (internal), `production`.
+Profiles live in [`eas.json`](./eas.json): `development` (dev client), `preview` (internal), `production`. All set `EXPO_PUBLIC_WHISPER=1`.
 
 ## Incomplete (known)
 
-1. ~~Whisper module scaffold~~ — stub + optional `whisper.rn` path (`EXPO_PUBLIC_WHISPER=1`); live model still needs a custom dev client + model asset
+1. ~~Whisper module scaffold~~ — stub + optional `whisper.rn`; model fetch/bundle + Wi‑Fi prep UI
 2. ~~Rural 2G sync-lite~~ — gzip transcript first; media deferred
-3. Enclave / Keychain-backed device keys
-4. Production R2 bucket binding + secrets on the CTF Worker
-5. Replace `extra.eas.projectId` placeholder after `eas init`
+3. Run `eas init` + first signed preview (needs Expo/Apple/Google credentials)
+4. Enclave / Keychain-backed device keys
+5. Production R2 bucket binding + secrets on the CTF Worker
 6. Background recording / shake-to-activate shortcuts
 
 ## Whisper
 
-Default builds use an **honest stub**: transcript files are marked `TRANSCRIPT_PENDING` so courts never see invented speech. Audio/video hashes remain authoritative.
+Default Expo Go builds stay on an **honest stub**. Custom EAS / `expo-dev-client` builds enable `whisper.rn` when `EXPO_PUBLIC_WHISPER=1`.
 
-To enable on-device STT in a **custom Expo dev client / EAS build**:
-
-```bash
-# after linking a Whisper native module (e.g. whisper.rn) and bundling a model:
-export EXPO_PUBLIC_WHISPER=1
-export EXPO_PUBLIC_WHISPER_MODEL=/path/in/bundle/ggml-small.bin
-npx expo run:ios   # or eas build --profile development
-```
-
-`src/whisper.ts` probes `whisper.rn` and falls back to the stub when the module or model is missing.
-
-Transcript text (Whisper or pending marker) is what we push over 2G — gzip'd via `fflate` in `src/gzip.ts`.
+- **Bundled:** `npm run whisper:fetch` or automatic `eas-build-pre-install`
+- **Field prep:** Ready screen → “Download speech model (Wi‑Fi, ~75MB)” → works offline afterward
+- **2G sync:** only the gzip transcript + hashes leave the device until the link improves
 
 ```bash
-npm test   # node:test for transcript packaging + rural sync plan
+npm test
 ```
 
 ## Legacy worker

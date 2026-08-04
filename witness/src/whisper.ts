@@ -2,25 +2,32 @@
  * On-device speech-to-text for Evidence capture.
  *
  * Default: stub (honest placeholder — never invents speech).
- * Optional: whisper.rn (or similar) when linked in a custom Expo dev client.
+ * Native: whisper.rn + ggml model (EAS / expo-dev-client; not Expo Go).
  *
- * Enable experimental native path with EXPO_PUBLIC_WHISPER=1 after installing
- * a Whisper native module. See NATIVE.md / README.
+ * Prefer realtime mic transcription while recording (saves WAV via audioOutputPath).
+ * File transcription falls back to 16 kHz WAV when ffmpeg is linked.
  */
 
+import * as FileSystem from "expo-file-system";
 import {
   formatEvidenceTranscript,
   liveTranscriptBanner,
 } from "./whisper-format.js";
+import { asFileUrl, prepareWavForWhisper } from "./audio";
+import { getCachedModelPath } from "./whisper-model";
 
 export { formatEvidenceTranscript, liveTranscriptBanner };
+export {
+  downloadWhisperModel,
+  getCachedModelPath,
+  isWhisperModelReady,
+  WHISPER_MODEL_URL,
+} from "./whisper-model";
 
 export type WhisperEngineId = "stub" | "native";
 
 export type WhisperSegment = {
-  /** Start seconds */
   t0: number;
-  /** End seconds */
   t1: number;
   text: string;
 };
@@ -29,25 +36,37 @@ export type WhisperTranscribeResult = {
   engine: WhisperEngineId;
   text: string;
   segments: WhisperSegment[];
-  /** True when text is a placeholder, not model output */
   placeholder: boolean;
+};
+
+export type RealtimeStopResult = {
+  text: string;
+  /** WAV path when whisper.rn wrote audioOutputPath */
+  audioPath: string | null;
 };
 
 export type WhisperEngine = {
   id: WhisperEngineId;
-  /** Human-readable status for the recording UI */
   label: string;
+  supportsRealtime: boolean;
   /**
-   * Transcribe a local audio file URI after stop.
-   * Stub returns an empty body with placeholder: true.
+   * Start mic realtime STT. Resolves to stop() → final text + optional WAV path.
    */
+  startRealtime: (
+    onPartial: (text: string) => void,
+  ) => Promise<() => Promise<RealtimeStopResult>>;
   transcribeFile: (audioUri: string) => Promise<WhisperTranscribeResult>;
 };
 
-function stubEngine(): WhisperEngine {
+function stubEngine(reason?: string): WhisperEngine {
   return {
     id: "stub",
-    label: "Whisper stub (audio-only until native module linked)",
+    label: reason || "Whisper stub (audio authoritative until model is ready)",
+    supportsRealtime: false,
+    async startRealtime(onPartial) {
+      onPartial("");
+      return async () => ({ text: "", audioPath: null });
+    },
     async transcribeFile() {
       return {
         engine: "stub",
@@ -59,63 +78,124 @@ function stubEngine(): WhisperEngine {
   };
 }
 
-/**
- * Attempt to load a native Whisper binding (whisper.rn-style).
- * Returns null when unavailable — callers must fall back to stub.
- */
-async function tryNativeEngine(): Promise<WhisperEngine | null> {
-  if (process.env.EXPO_PUBLIC_WHISPER !== "1") return null;
-  try {
-    // Optional dependency — not installed in the default Expo Go build.
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const mod = require("whisper.rn") as {
-      transcribe?: (uri: string) => Promise<{ result?: string; text?: string }>;
-      initWhisper?: (opts: { filePath: string }) => Promise<{
-        transcribe: (
-          uri: string,
-        ) => Promise<{ result?: string; text?: string }>;
+type WhisperRnModule = {
+  initWhisper: (opts: {
+    filePath: string;
+  }) => Promise<{
+    transcribe: (
+      uri: string,
+      opts?: { language?: string },
+    ) => {
+      stop: () => Promise<void>;
+      promise: Promise<{
+        result?: string;
+        segments?: Array<{ t0: number; t1: number; text: string }>;
       }>;
     };
+    transcribeRealtime: (opts?: {
+      language?: string;
+      realtimeAudioSec?: number;
+      audioOutputPath?: string;
+    }) => Promise<{
+      stop: () => Promise<void>;
+      subscribe: (
+        cb: (evt: {
+          isCapturing: boolean;
+          data?: { result?: string };
+        }) => void,
+      ) => void;
+    }>;
+    release?: () => Promise<void>;
+  }>;
+};
 
-    if (typeof mod.transcribe === "function") {
-      return {
-        id: "native",
-        label: "On-device Whisper",
-        async transcribeFile(audioUri: string) {
-          const out = await mod.transcribe!(audioUri);
-          const text = (out.result || out.text || "").trim();
-          return {
-            engine: "native",
-            text,
-            segments: [],
-            placeholder: !text,
-          };
-        },
-      };
-    }
+async function tryNativeEngine(): Promise<WhisperEngine | null> {
+  if (process.env.EXPO_PUBLIC_WHISPER !== "1") return null;
 
-    const modelPath = process.env.EXPO_PUBLIC_WHISPER_MODEL || "";
-    if (typeof mod.initWhisper === "function" && modelPath) {
-      const ctx = await mod.initWhisper({ filePath: modelPath });
-      return {
-        id: "native",
-        label: "On-device Whisper",
-        async transcribeFile(audioUri: string) {
-          const out = await ctx.transcribe(audioUri);
-          const text = (out.result || out.text || "").trim();
-          return {
-            engine: "native",
-            text,
-            segments: [],
-            placeholder: !text,
-          };
-        },
-      };
-    }
+  let mod: WhisperRnModule;
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    mod = require("whisper.rn") as WhisperRnModule;
   } catch {
-    // Module missing or native bridge failed — stay on stub.
+    return null;
   }
-  return null;
+
+  if (typeof mod.initWhisper !== "function") return null;
+
+  const modelPath = await getCachedModelPath();
+  if (!modelPath) {
+    return stubEngine(
+      "Whisper native linked — download the speech model on Wi‑Fi before field use",
+    );
+  }
+
+  try {
+    const ctx = await mod.initWhisper({ filePath: asFileUrl(modelPath) });
+    return {
+      id: "native",
+      label: "On-device Whisper (tiny.en)",
+      supportsRealtime: typeof ctx.transcribeRealtime === "function",
+      async startRealtime(onPartial) {
+        let latest = "";
+        const audioPath = `${FileSystem.cacheDirectory}ctf-whisper-live-${Date.now()}.wav`;
+        const session = await ctx.transcribeRealtime({
+          language: "en",
+          realtimeAudioSec: 30,
+          audioOutputPath: audioPath,
+        });
+        session.subscribe((evt) => {
+          const piece = (evt.data?.result || "").trim();
+          if (piece) {
+            latest = piece;
+            onPartial(piece);
+          }
+        });
+        return async () => {
+          try {
+            await session.stop();
+          } catch {
+            // ignore
+          }
+          const info = await FileSystem.getInfoAsync(audioPath);
+          return {
+            text: latest,
+            audioPath: info.exists ? audioPath : null,
+          };
+        };
+      },
+      async transcribeFile(audioUri: string) {
+        const wav = await prepareWavForWhisper(audioUri);
+        const path = asFileUrl(wav || audioUri);
+        try {
+          const job = ctx.transcribe(path, { language: "en" });
+          const out = await job.promise;
+          const text = (out.result || "").trim();
+          const segments = (out.segments || []).map((s) => ({
+            t0: s.t0,
+            t1: s.t1,
+            text: s.text,
+          }));
+          return {
+            engine: "native",
+            text,
+            segments,
+            placeholder: !text,
+          };
+        } catch (e) {
+          console.warn("Whisper file transcribe failed (need WAV?):", e);
+          return {
+            engine: "native",
+            text: "",
+            segments: [],
+            placeholder: true,
+          };
+        }
+      },
+    };
+  } catch (e) {
+    console.warn("Whisper init failed:", e);
+    return stubEngine("Whisper init failed — audio still hashed");
+  }
 }
 
 let cached: Promise<WhisperEngine> | null = null;
@@ -128,7 +208,10 @@ export function getWhisperEngine(): Promise<WhisperEngine> {
   return cached;
 }
 
-/** Test helper — reset memoized engine. */
 export function resetWhisperEngineForTests() {
+  cached = null;
+}
+
+export function resetWhisperEngine() {
   cached = null;
 }

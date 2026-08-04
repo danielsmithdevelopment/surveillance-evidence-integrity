@@ -57,7 +57,7 @@ npm test                 # transcript packaging + Whisper wiring contract
 npx tsc --noEmit         # when dependencies are installed
 ```
 
-Hashing must stay aligned with Worker hex digests (`@noble/hashes` full-file SHA-256). Whisper defaults to an honest `TRANSCRIPT_PENDING` stub unless `EXPO_PUBLIC_WHISPER=1` + a native module are present.
+Native hashing must stay aligned with Worker hex digests (`@noble/hashes` full-file SHA-256). Whisper defaults to an honest `TRANSCRIPT_PENDING` stub unless `EXPO_PUBLIC_WHISPER=1` + a native module / model are present. See `witness/BUILD.md` for EAS + model fetch.
 
 ## Production checklist (not automated)
 

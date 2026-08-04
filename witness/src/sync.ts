@@ -136,7 +136,7 @@ export async function flushQueueItem(
       ...common,
       artifactType: "audio",
       fileUri: item.audioPath,
-      contentType: "audio/mp4",
+      contentType: item.audioPath.endsWith(".wav") ? "audio/wav" : "audio/mp4",
       sha256: item.audioHash,
     });
     item.uploads.audio = true;
