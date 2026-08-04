@@ -40,6 +40,8 @@ Send `Accept: text/markdown` on `/`, `/evidence.html`, `/terms.html`, or `/publi
 | POST | `/api/evidence/secure` | Secure a recording package to the user account |
 | POST | `/api/evidence/secure-device` | Native record-first secure (returns claimCode) |
 | POST | `/api/evidence/claim` | Link a device session to the signed-in account |
+| POST | `/api/evidence/upload-url` | Create Worker-proxied blob upload URL |
+| PUT | `/api/evidence/object/:id/:type` | Upload transcript/audio/video bytes (→ R2 when configured) |
 | GET | `/api/evidence/sessions` | List evidence for the signed-in user |
 | GET | `/api/evidence/verify/:id` | Public verification status |
 

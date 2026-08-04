@@ -63,6 +63,6 @@ Native record (no Google mid-encounter)
 
 ## Roadmap notes
 
-- Ship **web recording** for one-URL onboarding; ship **Expo native** for reliability.
+- Ship **web recording** for one-URL onboarding; ship **Expo native** for reliability (full-file SHA-256, parallel audio, Worker→R2 uploads).
 - Never surface “connect wallet”, token tickers, or Arweave TX IDs in primary UI. Optional advanced “Independent verification” panel may show a verification ID for attorneys/experts.
 - Consider Rust only as a crypto/hash native module later — not as the app shell.

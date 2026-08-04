@@ -287,6 +287,54 @@
         }
       }
     },
+    "/api/evidence/upload-url": {
+      "post": {
+        "operationId": "createEvidenceUploadUrl",
+        "summary": "Create a Worker-proxied upload URL for an evidence artifact",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["sessionId", "artifactType", "contentType", "sha256"],
+                "properties": {
+                  "sessionId": { "type": "string" },
+                  "artifactType": { "type": "string", "enum": ["transcript", "audio", "video"] },
+                  "contentType": { "type": "string" },
+                  "sha256": { "type": "string" },
+                  "deviceId": { "type": "string" },
+                  "claimCode": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "uploadUrl + storage key" }
+        }
+      }
+    },
+    "/api/evidence/object/{sessionId}/{artifactType}": {
+      "put": {
+        "operationId": "putEvidenceObject",
+        "summary": "Upload evidence bytes (Worker proxies to R2 when configured)",
+        "security": [],
+        "parameters": [
+          { "name": "sessionId", "in": "path", "required": true, "schema": { "type": "string" } },
+          {
+            "name": "artifactType",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "enum": ["transcript", "audio", "video"] }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Stored (or metadata-only when R2 unset)" }
+        }
+      }
+    },
     "/api/evidence/sessions": {
       "get": {
         "operationId": "listEvidenceSessions",

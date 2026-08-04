@@ -86,6 +86,9 @@ describe("challenge-tool artifacts", () => {
     assert.match(workerSrc, /handleEvidenceSecure/);
     assert.match(workerSrc, /handleEvidenceSecureDevice/);
     assert.match(workerSrc, /handleEvidenceClaim/);
+    assert.match(workerSrc, /handleEvidenceUploadUrl/);
+    assert.match(workerSrc, /handleEvidenceObjectPut/);
+    readFileSync(join(root, "r2.js"));
     assert.match(workerSrc, /oauth-authorization-server/);
     readFileSync(join(root, "src/webmcp.js"));
   });

@@ -1,10 +1,8 @@
 /**
  * Challenge the Footage — Evidence (native)
  *
- * Expo / React Native companion. Record first (no Google mid-encounter),
- * secure via CTF /api/evidence/secure-device, then claim on the website.
- *
- * Incomplete: ffmpeg audio extract, full-file SHA-256, live Whisper, enclave keys.
+ * Expo companion: record-first (parallel A/V), full-file SHA-256, secure-device,
+ * then blob upload to CTF Worker / R2. Claim on the website afterward.
  */
 
 import React, {
@@ -34,10 +32,16 @@ import {
 } from "expo-camera";
 import * as FileSystem from "expo-file-system";
 import * as Location from "expo-location";
-import * as Crypto from "expo-crypto";
 import * as SecureStore from "expo-secure-store";
 import * as Clipboard from "expo-clipboard";
-import { CTF_API, CTF_WEB } from "./src/config";
+import { CTF_WEB } from "./src/config";
+import { sha256File, sha256Text } from "./src/hash";
+import {
+  extractAudioWithFfmpeg,
+  startParallelAudio,
+  type AudioCapture,
+} from "./src/audio";
+import { secureDeviceEvidence, uploadEvidenceObject } from "./src/api";
 
 const CONSENT_KEY = "ctf_evidence_consent_v1";
 const DEVICE_KEY = "ctf_evidence_device_id";
@@ -64,29 +68,12 @@ interface SessionResult {
   claimCode?: string;
   claimUrl?: string;
   verificationId: string;
+  uploads?: { transcript?: boolean; audio?: boolean; video?: boolean };
+  audioSource?: "parallel" | "ffmpeg" | "pending";
 }
 
 function randomId(prefix: string) {
   return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
-}
-
-async function sha256File(uri: string): Promise<string> {
-  // MVP integrity marker — replace with full-file SHA-256 before court use.
-  const info = await FileSystem.getInfoAsync(uri);
-  const size = info.exists && "size" in info ? info.size : 0;
-  const head = await FileSystem.readAsStringAsync(uri, {
-    encoding: FileSystem.EncodingType.Base64,
-    length: Math.min(64 * 1024, Number(size) || 64 * 1024),
-    position: 0,
-  }).catch(() => "");
-  return Crypto.digestStringAsync(
-    Crypto.CryptoDigestAlgorithm.SHA256,
-    `${uri}|${size}|${head}`,
-  );
-}
-
-async function sha256Text(text: string): Promise<string> {
-  return Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256, text);
 }
 
 async function ensureDeviceId(): Promise<string> {
@@ -98,23 +85,13 @@ async function ensureDeviceId(): Promise<string> {
   return deviceId;
 }
 
-async function apiJson(path: string, init?: RequestInit) {
-  const headers: Record<string, string> = {
-    "Content-Type": "application/json",
-    ...(init?.headers as Record<string, string>),
-  };
-  const res = await fetch(`${CTF_API}${path}`, { ...init, headers });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.error || data.message || res.statusText);
-  return data;
-}
-
 export default function App() {
   const [phase, setPhase] = useState<Phase>("consent");
   const [stateCode, setStateCode] = useState("CA");
   const [camPerm, requestCamPerm] = useCameraPermissions();
   const [micPerm, requestMicPerm] = useMicrophonePermissions();
   const cameraRef = useRef<CameraView>(null);
+  const audioRef = useRef<AudioCapture | null>(null);
   const [recording, setRecording] = useState(false);
   const [transcript, setTranscript] = useState("");
   const [status, setStatus] = useState("");
@@ -185,6 +162,8 @@ export default function App() {
       setRecording(true);
       setStatus("Recording…");
 
+      audioRef.current = await startParallelAudio();
+
       const cam = cameraRef.current;
       if (!cam) throw new Error("Camera not ready");
       cam
@@ -221,46 +200,103 @@ export default function App() {
 
     try {
       const deviceId = await ensureDeviceId();
-      setStatus("Preparing evidence package…");
+      if (!videoUri) throw new Error("No video captured");
 
+      setStatus("Finalizing audio…");
+      let audioUri = audioRef.current ? await audioRef.current.stop() : null;
+      audioRef.current = null;
+      let audioSource: SessionResult["audioSource"] = audioUri
+        ? "parallel"
+        : "pending";
+
+      if (!audioUri) {
+        setStatus("Trying ffmpeg audio extract…");
+        audioUri = await extractAudioWithFfmpeg(videoUri);
+        if (audioUri) audioSource = "ffmpeg";
+      }
+
+      setStatus("Writing transcript…");
       const transcriptText =
         transcript ||
         `[Evidence transcript — ${startedAt.current} → ${endedAt}]\nOn-device Whisper output will appear here.`;
       const transcriptPath = `${FileSystem.cacheDirectory}transcript-${Date.now()}.txt`;
       await FileSystem.writeAsStringAsync(transcriptPath, transcriptText);
 
-      // INCOMPLETE: extract audio via ffmpeg — placeholder keeps pipeline moving.
-      setStatus("Audio extract pending (ffmpeg) — continuing…");
-      const audioPath = `${FileSystem.cacheDirectory}audio-${Date.now()}.placeholder.txt`;
-      await FileSystem.writeAsStringAsync(
-        audioPath,
-        `AUDIO_EXTRACTION_PENDING\nsourceVideo=${videoUri || "none"}`,
-      );
-
-      if (!videoUri) throw new Error("No video captured");
-
-      setStatus("Hashing…");
+      setStatus("Hashing (full file SHA-256)…");
       const transcriptHash = await sha256Text(transcriptText);
-      const audioHash = await sha256File(audioPath);
       const videoHash = await sha256File(videoUri);
+      let audioHash: string;
+      if (audioUri) {
+        audioHash = await sha256File(audioUri);
+      } else {
+        // Honest pending marker — not a fake duplicate of the video hash for court use.
+        audioHash = await sha256Text(`AUDIO_PENDING:${videoHash}`);
+        audioSource = "pending";
+      }
 
-      setStatus("Securing to Challenge the Footage…");
-      const secured = await apiJson("/api/evidence/secure-device", {
-        method: "POST",
-        body: JSON.stringify({
-          deviceId,
-          transcriptHash,
-          audioHash,
-          videoHash,
-          transcriptText,
-          mimeType: "video/mp4",
-          startedAt: startedAt.current,
-          endedAt,
-          stateCode: stateCode.toUpperCase(),
-          source: "native",
-          location: locationRef.current,
-        }),
+      setStatus("Securing package…");
+      const secured = await secureDeviceEvidence({
+        deviceId,
+        transcriptHash,
+        audioHash,
+        videoHash,
+        transcriptText,
+        mimeType: "video/mp4",
+        startedAt: startedAt.current,
+        endedAt,
+        stateCode: stateCode.toUpperCase(),
+        source: "native",
+        location: locationRef.current,
+        audioExtracted: audioSource !== "pending",
+        audioSource,
       });
+
+      const uploads: SessionResult["uploads"] = {};
+      const common = {
+        sessionId: secured.sessionId,
+        deviceId,
+        claimCode: secured.claimCode,
+      };
+
+      try {
+        setStatus("Uploading transcript…");
+        await uploadEvidenceObject({
+          ...common,
+          artifactType: "transcript",
+          fileUri: transcriptPath,
+          contentType: "text/plain",
+          sha256: transcriptHash,
+        });
+        uploads.transcript = true;
+
+        if (audioUri && audioSource !== "pending") {
+          setStatus("Uploading audio…");
+          await uploadEvidenceObject({
+            ...common,
+            artifactType: "audio",
+            fileUri: audioUri,
+            contentType: "audio/mp4",
+            sha256: audioHash,
+          });
+          uploads.audio = true;
+        }
+
+        setStatus("Uploading video…");
+        await uploadEvidenceObject({
+          ...common,
+          artifactType: "video",
+          fileUri: videoUri,
+          contentType: "video/mp4",
+          sha256: videoHash,
+        });
+        uploads.video = true;
+      } catch (uploadErr: any) {
+        console.warn("Blob upload issue (hashes still secured):", uploadErr);
+        Alert.alert(
+          "Upload incomplete",
+          `${uploadErr.message || uploadErr}\n\nThe evidence package is still secured. You can link it on the website; retry upload from a later build if needed.`,
+        );
+      }
 
       setResult({
         sessionId: secured.sessionId,
@@ -268,6 +304,8 @@ export default function App() {
         claimCode: secured.claimCode,
         claimUrl: secured.claimUrl,
         verificationId: secured.verificationId || secured.sessionId,
+        uploads,
+        audioSource,
       });
       setPhase("secured");
       setStatus("Evidence secured.");
@@ -334,8 +372,9 @@ export default function App() {
         <View style={styles.panel}>
           <Text style={styles.h2}>Ready</Text>
           <Text style={styles.body}>
-            Tap to start recording. Shortcuts (Siri / Assistant / shake) can
-            call the same start action later.
+            Tap to start recording. Video and audio are captured together,
+            hashed with full-file SHA-256, then secured to Challenge the
+            Footage.
           </Text>
           <Pressable
             style={[styles.btn, styles.recordBtn]}
@@ -397,9 +436,19 @@ export default function App() {
             <Text style={styles.monoInline}>{result.verificationId}</Text>
           </Text>
           <Text style={styles.body}>
-            {result.status === "anchored"
-              ? "Independently verifiable on our systems."
-              : "Saved securely. Independent verification may still be processing."}
+            Audio:{" "}
+            {result.audioSource === "pending"
+              ? "pending extract"
+              : result.audioSource}
+            {" · "}
+            Uploads:{" "}
+            {[
+              result.uploads?.transcript && "transcript",
+              result.uploads?.audio && "audio",
+              result.uploads?.video && "video",
+            ]
+              .filter(Boolean)
+              .join(", ") || "hashes only"}
           </Text>
           <Pressable style={styles.btn} onPress={openClaimOnWeb}>
             <Text style={styles.btnText}>

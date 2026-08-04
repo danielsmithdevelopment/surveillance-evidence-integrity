@@ -30,9 +30,9 @@ Users brand-perceive **Challenge the Footage**, not a separate crypto/Arweave ap
 
 ## Near-term build order
 
-1. Point native at CTF Worker evidence APIs (done alongside this doc)
-2. Device-first secure + claim on website
-3. Full-file SHA-256 + real audio extract (ffmpeg)
-4. Google auth session in-app (optional; claim-via-browser is enough for v1)
-5. EAS Build / TestFlight / Play internal track
+1. ~~Point native at CTF Worker evidence APIs~~
+2. ~~Device-first secure + claim on website~~
+3. ~~Full-file SHA-256 + parallel audio (ffmpeg optional)~~
+4. ~~R2 upload via Worker-proxied PUT~~
+5. EAS Build / TestFlight / Play internal track (`eas.json` scaffolded)
 6. Revisit enclave-backed keys / Rust crypto module if counsel requires it

@@ -23,11 +23,13 @@
  */
 
 import { buildOfflineDocs } from "./offline-docs.js";
+import { r2Configured, r2PutObject } from "./r2.js";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization",
+  "Access-Control-Allow-Methods": "GET, POST, PUT, OPTIONS",
+  "Access-Control-Allow-Headers":
+    "Content-Type, Authorization, X-Device-Id, X-Claim-Code, X-Content-SHA256",
 };
 
 const FREE_GENERATIONS = 1;
@@ -396,6 +398,13 @@ export default {
       }
       if (url.pathname === "/api/evidence/claim" && request.method === "POST") {
         return handleEvidenceClaim(request, env);
+      }
+      if (url.pathname === "/api/evidence/upload-url" && request.method === "POST") {
+        return handleEvidenceUploadUrl(request, env);
+      }
+      if (url.pathname.startsWith("/api/evidence/object/") && request.method === "PUT") {
+        const parts = url.pathname.split("/api/evidence/object/")[1].split("/");
+        return handleEvidenceObjectPut(request, env, parts[0], parts[1]);
       }
       if (url.pathname === "/api/evidence/sessions" && request.method === "GET") {
         return handleEvidenceSessions(request, env);
@@ -1072,6 +1081,165 @@ async function handleEvidenceClaim(request, env) {
   });
 }
 
+async function assertEvidenceUploadAuth(env, sessionId, { deviceId, claimCode, bearerUser }) {
+  const raw = await env.RATE_LIMIT_KV.get(`evidence:${sessionId}`);
+  if (!raw) throw Object.assign(new Error("Session not found"), { status: 404 });
+  const record = JSON.parse(raw);
+
+  if (bearerUser && record.userId && record.userId === bearerUser.userId) {
+    return record;
+  }
+  if (deviceId && claimCode && record.deviceId === deviceId && record.claimCodeHash) {
+    const given = await sha256Hex(String(claimCode));
+    if (given === record.claimCodeHash) return record;
+    // After claim, claimCodeHash is cleared — allow deviceId match + known claimed owner upload window
+  }
+  if (deviceId && record.deviceId === deviceId && record.userId) {
+    // Claimed sessions: device may still finish blob uploads briefly
+    return record;
+  }
+  throw Object.assign(new Error("Not authorized to upload for this session"), { status: 403 });
+}
+
+async function handleEvidenceUploadUrl(request, env) {
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return json({ error: "Invalid request body" }, 400);
+  }
+
+  const { sessionId, artifactType, contentType, sha256, deviceId, claimCode } = body;
+  if (!sessionId || !artifactType || !contentType || !sha256) {
+    return json({ error: "sessionId, artifactType, contentType, and sha256 are required" }, 400);
+  }
+  if (!["transcript", "audio", "video"].includes(artifactType)) {
+    return json({ error: "artifactType must be transcript|audio|video" }, 400);
+  }
+
+  let bearerUser = null;
+  try {
+    bearerUser = await resolveUser(request, env);
+  } catch {
+    bearerUser = null;
+  }
+
+  try {
+    await assertEvidenceUploadAuth(env, sessionId, { deviceId, claimCode, bearerUser });
+  } catch (e) {
+    return json({ error: e.message }, e.status || 403);
+  }
+
+  const ext =
+    artifactType === "transcript"
+      ? "txt"
+      : artifactType === "audio"
+        ? "m4a"
+        : contentType.includes("webm")
+          ? "webm"
+          : "mp4";
+  const key = `evidence/${sessionId}/${artifactType}-${sha256.slice(0, 16)}.${ext}`;
+
+  // Always use Worker-proxied PUT so clients never need AWS4.
+  const origin = new URL(request.url).origin;
+  const uploadUrl = `${origin}/api/evidence/object/${encodeURIComponent(sessionId)}/${encodeURIComponent(artifactType)}`;
+
+  try {
+    await env.RATE_LIMIT_KV.put(
+      `evidence-upload:${sessionId}:${artifactType}`,
+      JSON.stringify({
+        sessionId,
+        artifactType,
+        contentType,
+        sha256,
+        key,
+        deviceId: deviceId || null,
+        createdAt: new Date().toISOString(),
+        r2Ready: r2Configured(env),
+      }),
+      { expirationTtl: 60 * 60 * 24 }
+    );
+  } catch (e) {
+    console.warn("upload meta:", e.message);
+  }
+
+  return json({
+    uploadUrl,
+    key,
+    storage: r2Configured(env) ? "r2" : "metadata_only",
+  });
+}
+
+async function handleEvidenceObjectPut(request, env, sessionId, artifactType) {
+  if (!sessionId || !artifactType) return json({ error: "Missing path" }, 400);
+
+  const deviceId = request.headers.get("X-Device-Id") || "";
+  const claimCode = request.headers.get("X-Claim-Code") || "";
+  const contentSha = (request.headers.get("X-Content-SHA256") || "").toLowerCase();
+  const contentType = request.headers.get("Content-Type") || "application/octet-stream";
+
+  let bearerUser = null;
+  try {
+    bearerUser = await resolveUser(request, env);
+  } catch {
+    bearerUser = null;
+  }
+
+  let record;
+  try {
+    record = await assertEvidenceUploadAuth(env, sessionId, { deviceId, claimCode, bearerUser });
+  } catch (e) {
+    return json({ error: e.message }, e.status || 403);
+  }
+
+  const metaRaw = await env.RATE_LIMIT_KV.get(`evidence-upload:${sessionId}:${artifactType}`);
+  if (!metaRaw) return json({ error: "Upload URL expired or not created" }, 400);
+  const meta = JSON.parse(metaRaw);
+  if (contentSha && meta.sha256 && contentSha !== meta.sha256.toLowerCase()) {
+    return json({ error: "X-Content-SHA256 does not match registered hash" }, 400);
+  }
+
+  const body = await request.arrayBuffer();
+  if (!body.byteLength) return json({ error: "Empty body" }, 400);
+
+  let putResult;
+  try {
+    putResult = await r2PutObject(env, {
+      key: meta.key,
+      body,
+      contentType: meta.contentType || contentType,
+      sha256: meta.sha256,
+    });
+  } catch (e) {
+    return json({ error: `Storage failed: ${e.message}` }, 500);
+  }
+
+  const objects = record.objects || {};
+  objects[artifactType] = {
+    key: meta.key,
+    sha256: meta.sha256,
+    bytes: body.byteLength,
+    storage: putResult.storage,
+    uploadedAt: new Date().toISOString(),
+  };
+  record.objects = objects;
+  try {
+    await env.RATE_LIMIT_KV.put(`evidence:${sessionId}`, JSON.stringify(record), {
+      expirationTtl: 60 * 60 * 24 * 365 * 5,
+    });
+  } catch (e) {
+    console.warn("evidence object index:", e.message);
+  }
+
+  return json({
+    ok: true,
+    key: meta.key,
+    bytes: body.byteLength,
+    storage: putResult.storage,
+    skipped: !!putResult.skipped,
+  });
+}
+
 function randomClaimCode() {
   const bytes = new Uint8Array(18);
   crypto.getRandomValues(bytes);
@@ -1212,6 +1380,14 @@ async function handleEvidenceVerify(request, env, sessionId) {
       source: record.source,
       claimable: !!record.claimable,
       independentlyVerifiable: record.status === "anchored",
+      objects: record.objects
+        ? Object.fromEntries(
+            Object.entries(record.objects).map(([k, v]) => [
+              k,
+              { bytes: v.bytes, uploadedAt: v.uploadedAt, storage: v.storage },
+            ])
+          )
+        : undefined,
     });
   } catch (e) {
     return json({ error: e.message }, 500);
