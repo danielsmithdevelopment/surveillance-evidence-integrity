@@ -296,6 +296,41 @@
         }
       }
     },
+    "/api/evidence/safety-ping": {
+      "post": {
+        "operationId": "evidenceSafetyPing",
+        "summary": "Record a personal-safety alert (dead-man / interrupt)",
+        "security": [],
+        "description": "Stores an audit ping. Native app also opens SMS drafts to emergency contacts. Not a 911 replacement.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["deviceId", "kind"],
+                "properties": {
+                  "deviceId": { "type": "string" },
+                  "kind": {
+                    "type": "string",
+                    "enum": ["deadman", "interrupt", "manual", "checkin_ok"]
+                  },
+                  "message": { "type": "string" },
+                  "scenario": { "type": "string" },
+                  "location": { "type": "object" },
+                  "sessionId": { "type": "string" },
+                  "localId": { "type": "string" },
+                  "interruptReason": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "ok + pingId" }
+        }
+      }
+    },
     "/api/evidence/claim": {
       "post": {
         "operationId": "claimEvidence",

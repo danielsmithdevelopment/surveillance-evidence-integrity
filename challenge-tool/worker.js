@@ -401,6 +401,9 @@ export default {
       if (url.pathname === "/api/evidence/sync-lite" && request.method === "POST") {
         return handleEvidenceSyncLite(request, env);
       }
+      if (url.pathname === "/api/evidence/safety-ping" && request.method === "POST") {
+        return handleEvidenceSafetyPing(request, env);
+      }
       if (url.pathname === "/api/evidence/claim" && request.method === "POST") {
         return handleEvidenceClaim(request, env);
       }
@@ -1084,6 +1087,9 @@ async function handleEvidenceSyncLite(request, env) {
   record.transcriptEngine = body.transcriptEngine || null;
   record.sync = "lite";
   record.mediaPending = true;
+  record.interrupted = !!body.interrupted;
+  record.interruptReason = body.interruptReason || null;
+  record.scenario = body.scenario || null;
 
   try {
     await env.RATE_LIMIT_KV.put(`evidence:${sessionId}`, JSON.stringify(record), {
@@ -1108,8 +1114,66 @@ async function handleEvidenceSyncLite(request, env) {
     claimUrl: `https://challengethefootage.com/evidence.html?claim=${encodeURIComponent(sessionId)}&code=${encodeURIComponent(claimCode)}`,
     transcriptStored: true,
     mediaPending: true,
+    interrupted: !!record.interrupted,
     sync: "lite",
   });
+}
+
+/**
+ * Personal-safety alert ping (dead-man / interrupt). Stored for audit; SMS is client-side for now.
+ */
+async function handleEvidenceSafetyPing(request, env) {
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return json({ error: "Invalid request body" }, 400);
+  }
+
+  const deviceId = body.deviceId ? String(body.deviceId) : "";
+  const kind = body.kind ? String(body.kind) : "";
+  if (!deviceId || !kind) {
+    return json({ error: "deviceId and kind are required" }, 400);
+  }
+  if (!["deadman", "interrupt", "manual", "checkin_ok"].includes(kind)) {
+    return json({ error: "Invalid kind" }, 400);
+  }
+
+  const pingId = `ping-${deviceId.slice(0, 8)}-${Date.now().toString(36)}`;
+  const record = {
+    pingId,
+    deviceId,
+    kind,
+    message: String(body.message || "").slice(0, 4000),
+    scenario: body.scenario || null,
+    location: body.location || null,
+    sessionId: body.sessionId || null,
+    localId: body.localId || null,
+    interruptReason: body.interruptReason || null,
+    at: body.at || new Date().toISOString(),
+  };
+
+  try {
+    await env.RATE_LIMIT_KV.put(`safety-ping:${pingId}`, JSON.stringify(record), {
+      expirationTtl: 60 * 60 * 24 * 90,
+    });
+    const indexKey = `safety-ping-index:${deviceId}`;
+    let index = [];
+    try {
+      index = (await env.RATE_LIMIT_KV.get(indexKey, { type: "json" })) || [];
+    } catch {
+      index = [];
+    }
+    if (!Array.isArray(index)) index = [];
+    index.unshift({ pingId, kind, at: record.at });
+    await env.RATE_LIMIT_KV.put(indexKey, JSON.stringify(index.slice(0, 50)), {
+      expirationTtl: 60 * 60 * 24 * 90,
+    });
+  } catch (e) {
+    console.warn("safety-ping KV:", e.message);
+  }
+
+  return json({ ok: true, pingId, stored: true });
 }
 
 async function handleEvidenceClaim(request, env) {
@@ -1484,6 +1548,9 @@ async function handleEvidenceVerify(request, env, sessionId) {
       claimable: !!record.claimable,
       independentlyVerifiable: record.status === "anchored",
       mediaPending: !!record.mediaPending,
+      interrupted: !!record.interrupted,
+      interruptReason: record.interruptReason || null,
+      scenario: record.scenario || null,
       sync: record.sync || null,
       objects: record.objects
         ? Object.fromEntries(

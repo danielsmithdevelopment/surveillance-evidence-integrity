@@ -24,10 +24,13 @@ Users brand-perceive **Challenge the Footage**, not a separate crypto/Arweave ap
 
 **Record first, account later.** Mid-encounter must not require Google sign-in.
 
+Works for **police encounters and broader personal safety** (meetups, dates, night walks):
+
 1. Native records → **on-device Whisper** (offline) → hashes → durable local queue
-2. Probe link: **offline** keep local · **constrained/2G** `POST /api/evidence/sync-lite` (gzip transcript only) · **ok** sync-lite then audio/video
-3. User opens Challenge the Footage → signs in → claims the session (needs claimCode from a successful sync-lite)
-4. ClawQL independently anchors behind the scenes; Stripe only for document packs
+2. Force-quit / unexpected stop → interrupted package + emergency-contact alerts
+3. Probe link: **offline** keep local · **constrained/2G** `sync-lite` · **ok** media too
+4. User claims on the website when ready
+5. ClawQL anchors behind the scenes; Stripe only for document packs
 
 ## Near-term build order
 
@@ -38,8 +41,10 @@ Users brand-perceive **Challenge the Footage**, not a separate crypto/Arweave ap
 5. ~~Whisper module scaffold (stub + optional whisper.rn)~~
 6. ~~Rural / 2G sync-lite (gzip transcript first, media later)~~
 7. ~~EAS + Whisper model fetch/bundle (`BUILD.md`, `eas-build-pre-install`)~~
-8. Run `eas init` + preview TestFlight/Play with a real Apple/Google account
-9. Revisit enclave-backed keys / Rust crypto module if counsel requires it
+8. ~~Interrupt recovery + emergency contacts / check-in~~
+9. Run `eas init` + preview TestFlight/Play with a real Apple/Google account
+10. Server-side SMS gateway (Twilio) for safety-ping (today: SMS drafts on device)
+11. Revisit enclave-backed keys / Rust crypto module if counsel requires it
 
 ## Testing
 

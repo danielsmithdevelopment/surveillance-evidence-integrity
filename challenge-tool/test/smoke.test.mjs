@@ -87,6 +87,7 @@ describe("challenge-tool artifacts", () => {
     assert.match(workerSrc, /handleEvidenceSecure/);
     assert.match(workerSrc, /handleEvidenceSecureDevice/);
     assert.match(workerSrc, /handleEvidenceSyncLite/);
+    assert.match(workerSrc, /handleEvidenceSafetyPing/);
     assert.match(workerSrc, /handleEvidenceClaim/);
     assert.match(workerSrc, /handleEvidenceUploadUrl/);
     assert.match(workerSrc, /handleEvidenceObjectPut/);

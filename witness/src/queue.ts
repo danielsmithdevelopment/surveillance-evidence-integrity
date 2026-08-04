@@ -21,6 +21,10 @@ export type QueueItem = {
   audioSource: "parallel" | "ffmpeg" | "pending";
   transcriptEngine: "stub" | "native";
   location: { latitude: number; longitude: number } | null;
+  scenario?: string;
+  interrupted?: boolean;
+  interruptReason?: string | null;
+  safetyAlertSent?: boolean;
   /** Server fields filled after sync-lite */
   sessionId?: string;
   claimCode?: string;

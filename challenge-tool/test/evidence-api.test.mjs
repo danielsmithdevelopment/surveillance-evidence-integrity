@@ -212,4 +212,47 @@ describe("evidence API (wrangler local)", () => {
     assert.equal(verify.json.objects?.transcript?.storage, "inline");
     assert.equal(verify.json.mediaPending, true);
   });
+
+  it("sync-lite records interrupted flag + safety-ping stores audit", async () => {
+    const transcriptText = "# interrupted\nTRANSCRIPT_PENDING\n";
+    const transcriptHash = await sha256Hex(transcriptText);
+    const { gzipTextToBytes } = await import("../evidence-gzip.js");
+    const gz = await gzipTextToBytes(transcriptText);
+    const lite = await api("/api/evidence/sync-lite", {
+      method: "POST",
+      body: {
+        deviceId: "device-safety-001",
+        transcriptHash,
+        audioHash: HASHES.audioHash,
+        videoHash: HASHES.videoHash,
+        transcriptEncoding: "gzip+base64",
+        transcriptGzipB64: Buffer.from(gz).toString("base64"),
+        interrupted: true,
+        interruptReason: "process_death",
+        scenario: "date",
+        linkTier: "constrained",
+      },
+    });
+    assert.equal(lite.status, 200, JSON.stringify(lite.json));
+    assert.equal(lite.json.interrupted, true);
+
+    const verify = await api(`/api/evidence/verify/${lite.json.sessionId}`);
+    assert.equal(verify.json.interrupted, true);
+    assert.equal(verify.json.interruptReason, "process_death");
+    assert.equal(verify.json.scenario, "date");
+
+    const ping = await api("/api/evidence/safety-ping", {
+      method: "POST",
+      body: {
+        deviceId: "device-safety-001",
+        kind: "interrupt",
+        message: "test alert",
+        sessionId: lite.json.sessionId,
+        interruptReason: "process_death",
+      },
+    });
+    assert.equal(ping.status, 200, JSON.stringify(ping.json));
+    assert.equal(ping.json.ok, true);
+    assert.ok(ping.json.pingId);
+  });
 });

@@ -1,8 +1,8 @@
 /**
  * Challenge the Footage — Evidence (native)
  *
- * Expo companion: record-first (parallel A/V), full-file SHA-256, secure-device,
- * then blob upload to CTF Worker / R2. Claim on the website afterward.
+ * Personal-safety recorder: police encounters, meetups, dates, night walks.
+ * Record-first, on-device Whisper, rural 2G transcript sync, emergency contacts.
  */
 
 import React, {
@@ -30,19 +30,16 @@ import {
   useCameraPermissions,
   useMicrophonePermissions,
 } from "expo-camera";
-import * as FileSystem from "expo-file-system";
 import * as Location from "expo-location";
 import * as SecureStore from "expo-secure-store";
 import * as Clipboard from "expo-clipboard";
 import { CTF_WEB } from "./src/config";
-import { sha256File, sha256Text } from "./src/hash";
 import {
   extractAudioWithFfmpeg,
   startParallelAudio,
   type AudioCapture,
 } from "./src/audio";
 import {
-  formatEvidenceTranscript,
   getWhisperEngine,
   liveTranscriptBanner,
   downloadWhisperModel,
@@ -56,9 +53,24 @@ import {
   loadQueueItem,
   needsSync,
   saveQueueItem,
-  type QueueItem,
 } from "./src/queue";
 import { gzipTextToBase64 } from "./src/gzip";
+import { buildQueuePackage } from "./src/package-session";
+import {
+  SCENARIO_LABELS,
+  clearRecordingActive,
+  dispatchSafetyAlert,
+  loadCheckInMinutes,
+  loadContacts,
+  loadScenario,
+  markRecordingActive,
+  readRecordingActive,
+  saveCheckInMinutes,
+  saveContacts,
+  saveScenario,
+  type SafetyContact,
+  type SafetyScenario,
+} from "./src/safety";
 
 const CONSENT_KEY = "ctf_evidence_consent_v1";
 const DEVICE_KEY = "ctf_evidence_device_id";
@@ -93,6 +105,10 @@ interface SessionResult {
   mediaPending?: boolean;
   localOnly?: boolean;
   localId?: string;
+  interrupted?: boolean;
+  interruptReason?: string | null;
+  scenario?: SafetyScenario;
+  safetyAlertSent?: boolean;
 }
 
 function randomId(prefix: string) {
@@ -126,12 +142,29 @@ export default function App() {
   const [result, setResult] = useState<SessionResult | null>(null);
   const [whisperReady, setWhisperReady] = useState(false);
   const [modelPct, setModelPct] = useState<number | null>(null);
+  const [scenario, setScenario] = useState<SafetyScenario>("other");
+  const [contacts, setContacts] = useState<SafetyContact[]>([]);
+  const [checkInMinutes, setCheckInMinutes] = useState(30);
+  const [contactName, setContactName] = useState("");
+  const [contactPhone, setContactPhone] = useState("");
+  const [checkInLeft, setCheckInLeft] = useState<number | null>(null);
   const startedAt = useRef<string | null>(null);
   const locationRef = useRef<{ latitude: number; longitude: number } | null>(
     null,
   );
   const whisperEngineId = useRef<"stub" | "native">("stub");
   const manualNotesRef = useRef("");
+  const userStopRef = useRef(false);
+  const checkInTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const checkInDeadlineRef = useRef<number | null>(null);
+  const activeLocalIdRef = useRef<string | null>(null);
+  const stopAndProcessRef = useRef<
+    | ((
+        videoUri?: string,
+        opts?: { interrupted?: boolean; reason?: string },
+      ) => Promise<void>)
+    | null
+  >(null);
 
   useEffect(() => {
     (async () => {
@@ -141,6 +174,71 @@ export default function App() {
         setWhisperReady(await isWhisperModelReady());
       } catch {
         setWhisperReady(false);
+      }
+      setContacts(await loadContacts());
+      setCheckInMinutes(await loadCheckInMinutes());
+      setScenario(await loadScenario());
+
+      // Force-quit / crash while recording → interrupt recovery.
+      const orphan = await readRecordingActive();
+      if (orphan) {
+        await clearRecordingActive();
+        const deviceId = orphan.deviceId || (await ensureDeviceId());
+        const localId = orphan.localId || randomId("local");
+        const endedAt = new Date().toISOString();
+        const { queueItem, transcriptText } = await buildQueuePackage({
+          localId,
+          deviceId,
+          stateCode: stateCode.toUpperCase(),
+          startedAt: orphan.startedAt,
+          endedAt,
+          engine: "stub",
+          modelText: "",
+          manualNotes: "App was killed or crashed during recording.",
+          audioUri: null,
+          videoUri: null,
+          audioSource: "pending",
+          location: null,
+          scenario: orphan.scenario,
+          interrupted: true,
+          interruptReason: "process_death",
+        });
+        await saveQueueItem(queueItem);
+        const alert = await dispatchSafetyAlert({
+          kind: "interrupt",
+          scenario: orphan.scenario || "other",
+          deviceId,
+          startedAt: orphan.startedAt,
+          location: null,
+          localId,
+          interruptReason: "App closed during recording (possible forced stop)",
+          openSms: true,
+        });
+        queueItem.safetyAlertSent = alert.smsOpened > 0 || alert.pingOk;
+        await saveQueueItem(queueItem);
+        try {
+          await flushQueueItem(queueItem);
+        } catch {
+          // offline ok
+        }
+        setResult({
+          sessionId: queueItem.sessionId || localId,
+          status: queueItem.status || "interrupted",
+          claimCode: queueItem.claimCode,
+          claimUrl: queueItem.claimUrl,
+          verificationId: queueItem.verificationId || localId,
+          uploads: queueItem.uploads,
+          interrupted: true,
+          interruptReason: "process_death",
+          scenario: orphan.scenario,
+          safetyAlertSent: queueItem.safetyAlertSent,
+          localOnly: !queueItem.sessionId,
+          localId,
+          mediaPending: true,
+        });
+        setTranscript(transcriptText);
+        setPhase("secured");
+        setStatus("Recovered interrupted recording — safety contacts notified if configured.");
       }
     })();
   }, []);
@@ -170,18 +268,60 @@ export default function App() {
   }, [phase]);
 
   const consentNotice = useMemo(() => {
+    const base =
+      `Challenge the Footage helps you keep a private record when you do not feel safe — ` +
+      `police encounters, marketplace meetups, first dates, walking alone at night, and similar situations.`;
     if (ALL_PARTY_STATES.has(stateCode.toUpperCase())) {
       return (
-        `You selected ${stateCode.toUpperCase()}, an all-party consent state. ` +
-        `Notify the officer that you are recording before relying on this recording in legal proceedings. ` +
-        `This is not legal advice — consult an attorney in your jurisdiction.`
+        `${base} You selected ${stateCode.toUpperCase()}, an all-party consent state. ` +
+        `Notify others that you are recording when required. This is not legal advice.`
       );
     }
     return (
-      `You selected ${stateCode.toUpperCase()}. Rules vary by state. ` +
-      `Notify when appropriate and consult an attorney before relying on recordings in court.`
+      `${base} You selected ${stateCode.toUpperCase()}. Rules vary by state — ` +
+      `notify when appropriate and consult an attorney before relying on recordings in court.`
     );
   }, [stateCode]);
+
+  const clearCheckInTimer = useCallback(() => {
+    if (checkInTimerRef.current) {
+      clearInterval(checkInTimerRef.current);
+      checkInTimerRef.current = null;
+    }
+    checkInDeadlineRef.current = null;
+    setCheckInLeft(null);
+  }, []);
+
+  const armCheckInTimer = useCallback(
+    (minutes: number, deviceId: string) => {
+      clearCheckInTimer();
+      if (minutes <= 0) return;
+      const deadline = Date.now() + minutes * 60 * 1000;
+      checkInDeadlineRef.current = deadline;
+      setCheckInLeft(minutes * 60);
+      checkInTimerRef.current = setInterval(async () => {
+        const left = Math.max(
+          0,
+          Math.ceil(((checkInDeadlineRef.current || 0) - Date.now()) / 1000),
+        );
+        setCheckInLeft(left);
+        if (left <= 0) {
+          clearCheckInTimer();
+          setStatus("Check-in missed — alerting emergency contacts…");
+          await dispatchSafetyAlert({
+            kind: "deadman",
+            scenario,
+            deviceId,
+            startedAt: startedAt.current || undefined,
+            location: locationRef.current,
+            localId: activeLocalIdRef.current,
+            openSms: true,
+          });
+        }
+      }, 1000);
+    },
+    [clearCheckInTimer, scenario],
+  );
 
   const acceptConsent = async () => {
     await SecureStore.setItemAsync(
@@ -208,6 +348,7 @@ export default function App() {
   const startRecording = async () => {
     try {
       await ensurePermissions();
+      const deviceId = await ensureDeviceId();
       const { status: locStatus } =
         await Location.requestForegroundPermissionsAsync();
       if (locStatus === "granted") {
@@ -218,6 +359,17 @@ export default function App() {
         };
       }
       startedAt.current = new Date().toISOString();
+      userStopRef.current = false;
+      const localId = randomId("local");
+      activeLocalIdRef.current = localId;
+      await markRecordingActive({
+        localId,
+        startedAt: startedAt.current,
+        scenario,
+        deviceId,
+      });
+      await saveScenario(scenario);
+
       setTranscript("");
       setPhase("recording");
       setRecording(true);
@@ -231,7 +383,6 @@ export default function App() {
       setStatus(engine.label);
 
       if (engine.id === "native" && engine.supportsRealtime) {
-        // Whisper owns the mic (and can write a WAV for hashing).
         stopRealtimeRef.current = await engine.startRealtime((partial) => {
           liveModelTextRef.current = partial;
           setTranscript(`${liveTranscriptBanner("native")}${partial}\n`);
@@ -241,37 +392,61 @@ export default function App() {
         audioRef.current = await startParallelAudio();
       }
 
+      armCheckInTimer(checkInMinutes, deviceId);
+
       const cam = cameraRef.current;
       if (!cam) throw new Error("Camera not ready");
       cam
         .recordAsync({ maxDuration: 60 * 30 })
         .then(async (video) => {
-          await stopAndProcess(video?.uri);
+          const interrupted = !userStopRef.current;
+          await stopAndProcessRef.current?.(video?.uri, {
+            interrupted,
+            reason: interrupted
+              ? "recording_ended_without_stop_button"
+              : undefined,
+          });
         })
-        .catch((e) => {
+        .catch(async (e) => {
           console.warn(e);
-          setStatus(String(e.message || e));
-          setPhase("idle");
-          setRecording(false);
+          await stopAndProcessRef.current?.(undefined, {
+            interrupted: true,
+            reason: e?.message || "camera_error",
+          });
         });
     } catch (e: any) {
+      await clearRecordingActive();
+      clearCheckInTimer();
       Alert.alert("Cannot start", e.message || String(e));
     }
   };
 
   const requestStop = () => {
+    userStopRef.current = true;
     setStatus("Stopping…");
     cameraRef.current?.stopRecording();
   };
 
-  const stopAndProcess = async (videoUri?: string) => {
+  const extendCheckIn = useCallback(async () => {
+    const deviceId = await ensureDeviceId();
+    armCheckInTimer(checkInMinutes || 15, deviceId);
+    setStatus("Check-in extended.");
+  }, [armCheckInTimer, checkInMinutes]);
+
+  const stopAndProcess = async (
+    videoUri?: string,
+    opts?: { interrupted?: boolean; reason?: string },
+  ) => {
     setRecording(false);
     setPhase("processing");
+    clearCheckInTimer();
     const endedAt = new Date().toISOString();
+    const interrupted = !!opts?.interrupted;
+    const interruptReason = opts?.reason || null;
 
     try {
       const deviceId = await ensureDeviceId();
-      if (!videoUri) throw new Error("No video captured");
+      await clearRecordingActive();
 
       setStatus("Finalizing audio…");
       let audioUri: string | null = null;
@@ -301,7 +476,7 @@ export default function App() {
         audioRef.current = null;
       }
 
-      if (!audioUri) {
+      if (!audioUri && videoUri) {
         setStatus("Trying ffmpeg audio extract…");
         audioUri = await extractAudioWithFfmpeg(videoUri);
         if (audioUri) audioSource = "ffmpeg";
@@ -322,58 +497,50 @@ export default function App() {
         setTranscript(`${liveTranscriptBanner(engine.id)}${modelText}\n`);
       }
 
-      // Treat edits in the live box as operator notes (strip our banners / model text).
       const manualNotes = transcript
         .replace(/\[Transcript\][^\n]*\n?/g, "")
         .replace(modelText, "")
         .trim();
       manualNotesRef.current = manualNotes;
 
-      const transcriptText = formatEvidenceTranscript({
+      const localId = activeLocalIdRef.current || randomId("local");
+      setStatus("Hashing (full file SHA-256)…");
+      const { queueItem, transcriptText } = await buildQueuePackage({
+        localId,
+        deviceId,
+        stateCode: stateCode.toUpperCase(),
         startedAt: startedAt.current!,
         endedAt,
         engine: engine.id,
         modelText,
         manualNotes,
+        audioUri,
+        videoUri: videoUri || null,
+        audioSource,
+        location: locationRef.current,
+        scenario,
+        interrupted,
+        interruptReason,
       });
       setTranscript(transcriptText);
-      const transcriptPath = `${FileSystem.cacheDirectory}transcript-${Date.now()}.txt`;
-      await FileSystem.writeAsStringAsync(transcriptPath, transcriptText);
-
-      setStatus("Hashing (full file SHA-256)…");
-      const transcriptHash = await sha256Text(transcriptText);
-      const videoHash = await sha256File(videoUri);
-      let audioHash: string;
-      if (audioUri) {
-        audioHash = await sha256File(audioUri);
-      } else {
-        // Honest pending marker — not a fake duplicate of the video hash for court use.
-        audioHash = await sha256Text(`AUDIO_PENDING:${videoHash}`);
-        audioSource = "pending";
-      }
-
-      const localId = randomId("local");
-      const queueItem: QueueItem = {
-        localId,
-        createdAt: new Date().toISOString(),
-        deviceId,
-        stateCode: stateCode.toUpperCase(),
-        startedAt: startedAt.current!,
-        endedAt,
-        transcriptText,
-        transcriptHash,
-        audioHash,
-        videoHash,
-        transcriptPath,
-        audioPath: audioUri,
-        videoPath: videoUri,
-        audioSource,
-        transcriptEngine: engine.id,
-        location: locationRef.current,
-        uploads: {},
-        syncAttempts: 0,
-      };
       await saveQueueItem(queueItem);
+
+      if (interrupted) {
+        setStatus("Interrupted — securing what we have + alerting contacts…");
+        const alert = await dispatchSafetyAlert({
+          kind: "interrupt",
+          scenario,
+          deviceId,
+          startedAt: startedAt.current || undefined,
+          location: locationRef.current,
+          localId,
+          interruptReason:
+            interruptReason || "Recording stopped unexpectedly",
+          openSms: true,
+        });
+        queueItem.safetyAlertSent = alert.smsOpened > 0 || alert.pingOk;
+        await saveQueueItem(queueItem);
+      }
 
       setStatus("Checking link (rural / 2G aware)…");
       const link = await probeLink();
@@ -382,15 +549,19 @@ export default function App() {
 
       let secured: SessionResult = {
         sessionId: localId,
-        status: "local_only",
+        status: interrupted ? "interrupted_local" : "local_only",
         verificationId: localId,
         uploads: {},
-        audioSource,
+        audioSource: queueItem.audioSource,
         transcriptEngine: engine.id,
         linkTier: link.tier,
         mediaPending: true,
         localOnly: true,
         localId,
+        interrupted,
+        interruptReason,
+        scenario,
+        safetyAlertSent: queueItem.safetyAlertSent,
       };
 
       if (plan.syncLite) {
@@ -402,48 +573,64 @@ export default function App() {
           );
           const gzInfo = gzipTextToBase64(transcriptText);
           const flushed = await flushQueueItem(queueItem, { tier: link.tier });
+          if (interrupted && flushed.claimUrl) {
+            await dispatchSafetyAlert({
+              kind: "interrupt",
+              scenario,
+              deviceId,
+              startedAt: startedAt.current || undefined,
+              location: locationRef.current,
+              localId,
+              sessionId: flushed.sessionId,
+              claimUrl: flushed.claimUrl,
+              interruptReason: interruptReason || "Recording interrupted",
+              openSms: false,
+            });
+          }
           secured = {
             sessionId: flushed.sessionId || localId,
-            status: flushed.status || "secured",
+            status: flushed.status || (interrupted ? "interrupted" : "secured"),
             claimCode: flushed.claimCode,
             claimUrl: flushed.claimUrl,
-            verificationId: flushed.verificationId || flushed.sessionId || localId,
+            verificationId:
+              flushed.verificationId || flushed.sessionId || localId,
             uploads: flushed.uploads,
-            audioSource,
+            audioSource: queueItem.audioSource,
             transcriptEngine: engine.id,
             linkTier: link.tier,
             mediaPending: !(flushed.uploads.audio && flushed.uploads.video),
             localOnly: !flushed.sessionId,
             localId,
             compressedBytes: gzInfo.gzipBytes,
+            interrupted,
+            interruptReason,
+            scenario,
+            safetyAlertSent: queueItem.safetyAlertSent,
           };
-          if (link.tier === "constrained") {
-            setStatus(
-              "Transcript synced over slow link. Video stays on device until signal improves.",
-            );
-          }
         } catch (syncErr: any) {
           console.warn("Sync failed — kept on device:", syncErr);
           Alert.alert(
             "Saved on device",
-            `${syncErr.message || syncErr}\n\nHashes and transcript are stored locally. Open the app again when you have signal — we will sync the compressed transcript first.`,
+            `${syncErr.message || syncErr}\n\nHashes and transcript are stored locally.`,
           );
         }
-      } else {
+      } else if (!interrupted) {
         Alert.alert(
           "Saved on device",
-          "No data connection. On-device transcript and hashes are safe. We will sync a compressed transcript as soon as you get even a weak (2G) signal — video waits for a better link.",
+          "No data connection. We will sync a compressed transcript when you get even a weak (2G) signal.",
         );
       }
 
       setResult(secured);
       setPhase("secured");
       setStatus(
-        secured.localOnly
-          ? "Evidence saved on device (waiting for signal)."
-          : secured.mediaPending
-            ? "Transcript secured. Media pending better link."
-            : "Evidence secured.",
+        interrupted
+          ? "Interrupted session secured. Contacts alerted if configured."
+          : secured.localOnly
+            ? "Evidence saved on device (waiting for signal)."
+            : secured.mediaPending
+              ? "Transcript secured. Media pending better link."
+              : "Evidence secured.",
       );
     } catch (e: any) {
       console.error(e);
@@ -452,6 +639,8 @@ export default function App() {
       setPhase("idle");
     }
   };
+
+  stopAndProcessRef.current = stopAndProcess;
 
   const prepSpeechModel = useCallback(async () => {
     try {
@@ -542,7 +731,7 @@ export default function App() {
       <View style={styles.header}>
         <Text style={styles.brand}>Challenge the Footage</Text>
         <Text style={styles.tagline}>
-          Evidence · record first, account later
+          Personal safety · record first, account later
         </Text>
       </View>
 
@@ -550,10 +739,10 @@ export default function App() {
         <ScrollView contentContainerStyle={styles.panel}>
           <Text style={styles.h2}>Before you record</Text>
           <Text style={styles.body}>
-            This app is part of Challenge the Footage. You can record without
-            signing in — link the evidence to your account on the website
-            afterward. Pay for document packs with a normal card. No crypto
-            wallet.
+            This is your personal safety recorder for Challenge the Footage —
+            police encounters, marketplace meetups, first dates, walking alone
+            at night, or any moment you want a private record. Record without
+            signing in; link evidence on the website later. No crypto wallet.
           </Text>
           <Text style={styles.label}>State code</Text>
           <TextInput
@@ -572,13 +761,99 @@ export default function App() {
       )}
 
       {phase === "idle" && (
-        <View style={styles.panel}>
+        <ScrollView contentContainerStyle={styles.panel}>
           <Text style={styles.h2}>Ready</Text>
           <Text style={styles.body}>
-            Tap to start recording. Capture works offline. On a weak (2G) link we
-            sync a compressed transcript first; video waits for a better
-            connection.
+            Capture works offline. On a weak (2G) link we sync a compressed
+            transcript first. If recording is force-stopped, we keep what we
+            can and alert your emergency contacts.
           </Text>
+
+          <Text style={styles.label}>Situation</Text>
+          {(Object.keys(SCENARIO_LABELS) as SafetyScenario[]).map((key) => (
+            <Pressable
+              key={key}
+              style={[styles.chip, scenario === key ? styles.chipOn : null]}
+              onPress={() => setScenario(key)}
+            >
+              <Text
+                style={[
+                  styles.chipText,
+                  scenario === key ? styles.chipTextOn : null,
+                ]}
+              >
+                {SCENARIO_LABELS[key]}
+              </Text>
+            </Pressable>
+          ))}
+
+          <Text style={styles.label}>Check-in timer (minutes, 0 = off)</Text>
+          <TextInput
+            style={styles.input}
+            keyboardType="number-pad"
+            value={String(checkInMinutes)}
+            onChangeText={async (t) => {
+              const n = Number(t.replace(/[^\d]/g, "")) || 0;
+              setCheckInMinutes(n);
+              await saveCheckInMinutes(n);
+            }}
+          />
+          <Text style={styles.body}>
+            If you do not extend check-in before the timer ends, we open SMS
+            drafts to your emergency contacts with your last location.
+          </Text>
+
+          <Text style={styles.label}>Emergency contacts</Text>
+          {contacts.map((c) => (
+            <View key={c.id} style={styles.contactRow}>
+              <Text style={styles.body}>
+                {c.name} · {c.phone}
+              </Text>
+              <Pressable
+                onPress={async () => {
+                  const next = contacts.filter((x) => x.id !== c.id);
+                  setContacts(next);
+                  await saveContacts(next);
+                }}
+              >
+                <Text style={styles.link}>Remove</Text>
+              </Pressable>
+            </View>
+          ))}
+          <TextInput
+            style={styles.input}
+            placeholder="Name"
+            value={contactName}
+            onChangeText={setContactName}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Phone"
+            keyboardType="phone-pad"
+            value={contactPhone}
+            onChangeText={setContactPhone}
+          />
+          <Pressable
+            style={styles.btnGhost}
+            onPress={async () => {
+              if (!contactName.trim() || !contactPhone.trim()) return;
+              const next = [
+                ...contacts,
+                {
+                  id: randomId("c"),
+                  name: contactName.trim(),
+                  phone: contactPhone.trim(),
+                },
+              ].slice(0, 5);
+              setContacts(next);
+              await saveContacts(next);
+              setContactName("");
+              setContactPhone("");
+            }}
+          >
+            <Text style={styles.link}>Add contact</Text>
+          </Pressable>
+
           <Text style={styles.body}>
             Speech model:{" "}
             {whisperReady
@@ -619,7 +894,7 @@ export default function App() {
           >
             <Text style={styles.link}>Review consent notice</Text>
           </Pressable>
-        </View>
+        </ScrollView>
       )}
 
       {(phase === "recording" || phase === "processing") && (
@@ -633,18 +908,31 @@ export default function App() {
           />
           <View style={styles.overlay}>
             <Text style={styles.status}>{status}</Text>
+            {checkInLeft !== null ? (
+              <Text style={styles.status}>
+                Check-in in {Math.floor(checkInLeft / 60)}:
+                {String(checkInLeft % 60).padStart(2, "0")}
+              </Text>
+            ) : null}
             <ScrollView style={styles.transcriptBox}>
               <Text style={styles.transcript}>{transcript}</Text>
             </ScrollView>
             {phase === "recording" ? (
-              <Pressable
-                style={[styles.btn, styles.stopBtn]}
-                onPress={requestStop}
-              >
-                <Text style={styles.btnText}>
-                  {recording ? "Stop & secure" : "Stopping…"}
-                </Text>
-              </Pressable>
+              <>
+                {checkInMinutes > 0 ? (
+                  <Pressable style={styles.btn} onPress={extendCheckIn}>
+                    <Text style={styles.btnText}>I&apos;m OK — extend check-in</Text>
+                  </Pressable>
+                ) : null}
+                <Pressable
+                  style={[styles.btn, styles.stopBtn]}
+                  onPress={requestStop}
+                >
+                  <Text style={styles.btnText}>
+                    {recording ? "Stop & secure" : "Stopping…"}
+                  </Text>
+                </Pressable>
+              </>
             ) : (
               <ActivityIndicator color="#0b6e6e" size="large" />
             )}
@@ -654,7 +942,22 @@ export default function App() {
 
       {phase === "secured" && result && (
         <ScrollView contentContainerStyle={styles.panel}>
-          <Text style={styles.h2}>Evidence secured</Text>
+          <Text style={styles.h2}>
+            {result.interrupted ? "Interrupted — package secured" : "Evidence secured"}
+          </Text>
+          {result.interrupted ? (
+            <Text style={styles.body}>
+              Recording ended unexpectedly
+              {result.interruptReason ? ` (${result.interruptReason})` : ""}.
+              We kept hashes/transcript where possible
+              {result.safetyAlertSent ? " and notified emergency contacts" : ""}.
+            </Text>
+          ) : null}
+          {result.scenario ? (
+            <Text style={styles.body}>
+              Situation: {SCENARIO_LABELS[result.scenario] || result.scenario}
+            </Text>
+          ) : null}
           <Text style={styles.body}>
             Verification ID{"\n"}
             <Text style={styles.monoInline}>{result.verificationId}</Text>
@@ -750,6 +1053,22 @@ const styles = StyleSheet.create({
   panel: { padding: 20, gap: 12 },
   h2: { fontSize: 22, fontWeight: "700", color: "#142028" },
   body: { color: "#3d4f5c", lineHeight: 22 },
+  chip: {
+    borderWidth: 1,
+    borderColor: "#9ab0bc",
+    borderRadius: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
+  chipOn: { backgroundColor: "#0b6e6e", borderColor: "#0b6e6e" },
+  chipText: { color: "#142028", fontSize: 14 },
+  chipTextOn: { color: "#fff", fontWeight: "600" },
+  contactRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: 8,
+  },
   label: {
     fontSize: 12,
     fontWeight: "700",

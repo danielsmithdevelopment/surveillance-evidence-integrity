@@ -37,6 +37,9 @@ export async function syncLiteEvidence(input: {
   audioSource?: string;
   transcriptEngine?: string;
   linkTier?: LinkTier;
+  interrupted?: boolean;
+  interruptReason?: string | null;
+  scenario?: string;
 }): Promise<SyncLiteResult> {
   const gz = gzipTextToBase64(input.transcriptText);
   const res = await fetch(`${CTF_API}/api/evidence/sync-lite`, {
@@ -62,6 +65,9 @@ export async function syncLiteEvidence(input: {
       audioSource: input.audioSource,
       transcriptEngine: input.transcriptEngine,
       linkTier: input.linkTier || "constrained",
+      interrupted: !!input.interrupted,
+      interruptReason: input.interruptReason || null,
+      scenario: input.scenario || null,
       sync: "lite",
     }),
   });
@@ -114,6 +120,9 @@ export async function flushQueueItem(
       audioSource: item.audioSource,
       transcriptEngine: item.transcriptEngine,
       linkTier: probe.tier,
+      interrupted: !!item.interrupted,
+      interruptReason: item.interruptReason || null,
+      scenario: item.scenario,
     });
     item.sessionId = lite.sessionId;
     item.claimCode = lite.claimCode;

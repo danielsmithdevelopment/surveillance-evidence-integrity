@@ -6,16 +6,13 @@ Expo / React Native companion for [challengethefootage.com](https://challengethe
 
 ## What users do
 
-1. Open the app → consent by state → **Start recording** (no Google required; works offline)
-2. Stop → **on-device Whisper** (when linked) → full-file SHA-256 → durable local queue
-3. Sync by link quality:
-   - **No signal** — stay on device
-   - **2G / slow** — gzip transcript + hashes via `POST /api/evidence/sync-lite` (one small request)
-   - **OK link** — sync-lite, then audio, then video
-4. **Link to my account on the website** → sign in → claim session
-5. Prepare documents / pay with Stripe on the website
+1. Pick a **situation** (police, meetup, date, night walk, …) and optional **emergency contacts**
+2. **Start recording** (no Google required; works offline)
+3. Optional **check-in timer** — missed check-in opens SMS drafts to contacts with last location
+4. Stop (or survive a force-quit) → Whisper + hashes → local queue → 2G-first sync
+5. Link to account on the website → documents / Stripe there
 
-No crypto wallet. ClawQL anchors independently behind the scenes.
+No crypto wallet. Not a 911 replacement — a private record + trusted-contact signal.
 
 ## Rural / poor connectivity
 
