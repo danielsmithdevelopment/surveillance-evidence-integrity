@@ -1,0 +1,6 @@
+# Local-only Worker vars (copy to .dev.vars — gitignored)
+ALLOW_TEST_AUTH=true
+GENERATION_MODE=offline
+# GOOGLE_CLIENT_ID=
+# CLAWQL_GATEWAY_URL=https://docs.clawql.com
+# CLAWQL_API_KEY=

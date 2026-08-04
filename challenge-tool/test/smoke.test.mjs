@@ -23,6 +23,9 @@ describe("challenge-tool artifacts", () => {
     for (const route of ["/api/checkout", "/api/entitlement", "/api/generate", "/api/history"]) {
       assert.match(workerSrc, new RegExp(route.replace("/", "\\/")));
     }
+    assert.match(workerSrc, /ALLOW_TEST_AUTH/);
+    assert.match(workerSrc, /buildOfflineDocs/);
+    assert.match(workerSrc, /wantsOfflineGeneration/);
   });
 
   it("disclaimer names Challenge the Footage", () => {

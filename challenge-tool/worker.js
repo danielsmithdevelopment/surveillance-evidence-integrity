@@ -16,7 +16,13 @@
  *   GET  /api/health
  *
  * Also: Link headers, Markdown negotiation (Accept: text/markdown), agent-ready well-known files.
+ *
+ * Local/dev testing (see .dev.vars.example):
+ *   ALLOW_TEST_AUTH=true  + Authorization: Bearer test:<userId>:<email>
+ *   GENERATION_MODE=offline  (or omit CLAWQL_* secrets) → deterministic templates
  */
+
+import { buildOfflineDocs } from "./offline-docs.js";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
@@ -366,6 +372,8 @@ export default {
           ok: true,
           service: "challenge-the-footage",
           time: new Date().toISOString(),
+          generationMode: wantsOfflineGeneration(env) ? "offline" : "gateway",
+          testAuthEnabled: env.ALLOW_TEST_AUTH === "true",
         });
       }
       if (url.pathname === "/api/checkout" && request.method === "POST")
@@ -402,10 +410,40 @@ async function verifyGoogleToken(token, clientId) {
   return { userId: p.sub, email: p.email, name: p.name };
 }
 
+/**
+ * Resolve the caller. When ALLOW_TEST_AUTH=true, accepts:
+ *   Authorization: Bearer test:<userId>:<email>
+ * Never enable ALLOW_TEST_AUTH in production.
+ */
+async function resolveUser(request, env) {
+  const token = extractBearer(request);
+  if (env.ALLOW_TEST_AUTH === "true" && token.startsWith("test:")) {
+    const parts = token.split(":");
+    const userId = parts[1] || "test-user";
+    const email = parts.slice(2).join(":") || "test@example.com";
+    return {
+      userId,
+      email,
+      name: "Test User",
+      testAuth: true,
+    };
+  }
+  if (!env.GOOGLE_CLIENT_ID) {
+    throw new Error("GOOGLE_CLIENT_ID not configured");
+  }
+  return verifyGoogleToken(token, env.GOOGLE_CLIENT_ID);
+}
+
 function extractBearer(req) {
   const auth = req.headers.get("Authorization") || "";
   if (!auth.startsWith("Bearer ")) throw new Error("Missing authorization header");
   return auth.slice(7);
+}
+
+function wantsOfflineGeneration(env) {
+  if (env.GENERATION_MODE === "offline") return true;
+  if (env.GENERATION_MODE === "gateway") return false;
+  return !env.CLAWQL_GATEWAY_URL || !env.CLAWQL_API_KEY;
 }
 
 // ─── Gateway helpers ──────────────────────────────────────────────────────────
@@ -481,7 +519,17 @@ async function gwChat(env, system, userMsg) {
 
 // ─── Entitlement ──────────────────────────────────────────────────────────────
 
-async function getEntitlement(env, userId, email) {
+async function getEntitlement(env, userId, email, { testAuth = false } = {}) {
+  // Local/demo tokens must not be blocked by the free-generation gate.
+  if (testAuth) {
+    return {
+      entitled: true,
+      generationsUsed: 0,
+      generationsAllowed: Infinity,
+      isPD: false,
+      testAuth: true,
+    };
+  }
   // Public defender whitelist — checked before gateway entitlement
   // Set via: wrangler kv:key put --binding=RATE_LIMIT_KV "pd_whitelist:{email}" "true"
   if (email) {
@@ -500,19 +548,32 @@ async function getEntitlement(env, userId, email) {
   }
 }
 async function getFreeUsed(env, userId) {
-  const v = await env.RATE_LIMIT_KV.get(`free:${userId}`, { type: "json" });
-  return v?.count || 0;
+  try {
+    const v = await env.RATE_LIMIT_KV.get(`free:${userId}`, { type: "json" });
+    return v?.count || 0;
+  } catch (e) {
+    console.warn("getFreeUsed:", e.message);
+    return 0;
+  }
 }
 async function incrementFree(env, userId) {
-  const c = await getFreeUsed(env, userId);
-  await env.RATE_LIMIT_KV.put(`free:${userId}`, JSON.stringify({ count: c + 1 }), {
-    expirationTtl: FREE_TTL_S,
-  });
+  try {
+    const c = await getFreeUsed(env, userId);
+    await env.RATE_LIMIT_KV.put(`free:${userId}`, JSON.stringify({ count: c + 1 }), {
+      expirationTtl: FREE_TTL_S,
+    });
+  } catch (e) {
+    console.warn("incrementFree:", e.message);
+  }
 }
 
 // ─── Document generation ──────────────────────────────────────────────────────
 
-async function generateAllDocs(env, system, ctx, enriched, vendorName) {
+async function generateAllDocs(env, system, ctx, enriched, vendorName, profile) {
+  if (wantsOfflineGeneration(env)) {
+    return buildOfflineDocs({ vendorName, profile, ctx, enriched });
+  }
+
   const base = `
 Vendor: ${vendorName}
 Camera / footage type: ${ctx.cameraType || "surveillance camera footage"}
@@ -616,9 +677,12 @@ Write the complete demand letter in formal legal correspondence format.`
 async function handleCheckout(request, env) {
   let user;
   try {
-    user = await verifyGoogleToken(extractBearer(request), env.GOOGLE_CLIENT_ID);
+    user = await resolveUser(request, env);
   } catch (e) {
     return json({ error: `Auth failed: ${e.message}` }, 401);
+  }
+  if (user.testAuth) {
+    return json({ error: "Checkout disabled under test auth" }, 400);
   }
   let body = {};
   try {
@@ -645,11 +709,11 @@ async function handleCheckout(request, env) {
 async function handleEntitlement(request, env) {
   let user;
   try {
-    user = await verifyGoogleToken(extractBearer(request), env.GOOGLE_CLIENT_ID);
+    user = await resolveUser(request, env);
   } catch (e) {
     return json({ error: `Auth failed: ${e.message}` }, 401);
   }
-  const ent = await getEntitlement(env, user.userId, user.email);
+  const ent = await getEntitlement(env, user.userId, user.email, { testAuth: !!user.testAuth });
   const freeUsed = await getFreeUsed(env, user.userId);
   return json({
     entitled: ent.entitled,
@@ -659,18 +723,19 @@ async function handleEntitlement(request, env) {
     freeUsed,
     freeAllowed: FREE_GENERATIONS,
     canGenerate: ent.entitled || freeUsed < FREE_GENERATIONS,
+    testAuth: !!user.testAuth,
   });
 }
 
 async function handleGenerate(request, env) {
   let user;
   try {
-    user = await verifyGoogleToken(extractBearer(request), env.GOOGLE_CLIENT_ID);
+    user = await resolveUser(request, env);
   } catch (e) {
     return json({ error: `Auth failed: ${e.message}` }, 401);
   }
 
-  const ent = await getEntitlement(env, user.userId, user.email);
+  const ent = await getEntitlement(env, user.userId, user.email, { testAuth: !!user.testAuth });
   const freeUsed = await getFreeUsed(env, user.userId);
   if (!ent.entitled && freeUsed >= FREE_GENERATIONS) {
     return json(
@@ -699,17 +764,20 @@ async function handleGenerate(request, env) {
     additionalVendorFacts: form.additionalVendorFacts,
   });
 
-  const [memoryContext, onyxContext] = await Promise.all([
-    recallMemory(
-      env,
-      user.userId,
-      `surveillance evidence challenge ${vendorName} ${form.jurisdiction || ""} ${form.court || ""}`
-    ),
-    searchOnyx(
-      env,
-      `FRE 901 702 Daubert surveillance ALPR wrongful arrest civil rights ${vendorName} ${form.jurisdiction || ""}`
-    ),
-  ]);
+  const offline = wantsOfflineGeneration(env);
+  const [memoryContext, onyxContext] = offline
+    ? [null, null]
+    : await Promise.all([
+        recallMemory(
+          env,
+          user.userId,
+          `surveillance evidence challenge ${vendorName} ${form.jurisdiction || ""} ${form.court || ""}`
+        ),
+        searchOnyx(
+          env,
+          `FRE 901 702 Daubert surveillance ALPR wrongful arrest civil rights ${vendorName} ${form.jurisdiction || ""}`
+        ),
+      ]);
 
   const enriched = [
     memoryContext ? `RECALLED CONTEXT:\n${memoryContext}` : "",
@@ -734,7 +802,7 @@ async function handleGenerate(request, env) {
 
   let docs;
   try {
-    docs = await generateAllDocs(env, system, ctx, enriched, vendorName);
+    docs = await generateAllDocs(env, system, ctx, enriched, vendorName, profile);
   } catch (e) {
     return json({ error: `Generation failed: ${e.message}` }, 500);
   }
@@ -748,13 +816,15 @@ async function handleGenerate(request, env) {
 
   if (!ent.entitled) await incrementFree(env, user.userId);
 
-  await ingestMemory(
-    env,
-    user.userId,
-    sessionId,
-    `# Surveillance Challenge — ${new Date().toISOString()}\nVendor: ${vendorName}\nCase: ${ctx.caseNumber} | ${ctx.defendant} | ${ctx.court}\nJurisdiction: ${ctx.jurisdiction} | City: ${ctx.city}\n\n## Motion Summary\n${docs.motion.slice(0, 400)}...`.trim(),
-    [vendorName, ctx.jurisdiction, ctx.city].filter(Boolean)
-  );
+  if (!offline) {
+    await ingestMemory(
+      env,
+      user.userId,
+      sessionId,
+      `# Surveillance Challenge — ${new Date().toISOString()}\nVendor: ${vendorName}\nCase: ${ctx.caseNumber} | ${ctx.defendant} | ${ctx.court}\nJurisdiction: ${ctx.jurisdiction} | City: ${ctx.city}\n\n## Motion Summary\n${docs.motion.slice(0, 400)}...`.trim(),
+      [vendorName, ctx.jurisdiction, ctx.city].filter(Boolean)
+    );
+  }
 
   return json({
     sessionId,
@@ -765,6 +835,8 @@ async function handleGenerate(request, env) {
       memoryContextUsed: !!memoryContext,
       onyxContextUsed: !!onyxContext,
       entitled: ent.entitled,
+      generationMode: offline ? "offline" : "gateway",
+      testAuth: !!user.testAuth,
     },
   });
 }
@@ -772,7 +844,7 @@ async function handleGenerate(request, env) {
 async function handleHistory(request, env) {
   let user;
   try {
-    user = await verifyGoogleToken(extractBearer(request), env.GOOGLE_CLIENT_ID);
+    user = await resolveUser(request, env);
   } catch (e) {
     return json({ error: `Auth failed: ${e.message}` }, 401);
   }
@@ -787,7 +859,7 @@ async function handleHistory(request, env) {
 async function handleSession(request, env, sessionId) {
   let user;
   try {
-    user = await verifyGoogleToken(extractBearer(request), env.GOOGLE_CLIENT_ID);
+    user = await resolveUser(request, env);
   } catch (e) {
     return json({ error: `Auth failed: ${e.message}` }, 401);
   }

@@ -167,7 +167,7 @@ function TosModal({ onAccept }) {
   );
 }
 
-function SignIn({ onCredential }) {
+function SignIn({ onCredential, allowTestAuth }) {
   const slot = useRef(null);
 
   useEffect(() => {
@@ -188,10 +188,27 @@ function SignIn({ onCredential }) {
 
   if (!window.GOOGLE_CLIENT_ID) {
     return (
-      <p className="max-w-xs text-sm leading-snug text-ink-muted">
-        Sign in with Google after deploy — set{" "}
-        <code className="font-mono text-[0.8rem] text-teal-deep">GOOGLE_CLIENT_ID</code>
-      </p>
+      <div className="flex max-w-sm flex-col gap-3">
+        <p className="text-sm leading-snug text-ink-muted">
+          Sign in with Google after deploy — set{" "}
+          <code className="font-mono text-[0.8rem] text-teal-deep">GOOGLE_CLIENT_ID</code>
+        </p>
+        {allowTestAuth ? (
+          <button
+            type="button"
+            className={btnSecondary}
+            onClick={() => {
+              const id = `demo-ui-${Date.now()}`;
+              onCredential(`test:${id}:demo.attorney@example.com`, {
+                testAuth: true,
+                email: "demo.attorney@example.com",
+              });
+            }}
+          >
+            Continue with local demo account
+          </button>
+        ) : null}
+      </div>
     );
   }
   return <div ref={slot} aria-label="Google Sign-In" />;
@@ -202,6 +219,7 @@ export default function App() {
   const [userEmail, setUserEmail] = useState(null);
   const [tosOk, setTosOk] = useState(() => !!localStorage.getItem(TOS_KEY));
   const [entitlement, setEntitlement] = useState(null);
+  const [allowTestAuth, setAllowTestAuth] = useState(false);
   const [vendor, setVendor] = useState("flock");
   const [customVendorName, setCustomVendorName] = useState("");
   const [form, setForm] = useState({
@@ -239,8 +257,19 @@ export default function App() {
 
   useEffect(() => registerWebMcpTools(), []);
 
-  const onCredential = useCallback((cred) => {
+  useEffect(() => {
+    fetch(`${API}/api/health`)
+      .then((r) => r.json())
+      .then((h) => setAllowTestAuth(!!h.testAuthEnabled))
+      .catch(() => setAllowTestAuth(false));
+  }, []);
+
+  const onCredential = useCallback((cred, meta) => {
     setToken(cred);
+    if (meta?.email) {
+      setUserEmail(meta.email);
+      return;
+    }
     try {
       const payload = JSON.parse(atob(cred.split(".")[1]));
       setUserEmail(payload.email || null);
@@ -358,7 +387,7 @@ export default function App() {
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-4">
               {!token ? (
-                <SignIn onCredential={onCredential} />
+                <SignIn onCredential={onCredential} allowTestAuth={allowTestAuth} />
               ) : (
                 <div
                   className="flex flex-wrap items-center gap-2 rounded-full border border-line bg-white/70 px-4 py-2 text-sm"
@@ -367,12 +396,17 @@ export default function App() {
                   <span>
                     Signed in as <strong>{userEmail || "Google user"}</strong>
                   </span>
+                  {entitlement?.testAuth && (
+                    <span className="rounded-md bg-teal px-2 py-0.5 text-xs font-semibold text-white">
+                      Local demo
+                    </span>
+                  )}
                   {entitlement?.isPD && (
                     <span className="rounded-md bg-teal px-2 py-0.5 text-xs font-semibold text-white">
                       PD · unlimited
                     </span>
                   )}
-                  {entitlement && !entitlement.isPD && (
+                  {entitlement && !entitlement.isPD && !entitlement.testAuth && (
                     <span className="rounded-md bg-ink px-2 py-0.5 text-xs font-semibold text-white">
                       {entitlement.canGenerate
                         ? entitlement.entitled

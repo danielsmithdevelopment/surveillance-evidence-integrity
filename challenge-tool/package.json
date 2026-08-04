@@ -11,6 +11,7 @@
     "worker": "npm run build && wrangler dev",
     "deploy": "npm run build && wrangler deploy",
     "test": "node --test test/*.test.mjs",
+    "generate:sample": "node test/generate-sample.mjs",
     "test:a11y": "npm run build && playwright test",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",

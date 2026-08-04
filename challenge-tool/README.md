@@ -13,6 +13,20 @@ npm run dev          # Vite UI on :5173 (proxies /api → :8787)
 npm run worker       # build + wrangler dev (UI + API together)
 ```
 
+### Local generation without Google / ClawQL secrets
+
+Copy `.dev.vars.example` → `.dev.vars` (gitignored). With `ALLOW_TEST_AUTH=true` and `GENERATION_MODE=offline`:
+
+```bash
+npm run worker
+# other terminal:
+npm run generate:sample
+```
+
+Sample docs land in `.artifacts/sample-generation/`. Test bearer format: `Authorization: Bearer test:<userId>:<email>`.
+
+Never set `ALLOW_TEST_AUTH` in production.
+
 ## Quality gates (CI)
 
 ```bash
