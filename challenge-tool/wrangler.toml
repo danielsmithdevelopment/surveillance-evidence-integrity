@@ -1,0 +1,23 @@
+name = "challenge-the-footage"
+main = "worker.js"
+compatibility_date = "2025-06-01"
+workers_dev = true
+
+# Serve static assets (index.html, terms, public-defenders) alongside the Worker
+[assets]
+directory = "./static"
+binding = "ASSETS"
+
+[[kv_namespaces]]
+binding = "RATE_LIMIT_KV"
+id = "REPLACE_WITH_RATE_LIMIT_KV_ID"
+preview_id = "REPLACE_WITH_RATE_LIMIT_KV_PREVIEW_ID"
+
+# Secrets (wrangler secret put):
+#   GOOGLE_CLIENT_ID
+#   CLAWQL_GATEWAY_URL
+#   CLAWQL_API_KEY
+
+[vars]
+# Non-secret defaults
+TOOL_NAME = "Challenge the Footage"

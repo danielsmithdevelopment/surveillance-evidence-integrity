@@ -1,0 +1,9 @@
+static
+node_modules
+package-lock.json
+coverage
+.wrangler
+.lighthouseci
+playwright-report
+test-results
+*.md

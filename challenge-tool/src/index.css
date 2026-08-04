@@ -1,0 +1,151 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Instrument Serif", Georgia, serif;
+  --font-sans: "Outfit", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+
+  /* Contrast-checked against paper/white for WCAG AA */
+  --color-ink: #121a21;
+  --color-ink-muted: #3d4d5a;
+  --color-paper: #f3f6f8;
+  --color-panel: #ffffff;
+  --color-line: #c5d0d9;
+  --color-teal: #0a5f5b;
+  --color-teal-deep: #074845;
+  --color-teal-soft: #d8efed;
+  --color-amber: #9a4f0f;
+  --color-danger: #9f1239;
+}
+
+@layer base {
+  html {
+    @apply antialiased;
+    scroll-behavior: smooth;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
+  body {
+    @apply min-h-screen bg-paper font-sans text-ink;
+    background-image:
+      radial-gradient(ellipse 90% 60% at 0% -10%, rgba(10, 95, 91, 0.14), transparent 55%),
+      radial-gradient(ellipse 70% 50% at 100% 0%, rgba(154, 79, 15, 0.09), transparent 50%),
+      radial-gradient(ellipse 50% 40% at 50% 100%, rgba(18, 26, 33, 0.05), transparent 60%),
+      linear-gradient(180deg, #e7eef3 0%, #f3f6f8 40%, #eef3f6 100%);
+    background-attachment: fixed;
+  }
+
+  ::selection {
+    @apply bg-teal-soft text-ink;
+  }
+
+  :focus-visible {
+    outline-color: var(--color-teal);
+  }
+}
+
+@layer utilities {
+  .font-display {
+    font-family: var(--font-display);
+  }
+
+  .animate-rise {
+    animation: rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .animate-rise-delay {
+    animation: rise 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.12s both;
+  }
+
+  .animate-fade {
+    animation: fade 0.5s ease both;
+  }
+
+  .aperture-ring {
+    background:
+      radial-gradient(
+        circle at center,
+        transparent 38%,
+        rgba(10, 95, 91, 0.07) 39%,
+        transparent 40%
+      ),
+      radial-gradient(
+        circle at center,
+        transparent 58%,
+        rgba(18, 26, 33, 0.05) 59%,
+        transparent 60%
+      ),
+      radial-gradient(
+        circle at center,
+        transparent 78%,
+        rgba(154, 79, 15, 0.06) 79%,
+        transparent 80%
+      );
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes grain-shift {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(-1.5%, 1%);
+  }
+}
+
+.grain {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  opacity: 0.07;
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(18, 26, 33, 0.03) 2px,
+      rgba(18, 26, 33, 0.03) 3px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 2px,
+      rgba(18, 26, 33, 0.025) 2px,
+      rgba(18, 26, 33, 0.025) 3px
+    );
+}

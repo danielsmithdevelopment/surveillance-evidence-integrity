@@ -1,62 +1,198 @@
-# Surveillance Evidence Integrity Standards
+# Surveillance Evidence Integrity
 
-This repository contains model contract language, draft legislation, technical standards, and legal guidance addressing a specific and largely unexamined problem: footage from mass surveillance camera networks like Flock Safety cannot currently be authenticated as unaltered when introduced as criminal evidence.
+Tools, legal standards, and open-source software for challenging surveillance camera evidence in court — and for building surveillance infrastructure that produces evidence courts can actually trust.
 
-The problem is not theoretical. A company called Toka — co-founded by former Israeli Prime Minister Ehud Barak and former IDF cyber chief Yaron Rosen — sells technology to government clients that can alter both live camera feeds and archived footage without leaving forensic traces, as reported by Haaretz in 2022. Andreessen Horowitz has funded both Toka and Flock Safety. Flock's current architecture has no technical controls that would detect or prevent silent alteration of footage, and cannot generate the cryptographic proof that authentication of digital evidence requires.
+Built by [Daniel Smith](https://github.com/danielsmithdevelopment) · Powered by [ClawQL](https://clawql.com) · Live tool at [challengethefootage.com](https://challengethefootage.com)
 
-FOIA-derived audit logs published at haveibeenflocked.com show 233 million searches against Flock's network, with 84% carrying no case number and approximately 9% tied to documented crimes. FBI and Homeland Security have accessed local Flock networks without clear local awareness or approval. Dozens of cities have already canceled contracts over the access problem. The integrity problem — whether the footage itself can be trusted as evidence — has received far less attention.
+---
 
-This repository is an attempt to give that problem concrete form: documents that lawyers, city council staffers, legislators, and journalists can take and use.
+## The problem
 
-## Background
+Surveillance camera footage is used to prosecute people every day. No major vendor — Flock Safety, Axon, Motorola Solutions, Genetec, Verkada — publicly documents the technical controls required to independently verify that footage is what it claims to be.
 
-Full technical and legal analysis is available here:
+No hash computed at the camera before footage leaves the hardware. No Merkle-chained audit log. No external immutable anchor independent of vendor infrastructure. No mandatory case number enforcement on queries.
 
-- [Long-form X/Twitter post](https://x.com/DanielSmithDev/status/2084048838193721626) — complete technical and legal argument
-- [LinkedIn piece](https://www.linkedin.com/posts/danielsmithdev_have-i-been-flocked-search-flock-alpr-share-7489705881710800896-nZvX) — compressed version for professional audiences
+Without these controls, "this is what the camera recorded, unaltered" is a vendor assertion. It is not a mathematically provable fact. And the capability to alter surveillance footage without leaving forensic traces is commercially available — documented by Haaretz in 2022 based on internal records from Toka, an Israeli cyber firm co-founded by former Prime Minister Ehud Barak.
 
-The technical architecture described in these documents is derived from work building [ClawQL's security stack](https://docs.clawql.com/security/best-practices), a 32-module agentic AI security framework that implements the same Merkle-chaining, WORM audit, and external immutable anchoring patterns that Flock would need to make its footage trustworthy as evidence.
+The industry also operates at a documented ~10% misidentification error rate. The Institute for Justice has documented at least 27 wrongful stops and detentions from ALPR errors since 2018, and at least 28 cases of officers using ALPR networks to track romantic interests.
 
-## Documents
+This repository is the response to that.
 
-### [Model Contract Language](./model-contract-language.md)
-Clause-ready language for city councils negotiating or renewing Flock contracts. Covers cryptographic integrity requirements, audit log standards, external anchoring obligations, and prohibitions on undetectable-alteration integrations. Includes defined terms and commentary.
+---
 
-### [Model Legislation](./model-legislation.md)
-Draft statutory language for state legislatures establishing minimum cryptographic integrity standards as a prerequisite for surveillance footage admissibility in criminal proceedings. Includes findings, definitions, operative requirements, and an enforcement mechanism.
+## What's here
 
-### [Technical Standards](./technical-standards.md)
-Full architecture documentation: hardware attestation through Merkle chaining through external immutable anchoring. Written so both security engineers and lawyers can follow it. Explains what each layer does, what it protects against, and where the remaining gaps are.
+### For people facing charges or wrongful stops
 
-### [Authentication Challenge Guide](./authentication-challenge-guide.md)
-Practical guidance for defense attorneys challenging the admissibility of Flock footage on authentication grounds under Federal Rule of Evidence 901. Includes discovery requests, motion framework, and how to use Flock's responses — or non-responses — to build the argument.
+**[Witness](./witness/)** — A free mobile app (iOS + Android) that records police encounters, transcribes in real time on your device, uploads transcript → audio → video in priority order so evidence reaches safety even on a weak signal, and cryptographically anchors everything to Arweave for independent verification.
 
-## How to use this
+**[challengethefootage.com](https://challengethefootage.com)** — A web tool that generates four legal document templates for any surveillance vendor: a motion in limine (FRE 901 authentication), a Daubert motion (FRE 702 accuracy), a Fourth Amendment suppression motion (access abuse pattern), and a Section 1983 civil demand letter (damages). Free first generation. Public defenders get free unlimited access.
 
-Everything here is free to use, adapt, and improve. Fork the repo. Submit pull requests with improvements to the legal language. Open issues if you find technical errors or gaps.
+Source code: **[challenge-tool/](./challenge-tool/)**
 
-If you are a **defense attorney**: start with the authentication challenge guide, then reference the technical standards document for the expert witness and discovery components.
+### For defense attorneys
 
-If you are a **city council staffer or city attorney**: the model contract language document is designed to be dropped into a contract redline. The technical standards document explains what you're asking for in plain terms.
+**[Authentication Challenge Guide](./authentication-challenge-guide.md)** — Ten specific discovery requests, a motion in limine framework under FRE 901, how to use Flock's responses (or non-responses) to build the argument, and guidance on expert witnesses.
 
-If you are a **legislative staffer**: the model legislation document includes findings language and defined terms. The technical standards document provides the factual basis for the findings.
+**[challengethefootage.com](https://challengethefootage.com)** — generates all four documents pre-populated with vendor-specific documented facts. Public defenders: email pd@challengethefootage.com for free unlimited access.
 
-If you are a **journalist**: the technical standards document is the most detailed primary source here on what controls exist, what controls are missing, and why that matters for evidence reliability.
+### For city councils and contracting authorities
 
-If you are a **security researcher or engineer**: pull requests improving the technical standards document are particularly welcome. The architecture described here is implementable with current technology. The question is whether Flock has any incentive to implement it without being required to.
+**[Model Contract Language](./model-contract-language.md)** — Clause-ready amendment language covering hash at capture, Merkle chaining, external immutable anchoring, mandatory access logging, prohibition on undetectable alteration integrations, independent audit rights, and non-compliance consequences.
+
+### For state legislators
+
+**[Model Legislation](./model-legislation.md)** — Draft statutory language establishing minimum cryptographic integrity standards as a prerequisite for surveillance footage admissibility in criminal proceedings. Includes findings, definitions, operative requirements, transition provisions, and drafting notes.
+
+### For surveillance camera vendors
+
+**[For Vendors](./FOR-VENDORS.md)** — The technical standards required to sign the model contract language and win the next procurement cycle. The first vendor to meet these standards owns every contract renewal where a city attorney has read the Institute for Justice's litigation. Reference implementation: [clawql-surveillance](https://docs.clawql.com/surveillance).
+
+### Technical reference
+
+**[Technical Standards](./technical-standards.md)** — The full six-layer integrity architecture: hash at capture within camera hardware, Merkle chaining into WORM storage, external Arweave anchoring, append-only audit logging, file integrity monitoring, and supply chain integrity. Written for both security engineers and lawyers.
+
+---
+
+## How everything connects
+
+```
+A person gets pulled over
+        |
+        v
+[Witness app activates]
+   Records video + audio + transcript
+   Uploads in priority order (transcript first)
+   Signs with device key
+   Anchors to Arweave
+        |
+        v
+[Encounter ends]
+        |
+        +-- If footage is used in prosecution:
+        |       challengethefootage.com generates:
+        |         · FRE 901 motion (no chain of custody)
+        |         · FRE 702 motion (~10% error rate)
+        |         · 4th Amendment motion (access abuse)
+        |         · Section 1983 demand letter (damages)
+        |
+        +-- If city is renewing surveillance contract:
+        |       model-contract-language.md goes to city attorney
+        |
+        +-- If state is considering legislation:
+                model-legislation.md goes to legislative staff
+```
+
+The Witness recording and the police body camera or ALPR footage exist in the same cryptographic framework. If both are anchored, discrepancies between them are mathematically detectable. If only the civilian recording is anchored and the police footage is not, the authenticated record is the civilian's.
+
+---
+
+## The legal framework
+
+**FRE 901 — Authentication**
+Proponents of surveillance footage must demonstrate the system producing it is reliable and produces accurate results (FRE 901(b)(9)). No major vendor can currently provide the cryptographic proof this requires when specifically challenged.
+
+**FRE 702 — Reliability (Daubert)**
+AI-generated identification evidence is subject to reliability scrutiny. A documented ~10% error rate does not meet the standard for evidence used to initiate stops, detentions, and arrests. The appropriate floor is 0.1% or better, independently certified.
+
+**Fourth Amendment — Unauthorized access**
+ALPR queries without documented case numbers and legitimate law enforcement purpose are constitutionally suspect. When 84% of queries in FOIA-derived audit logs carry no case number, and the documented pattern of officer abuse runs to at least 28 cases, a search without documentation cannot be distinguished from personal misuse.
+
+**42 U.S.C. § 1983 — Civil damages**
+Wrongful stops, detentions at gunpoint, and arrests based on misidentification constitute Fourth Amendment violations actionable under Section 1983. Settlements range from $10,000–$75,000 for brief detentions to $100,000–$500,000+ for prolonged detention or physical harm.
+
+---
+
+## The technical standard
+
+The architecture that makes footage independently verifiable is documented in [technical-standards.md](./technical-standards.md) and implemented in [ClawQL's security framework](https://docs.clawql.com/security/best-practices).
+
+The minimum standard for surveillance footage used as criminal evidence:
+
+| Control | Requirement | Industry status |
+|---|---|---|
+| Hash at capture | SHA-256 within camera HSE before network transmission | Not publicly documented by any major vendor |
+| Merkle chaining | Continuous chain in WORM storage | Not publicly documented by any major vendor |
+| External anchoring | Merkle roots on Arweave or equivalent, hourly | Not publicly documented by any major vendor |
+| Audit logging | All queries logged regardless of case number | Not implemented by any major vendor |
+| Access enforcement | Queries without case numbers blocked, not flagged | Not implemented by any major vendor |
+| Accuracy certification | ≤0.1% error rate, independently certified annually | Not certified by any major vendor |
+
+---
 
 ## Contributing
 
-This is a living document. Legal standards for digital evidence authentication are evolving. The technical capability to alter video undetectably is advancing. Pull requests, issues, and forks are welcome.
+Pull requests, issues, and forks are welcome across all parts of this repository.
 
-Areas where contributions would be most useful:
+Areas where contributions are most useful:
 
-- State-specific variations on the model legislation
-- Additional discovery request language
-- Technical implementation details, particularly on hardware attestation at the camera level
-- Case law citations for the authentication challenge guide
-- International equivalents for non-US jurisdictions
+- **State-specific model legislation** — the current draft is written for federal proceedings; state variations are needed
+- **Case law citations** — the authentication challenge guide needs jurisdiction-specific precedent
+- **Vendor documentation updates** — if a vendor publishes new technical documentation about integrity controls, open an issue or PR
+- **Witness app** — audio extraction, two-party consent notices by state, offline retry logic
+- **Translations** — Spanish translation of the council letter and Witness app UI
+
+---
+
+## Deployment
+
+### challengethefootage.com (the web tool)
+
+See [challenge-tool/README.md](./challenge-tool/README.md). Cloudflare Pages frontend, Cloudflare Worker backend, ClawQL gateway for inference and memory, Stripe via clawql-payments for $9 per-generation purchases.
+
+### Witness (the mobile app)
+
+See [witness/README.md](./witness/README.md). React Native (Expo), Cloudflare Worker backend, ClawQL gateway for Arweave anchoring, Cloudflare R2 for artifact storage.
+
+Both tools can be self-hosted. The ClawQL integration is optional but provides memory-layer context across sessions and Arweave anchoring for permanent independent verification.
+
+---
+
+## Public defender access
+
+Public defenders and public defender offices have free unlimited access to challengethefootage.com.
+
+Email **pd@challengethefootage.com** from your office email address. Access is activated within one business day.
+
+This project exists to help people who are up against well-funded surveillance infrastructure with limited resources to fight back. Public defenders are on the front line of that fight.
+
+---
+
+## Sponsor a generation
+
+Law firms, organizations, and individuals can sponsor generations for defendants who cannot afford the $9 fee. Sponsored generations are distributed through the public defender access pool.
+
+Contact **sponsor@challengethefootage.com** for bulk sponsorship arrangements.
+
+---
+
+## Press and research
+
+If you are a journalist, researcher, or civil liberties organization working on surveillance accountability, feel free to use the documentation and data in this repository. Attribution appreciated but not required.
+
+Key sources underlying the factual claims in this project:
+
+- [haveibeenflocked.com](https://haveibeenflocked.com) — FOIA-derived Flock Safety audit logs
+- Institute for Justice Plate Privacy Project — ALPR error and abuse documentation
+- Haaretz, 2022 — Toka internal documents (footage alteration capability)
+- DHS SAVER ALPR Market Survey Report, June 2025 — industry error rate acknowledgment
+- EFF — ALPR accuracy and misuse reporting
+- 404 Media — Flock officer stalking case reporting
+
+---
+
+## Legal notice
+
+Documents generated by challengethefootage.com and templates in this repository are starting points for attorney review, not legal advice. No attorney-client relationship is created by using any tool in this repository. Have every document reviewed by a licensed attorney in your jurisdiction before filing, submitting, or sending it.
+
+Recording laws vary by state. In two-party or all-party consent states, notifying the officer that you are recording may be required. Consult an attorney in your jurisdiction before relying on Witness recordings in legal proceedings.
+
+---
 
 ## Author
 
-Built by [Daniel Smith](https://github.com/danielsmithdevelopment), architect of the [ClawQL](https://docs.clawql.com) agentic AI security framework.
+[Daniel Smith](https://danielsmithdevelopment.com) — architect of the [ClawQL](https://clawql.com) agentic AI security framework, which provides the Merkle-chaining, WORM audit, and Arweave anchoring infrastructure that powers this project.
+
+[PragmaticVectors](https://pragmaticvectors.com) — technical writing where the security architecture underlying this work is documented in depth.
+
+X: [@danielsmithdev](https://x.com/danielsmithdev) · LinkedIn: [danielsmithdev](https://linkedin.com/in/danielsmithdev)
