@@ -2,6 +2,8 @@
 
 This document is written for defense attorneys whose clients face criminal charges in which footage from Flock Safety's license plate reader or camera network is offered as evidence by the prosecution. It provides a framework for challenging the authentication of that footage under Federal Rule of Evidence 901 and its state equivalents.
 
+For **body-worn cameras** and **cell phone / deepfake** video — with parallel case citations and news sources — see [challenge-tool/FOOTAGE-CHALLENGE.md](./challenge-tool/FOOTAGE-CHALLENGE.md). The Challenge the Footage docs generator uses those fact packs when `footageCategory` is `body_worn` or `cellphone`.
+
 This is not a complete brief. It is a starting framework that needs to be adapted to the specific facts of each case, the jurisdiction's rules, and the available expert support. Nothing here is legal advice.
 
 ---

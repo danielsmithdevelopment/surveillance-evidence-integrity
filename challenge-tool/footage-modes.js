@@ -57,35 +57,80 @@ export function getFootageCategory(id) {
   return FOOTAGE_CATEGORIES.find((c) => c.id === id) || FOOTAGE_CATEGORIES[0];
 }
 
+/**
+ * Body-worn baseline facts (merged into any BWC vendor profile).
+ * Parallel to Flock FOIA / IJ documentation for fixed cams.
+ */
+export const BODY_WORN_BASELINE = {
+  authFacts: [
+    "Body-worn systems commonly buffer, mute, and dock-upload through vendor clouds; without a cryptographic commitment before media leaves the camera, docking and cloud re-encode are integrity breakpoints.",
+    "Colorado's statewide BWC statute creates a permissive inference that missing footage would have reflected officer misconduct, plus a rebuttable presumption of inadmissibility for unrecorded statements/conduct when an officer fails to activate or unmute as required — People v. Havens, 2025 CO 72 (interpreting § 24-31-902(1)(a)(III), C.R.S.).",
+    "Illinois's Law Enforcement Officer-Worn Body Camera Act likewise treats intentional non-recording as a jury-weight issue the defense may raise — People v. Tompkins, 2023 IL 127805 (discussing 50 ILCS 706/10-30).",
+    "Evidence management platforms (e.g. Axon Evidence / Evidence.com) are typically the sole oracle for access and export history; NACDL materials urge defense counsel to demand the evidence audit trail and device audit trail whenever footage is produced.",
+    "In NYPD civil litigation, the City sought extensions because bulk Evidence.com audit-trail production required simultaneously downloading every associated video and Axon had not resolved technical errors — illustrating that 'immutable audit logs' are still vendor-mediated and hard for outsiders to obtain at scale (S.D.N.Y. letters, Feb. 2022).",
+  ],
+  errorRateFacts: [
+    "Chicago's Civilian Office of Police Accountability reviewed 186 BWC non-compliance allegations across a sample of investigations opened in a defined period and sustained non-compliance in 68 (≈37%), including serious underlying incidents where missing video was especially material (COPA Report on Non-Compliance with Body-Worn Camera Regulations, 2021).",
+    "CBS 2 Chicago's 'Left in the Dark' investigation of CPD's own data found tens of thousands of everyday encounters that policy said should have been recorded were never captured, with little evidence of meaningful discipline.",
+    "Body-worn 'accuracy' for criminal proof is primarily completeness and fidelity: missing activation, mute gaps, and dock/cloud re-encode can omit the decisive seconds even when shown pixels appear unaltered.",
+    "Vendor AI tools (auto-transcribe, redaction, search) introduce secondary model-error risk when the state relies on AI-derived descriptions of what the video shows.",
+  ],
+  accessAbuseFacts: [
+    "In Billings, Montana (May 2023 stop), body-cam video and disciplinary records showed officers discussing cameras, removing a camera so recording went dark, and turning cameras off during conversations about a consent search — prompting prosecutors to review nearly 180 related criminal cases; one officer was later terminated (MTN News / KPAX reporting).",
+    "A Scottsdale city audit of an Axon/Evidence.com deployment found former employees still had system access (including one with full admin rights), supervisors skipping required reviews, and videos deleted without required documentation — agency-side custody failures independent of vendor marketing claims.",
+    "Who could view, share, or export a body-worn file from the evidence vault — and whether those events are independently verifiable — is the body-cam analogue of ALPR query abuse.",
+    "Retention and automatic deletion policies can destroy Brady material; discovery must lock preservation immediately.",
+  ],
+  civilFacts: [
+    "Incomplete or selectively retained body-worn footage that conceals force or exculpatory context supports § 1983 theories and spoliation arguments; state BWC statutes increasingly attach evidentiary consequences (Colorado inference/presumption; Illinois Act) that civil plaintiffs can also cite.",
+    "Wrongful arrest / excessive-force settlements frequently turn on what body-worn video shows — or fails to show — making integrity and completeness controls material to civil exposure.",
+  ],
+  sources: [
+    "People v. Havens, 2025 CO 72; Colo. Rev. Stat. § 24-31-902(1)(a)(III)",
+    "People v. Tompkins, 2023 IL 127805; 50 ILCS 706/10-20, 10-30",
+    "Chicago COPA — Report on Non-Compliance with Body-Worn Camera Regulations (2021)",
+    "CBS 2 Chicago — Left in the Dark: The Failed Promise of Chicago Police Body Cameras",
+    "MTN News / KPAX — Billings police body-cam 'hidden consent' reporting (2023–2024)",
+    "Scottsdale city audit / Arizona Republic reporting on Evidence.com access and deletion gaps (2018)",
+    "NACDL Champion — Harlan Yu on Evidence.com audit trails (July 2019)",
+    "S.D.N.Y. City letters on Evidence.com audit-trail production difficulties (Feb. 2022)",
+    "Challenge the Footage — Challenge-grade / clawql-surveillance integrity bar",
+  ],
+};
+
 /** Built-in profile when challenging cellphone footage (not a camera vendor). */
 export const CELLPHONE_PROFILE = {
   name: "cellphone footage",
   authFacts: [
     "Consumer smartphones do not, by default, produce independently verifiable cryptographic commitments of video at the moment of capture that a third party can check without trusting the device owner or cloud vendor.",
-    "Generative AI and consumer editing tools can alter, fabricate, or selectively re-time audiovisual content; without a capture-time hash (or equivalent content credential) anchored outside the proponent's control, 'this is what the phone recorded' is an assertion, not a proof.",
-    "Common distribution paths — Messages, WhatsApp, iCloud/Google Photos re-export, social apps — re-encode video, strip or rewrite metadata, and break any informal chain of custody.",
-    "EXIF / file-system timestamps and 'original filename' claims are trivially spoofable and are not a substitute for a cryptographic integrity regime.",
+    "In Mendones v. Cushman & Wakefield (Alameda County Superior Court, Sept. 2025), the court dismissed a civil case with prejudice after finding plaintiffs submitted an AI-generated deepfake video and other generative-AI-altered exhibits; the court scrutinized metadata claiming an iPhone 6 capture that could not support the AI explanation offered (Law.com / The Recorder; EDRM summary).",
+    "Common distribution paths — Messages, WhatsApp, Snapchat, iCloud/Google Photos re-export — re-encode video, strip or rewrite metadata, and break informal chain of custody; State v. Puloka involved Snapchat-sourced iPhone video of a shooting later subjected to AI 'enhancement.'",
+    "EXIF / file-system timestamps and 'original filename' claims are trivially spoofable and are not a substitute for a cryptographic integrity regime — as the Mendones metadata analysis illustrates.",
     "Challenge-grade capture (hash at capture, on-device transcript commitment, optional external anchor) exists for civilian phones; footage that lacks those controls should not receive a reliability presumption in court.",
   ],
   errorRateFacts: [
-    "Synthetic media and AI face/voice swap tools are commercially available and improving; courts increasingly confront deepfake risk in both civil and criminal cases.",
-    "Compressed phone video and partial clips can omit critical seconds before/after an encounter, creating a misleading narrative without any 'AI' edit.",
-    "Human viewers systematically over-trust video relative to other evidence ('seeing is believing'), amplifying the prejudice of unverified clips under FRE 403 / 702 analysis.",
-    "There is no accepted judicial error-rate floor for AI-altered or AI-assisted phone video offered to prove guilt; unauthenticated clips fail the reliability showing expected of technical evidence.",
+    "State v. Puloka, No. 21-1-04851-2 KNT (King County Super. Ct., Wash., Mar. 29, 2024) — widely reported as a first-of-its-kind U.S. criminal ruling — excluded AI-enhanced cellphone/Snapchat video under Washington's Frye standard and ER 702/403; forensic analyst Grant Fredericks testified the AI tool added and removed visual data not in the original (NBC News, Apr. 2024).",
+    "Topaz Labs, whose AI enhancement tool was at issue in Puloka, publicly warned against forensic use of the product (statement reported by NBC News).",
+    "The Judicial Conference Advisory Committee on Evidence Rules has drafted a working Rule 901(c) on generative-AI fabrication / deepfakes (burden-shifting authenticity), holding it in abeyance while monitoring case law (Committee reports May 2025 / 2026).",
+    "Human viewers systematically over-trust video relative to other evidence ('seeing is believing'), amplifying FRE 403 prejudice when provenance is unproven — a theme in deepfake scholarship and the Mendones terminating sanction.",
   ],
   accessAbuseFacts: [
-    "Riley v. California recognizes the uniquely invasive nature of cellphone searches; warrantless or overbroad extractions raise independent Fourth Amendment issues when law enforcement offers phone video.",
+    "Riley v. California, 573 U.S. 373 (2014), recognizes the uniquely invasive nature of cellphone searches; warrantless or overbroad extractions raise independent Fourth Amendment issues when law enforcement offers phone video.",
     "Selective production of a single clip from a device that held hours of related media is an access/custody problem — the proponent controls which seconds the fact-finder sees.",
-    "Cloud backups and shared albums may expose footage to third parties (carriers, platform vendors, synced household accounts) without a complete access log produced in discovery.",
+    "Courts have treated bare 'this might be a deepfake' objections as going to weight when independent corroboration exists (e.g. Jan. 6 cases United States v. Doolin; United States v. Reffitt) — which is why the defense should demand affirmative cryptographic provenance, not rely on speculation alone.",
     "When an officer records on a personal phone outside the department body-cam policy, retention, audit, and Brady obligations are frequently undefined.",
   ],
   civilFacts: [
+    "Mendones shows courts will terminate litigation and deter parties who offer deepfake / AI-fabricated audiovisual evidence; the same authenticity gap justifies aggressive FRE 901 gatekeeping when the state or a civil plaintiff relies on unverified phone video.",
     "Publishing or relying on unverified or altered phone video to justify force, detention, or prosecution can support Fourth Amendment and reputational tort theories under 42 U.S.C. § 1983 and state law.",
     "Agencies that accept civilian phone clips as investigative gospel without integrity controls externalize deepfake and edit risk onto defendants.",
   ],
   sources: [
     "Riley v. California, 573 U.S. 373 (2014)",
-    "Public reporting on generative AI / deepfake evidence risk in courts",
+    "State v. Puloka (King County Super. Ct., Wash., Mar. 29, 2024); NBC News reporting (Apr. 2, 2024)",
+    "Mendones v. Cushman & Wakefield (Alameda County Super. Ct., Sept. 2025); Law.com / The Recorder; EDRM",
+    "Advisory Committee on Evidence Rules — reports on deepfakes / draft Rule 901(c) (2024–2026)",
+    "United States v. Doolin; United States v. Reffitt (D.D.C.) — deepfake objections and corroboration",
     "Challenge the Footage — Challenge-grade capture (hash at capture, verifiable export)",
     "C2PA / content credentials industry materials (emerging provenance standards)",
   ],
@@ -102,12 +147,8 @@ export const MODE_FACT_PACKS = {
   },
   body_worn: {
     pressureLine:
-      "Body-worn camera vendors should integrate Challenge-grade controls (hash before leave-device, mute/dock/export audit, third-party verifiable export — e.g. clawql-surveillance class integrity) or face the same FRE 901 pressure as fixed surveillance.",
-    authExtra: [
-      "Body-worn systems commonly buffer, mute, and dock-upload through vendor clouds; without a cryptographic commitment before media leaves the camera, docking and cloud re-encode are integrity breakpoints.",
-      "Selective activation, covered lenses, and unlogged mute intervals mean the absence of video is itself an evidentiary event that vendor portals rarely prove with tamper-evident logs.",
-      "Evidence management platforms (e.g. Axon Evidence / Evidence.com class systems) are typically the sole oracle for access and export history — not an independent verifier.",
-    ],
+      "Body-worn camera vendors should integrate Challenge-grade controls (hash before leave-device, mute/dock/export audit, third-party verifiable export — e.g. clawql-surveillance class integrity) or face the same FRE 901 pressure as fixed surveillance — backed by Colorado/Illinois statutory consequences for missing footage and documented activation failures in Chicago, Billings, and Evidence.com audits.",
+    authExtra: BODY_WORN_BASELINE.authFacts,
     accuracyFrame: "completeness, activation gaps, and AI assist tools — not plate OCR",
     accessFrame: "evidence-vault access, export, retention, and Brady completeness",
   },
@@ -157,21 +198,16 @@ export function resolveFootageProfile(footageCategory, vendorKey, vendorProfile,
   }
 
   if (mode.id === "body_worn" && base) {
-    base.errorRateFacts = [
-      "Body-worn camera 'accuracy' for criminal proof is primarily a completeness and fidelity problem: missing activation, mute gaps, and dock/cloud re-encode can omit the decisive seconds of an encounter.",
-      "Vendor AI tools (auto-transcribe, redaction, search) introduce secondary model-error risk when the state relies on AI-derived descriptions of what the video shows.",
-      "Presenting a partial body-cam clip as the complete record is a reliability defect under FRE 702 even when the pixels shown are unaltered.",
-      ...(base.errorRateFacts || []).filter((f) => !/ALPR|plate misread/i.test(f)),
-    ];
-    base.accessAbuseFacts = [
-      "Who could view, share, or export the body-worn file from the evidence vault — and whether those events are tamper-evident — is the body-cam analogue of ALPR query abuse.",
-      "Retention and automatic deletion policies can destroy Brady material; discovery must lock preservation immediately.",
-      ...(base.accessAbuseFacts || []).filter((f) => !/ALPR|license plate|Flock search/i.test(f)),
-    ];
-    base.civilFacts = [
-      "Incomplete or selectively retained body-worn footage that conceals force or exculpatory context supports § 1983 theories and spoliation arguments.",
-      ...(base.civilFacts || []),
-    ];
+    const vendorOnlyErrors = (base.errorRateFacts || []).filter(
+      (f) => !/ALPR|plate misread/i.test(f)
+    );
+    const vendorOnlyAccess = (base.accessAbuseFacts || []).filter(
+      (f) => !/ALPR|license plate|Flock search/i.test(f)
+    );
+    base.errorRateFacts = [...BODY_WORN_BASELINE.errorRateFacts, ...vendorOnlyErrors];
+    base.accessAbuseFacts = [...BODY_WORN_BASELINE.accessAbuseFacts, ...vendorOnlyAccess];
+    base.civilFacts = [...BODY_WORN_BASELINE.civilFacts, ...(base.civilFacts || [])];
+    base.sources = [...BODY_WORN_BASELINE.sources, ...(base.sources || [])];
   }
 
   return {
