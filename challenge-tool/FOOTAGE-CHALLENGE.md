@@ -1,56 +1,69 @@
 # Challenging all three capture classes
 
-Challenge the Footage applies the **same integrity pressure** to every category of camera evidence:
+Challenge the Footage applies the **same integrity pressure** to every category of camera evidence — with **documented precedents and news**, not only abstract gaps.
 
 | Category | Typical systems | Core failure modes | Pressure ask |
 |---|---|---|---|
 | **Fixed / ALPR** | Flock, Vigilant, municipal CCTV | No hash-at-capture; query abuse; ~10% misreads; vendor-only logs | FRE 901 / 702 exclusion; case-numbered access; Challenge-grade procurement |
 | **Body-worn / in-car** | Axon Evidence, Motorola, WatchGuard | Mute/buffer/dock gaps; cloud re-encode; vault as sole oracle | Hash **before leave-device**; tamper-evident activation/mute/export; clawql-surveillance-class verification or exclusion |
-| **Cell phone** | iPhone/Android, WhatsApp/iCloud re-exports, officer personal phones | AI edit/deepfake risk; re-encode destroys provenance; selective clips; Riley extraction issues | No authenticity presumption without cryptographic proof; Challenge-grade civilian capture as the floor |
+| **Cell phone** | iPhone/Android, WhatsApp/Snapchat/iCloud re-exports | AI edit/deepfake risk; re-encode destroys provenance; selective clips | No authenticity presumption without cryptographic proof; Challenge-grade civilian capture as the floor |
 
-Generator UI: choose **Footage category** first → mode-specific discovery + templates for all four vectors (FRE 901, FRE 702, Fourth Amendment, § 1983).
+Generator UI: choose **Footage category** first → mode-specific discovery + templates. Fact packs live in `footage-modes.js` (injected into offline + gateway generation).
+
+---
 
 ## Fixed / ALPR (existing)
 
-See [authentication-challenge-guide.md](../authentication-challenge-guide.md) and vendor profiles in the Worker. FOIA-derived Flock logs, IJ wrongful-stop data, and Toka/Haaretz alteration risk remain the backbone.
+See [authentication-challenge-guide.md](../authentication-challenge-guide.md). Backbone includes FOIA-derived Flock logs (haveibeenflocked.com), Institute for Justice wrongful-stop / stalking documentation, Oak Park cancellation, DHS SAVER ALPR survey, and Toka/Haaretz alteration risk.
 
-## Body-worn cameras
+---
 
-**Common data-management issues**
+## Body-worn cameras — precedents & reporting
 
-1. **Activation & mute** — the most important seconds may never be recorded; portals rarely prove mute/off with third-party-verifiable logs  
-2. **Dock / cloud ingest** — re-wrap/transcode after the camera; integrity breakpoint without a pre-upload hash  
-3. **Evidence vault as oracle** — who viewed/exported is asserted by the vendor, not independently checked  
-4. **Retention / category delete** — Brady material disappears on a schedule  
-5. **AI assist** — transcripts/redactions become the story the jury hears about the video  
-6. **Multi-unit gaps** — curated single-angle production when other officers also recorded  
+### Statutes & case law
 
-**Pressure**
+| Authority | What it shows |
+|---|---|
+| **Colo. Rev. Stat. § 24-31-902(1)(a)(III)**; **People v. Havens, 2025 CO 72** | Failure to activate/unmute → permissive inference that missing footage would have reflected officer misconduct; rebuttable presumption of inadmissibility for unrecorded statements/conduct |
+| **50 ILCS 706/10-20, 10-30**; **People v. Tompkins, 2023 IL 127805** | Illinois Officer-Worn Body Camera Act — intentional non-recording is a jury-instruction / weight issue the defense may raise |
 
-- Procurement and discovery: require Challenge-grade controls (hash before leave-device, mute/dock/export audit, export a third party can verify) — same class of capability as [clawql-surveillance](https://docs.clawql.com/surveillance)  
-- If the vendor cannot produce those proofs → FRE 901(b)(9) exclusion or evidentiary hearing  
-- Civil exposure: incomplete body-cam that conceals force is a § 1983 / spoliation problem  
+### Investigative / news record (activation & custody)
 
-## Cell phone footage
+| Source | What it shows |
+|---|---|
+| **Chicago COPA** — *Report on Non-Compliance with Body-Worn Camera Regulations* (2021) | 186 BWC non-compliance allegations reviewed; **68 sustained** (≈37%), including serious underlying incidents |
+| **CBS 2 Chicago** — *Left in the Dark* | CPD’s own data: **tens of thousands** of encounters that policy required to be recorded were never captured; weak discipline |
+| **MTN News / KPAX** — Billings, MT (2023 stop) | Officers discussed cameras, **removed a BWC** (recording went dark), turned cameras off around a consent search; prosecutors reviewed **~180** related cases; officer later terminated |
+| **Scottsdale city audit** (Axon/Evidence.com) | Former employees still had access (incl. admin); deletions without required documentation; supervisors skipping reviews |
+| **NACDL Champion** (Harlan Yu, 2019) | Defense should demand Evidence.com **evidence audit trail** and **device audit trail** with every production |
+| **S.D.N.Y. City letters** (Feb. 2022) | NYPD bulk Evidence.com audit-trail production blocked by technical errors; bulk download required pulling every associated video |
 
-**Common data-management issues**
+### Pressure ask
 
-1. **No capture-time commitment** — consumer cameras do not default to independently verifiable hashes  
-2. **Generative AI / editors** — fabricate or alter AV without obvious artifacts  
-3. **Share-sheet / WhatsApp / cloud re-export** — new files, new hashes, broken provenance  
-4. **Spoofable metadata** — EXIF and filenames are not proof  
-5. **Selective clips** — neighbor files on the roll may be exculpatory  
-6. **Extraction overbreadth** — Riley; full-device dumps vs targeted production  
-7. **Officer personal phones** — outside BWC policy, weak retention/audit  
+Procurement + discovery: Challenge-grade controls (hash before leave-device, mute/dock/export audit, third-party verifiable export — [clawql-surveillance](https://docs.clawql.com/surveillance) class). If proofs do not exist → FRE 901(b)(9) exclusion / hearing; cite Havens/Tompkins-style consequences for missing video.
 
-**Pressure**
+---
 
-- Accusatory phone video should meet or exceed what Challenge-grade civilian capture already does: hash at capture, honest transcript commitment, verifiable package  
-- Without cryptographic proof the clip was not AI-altered or silently re-encoded → no reliability presumption; move to exclude under FRE 901 / 702  
-- Demand original camera-roll bytes + hash chain of custody, not a chat export  
+## Cell phone footage — precedents & reporting
+
+### Case law & rules work
+
+| Authority | What it shows |
+|---|---|
+| **Riley v. California, 573 U.S. 373 (2014)** | Cell phones uniquely invasive; constrains warrantless search/extraction when LE offers phone video |
+| **State v. Puloka** (King County Super. Ct., Wash., Mar. 29, 2024) | **First widely reported U.S. criminal ruling** excluding **AI-enhanced** cellphone/Snapchat video under Frye + ER 702/403; AI added/removed visual data (NBC News, Apr. 2024); Topaz Labs warned against forensic use |
+| **Mendones v. Cushman & Wakefield** (Alameda Super. Ct., Sept. 2025) | Civil case **dismissed with prejudice** after court found deepfake video + other generative-AI-altered exhibits; metadata claimed iPhone 6 capture incompatible with AI explanation (Law.com / The Recorder; EDRM) |
+| **Advisory Committee on Evidence Rules** (2024–2026 reports) | Working draft **Rule 901(c)** on generative-AI fabrication / deepfakes (burden-shifting authenticity), held in abeyance while monitoring cases |
+| **United States v. Doolin**; **United States v. Reffitt** (D.D.C.) | Bare “might be deepfake” went to **weight** where independent corroboration existed — so demand **affirmative** cryptographic provenance, not speculation alone |
+
+### Pressure ask
+
+Accusatory phone video should meet or exceed Challenge-grade civilian capture: hash at capture, honest transcript commitment, verifiable package. Without proof the clip was not AI-altered or silently re-encoded → FRE 901 / 702 exclusion or limiting instruction. Demand original camera-roll bytes + hash chain of custody, not a chat export.
+
+---
 
 ## Product wiring
 
-- UI + API: `footageCategory` = `fixed_surveillance` | `body_worn` | `cellphone`  
-- Logic: `footage-modes.js` + mode-aware `offline-docs.js` / Worker prompts  
+- UI + API: `footageCategory` = `fixed_surveillance` | `body_worn` | `cellphone`
+- Logic: `footage-modes.js` (`BODY_WORN_BASELINE`, `CELLPHONE_PROFILE`) + mode-aware `offline-docs.js` / Worker
 - Vision: [CHALLENGE-GRADE.md](./CHALLENGE-GRADE.md)

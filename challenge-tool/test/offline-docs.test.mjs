@@ -65,7 +65,7 @@ describe("offline document templates", () => {
     }
   });
 
-  it("body-worn mode pressures mute/dock hash and clawql-surveillance-class controls", () => {
+  it("body-worn mode cites Havens/COPA/Billings-style precedents", () => {
     const axon = {
       name: "Axon (formerly TASER)",
       authFacts: ["No public hardware hash before dock."],
@@ -87,14 +87,14 @@ describe("offline document templates", () => {
       enriched: "",
     });
     assert.match(docs.motion, /BODY-WORN|body-worn/i);
-    assert.match(docs.motion, /leave-device|dock|mute/i);
+    assert.match(docs.motion, /Havens|24-31-902|Tompkins/i);
     assert.match(docs.motion, /clawql-surveillance/i);
-    assert.match(docs.accuracy, /completeness|mute|activation/i);
-    assert.match(docs.access, /Evidence-vault|vault|Brady/i);
+    assert.match(docs.accuracy, /COPA|Chicago|Left in the Dark/i);
+    assert.match(docs.access, /Billings|Evidence\.com|Scottsdale/i);
     assert.match(docs.motion, /10\. /);
   });
 
-  it("cellphone mode demands cryptographic proof against AI alteration", () => {
+  it("cellphone mode cites Puloka, Mendones, and Riley", () => {
     const docs = buildOfflineDocs({
       vendorName: CELLPHONE_PROFILE.name,
       profile: CELLPHONE_PROFILE,
@@ -108,10 +108,10 @@ describe("offline document templates", () => {
       enriched: "",
     });
     assert.match(docs.motion, /CELL PHONE|AI-ALTERATION/i);
-    assert.match(docs.motion, /cryptographic|Challenge-grade|content credential/i);
-    assert.match(docs.accuracy, /deepfake|AI|over-trust/i);
+    assert.match(docs.motion, /Mendones|deepfake/i);
+    assert.match(docs.accuracy, /Puloka|Frye|Topaz/i);
     assert.match(docs.access, /Riley/);
-    assert.match(docs.civil, /unverified|altered/i);
+    assert.match(docs.civil, /Mendones|unverified|altered/i);
     assert.match(docs.motion, /10\. /);
   });
 });
