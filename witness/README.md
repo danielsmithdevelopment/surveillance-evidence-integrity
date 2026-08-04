@@ -7,10 +7,11 @@ Expo / React Native companion for [challengethefootage.com](https://challengethe
 ## What users do
 
 1. Pick a **situation** (police, meetup, date, night walk, …) and optional **emergency contacts**
-2. **Start recording** (no Google required; works offline)
-3. Optional **check-in timer** — missed check-in opens SMS drafts to contacts with last location
-4. Stop (or survive a force-quit) → Whisper + hashes → local queue → 2G-first sync
-5. Link to account on the website → documents / Stripe there
+2. Optional **multi-device incident** — create/join a short code so several phones start together (each keeps its own hashes/transcript; shared `incidentId`)
+3. **Start recording** (no Google required; works offline)
+4. Optional **check-in timer** — missed check-in opens SMS drafts to contacts with last location
+5. Stop (or survive a force-quit) → Whisper + hashes → local queue → 2G-first sync
+6. Link to account on the website → documents / Stripe there
 
 No crypto wallet. Not a 911 replacement — a private record + trusted-contact signal.
 
@@ -67,10 +68,12 @@ Profiles live in [`eas.json`](./eas.json): `development` (dev client), `preview`
 
 1. ~~Whisper module scaffold~~ — stub + optional `whisper.rn`; model fetch/bundle + Wi‑Fi prep UI
 2. ~~Rural 2G sync-lite~~ — gzip transcript first; media deferred
-3. Run `eas init` + first signed preview (needs Expo/Apple/Google credentials)
-4. Enclave / Keychain-backed device keys
-5. Production R2 bucket binding + secrets on the CTF Worker
-6. Background recording / shake-to-activate shortcuts
+3. ~~Multi-device incident MVP~~ — create/join, start signal, heartbeat, `PEER_LOST`, `incidentId` on packages
+4. Run `eas init` + first signed preview (needs Expo/Apple/Google credentials)
+5. Attorney UI: group sessions by `incidentId` + transcript cross-reference
+6. Enclave / Keychain-backed device keys
+7. Production R2 bucket binding + secrets on the CTF Worker
+8. Background recording / shake-to-activate shortcuts
 
 ## Whisper
 

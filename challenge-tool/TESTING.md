@@ -22,7 +22,9 @@ npm run ci               # all of the above
 | Smoke | `test/smoke.test.mjs` | Vendor keys, API route strings, static agent-ready files, evidence handlers |
 | Offline docs | `test/offline-docs.test.mjs` | Deterministic FRE templates without ClawQL |
 | Evidence crypto | `test/evidence-crypto.test.mjs` | SHA-256 + merkle commitment shared with Worker |
-| Evidence API | `test/evidence-api.test.mjs` | Local Worker via `wrangler unstable_dev`: secure, device claim, upload |
+| Evidence gzip | `test/evidence-gzip.test.mjs` | Transcript gzip+base64 for rural sync-lite |
+| Incident helpers | `test/incident.test.mjs` | Multi-device incident codes + `PEER_LOST` timeouts |
+| Evidence API | `test/evidence-api.test.mjs` | Local Worker via `wrangler unstable_dev`: secure, device claim, sync-lite, safety-ping, incident |
 | A11y | `test/e2e/a11y.spec.js` | axe WCAG 2.2 A/AA on key pages |
 | Lighthouse | `test/lighthouse-runner.mjs` | a11y 100, BP/SEO ≥90 |
 
@@ -43,7 +45,9 @@ Test bearer: `Authorization: Bearer test:<userId>:<email>`.
 1. **Authenticated secure** — `POST /api/evidence/secure` with three media hashes → KV record + merkle root.
 2. **Device secure + claim** — `POST /api/evidence/secure-device` → claimCode → `POST /api/evidence/claim` with test auth.
 3. **Upload** — `POST /api/evidence/upload-url` → `PUT /api/evidence/object/...` with `X-Content-SHA256`. Without R2, metadata is stored and `storage` may be `none`.
-4. **Rural sync-lite** — `POST /api/evidence/sync-lite` with `transcriptEncoding: "gzip+base64"` registers hashes and stores the transcript inline in one RTT (`mediaPending: true`).
+4. **Rural sync-lite** — `POST /api/evidence/sync-lite` with `transcriptEncoding: "gzip+base64"` registers hashes and stores the transcript inline in one RTT (`mediaPending: true`). Optional `incidentId` tags the package for multi-device correlation.
+5. **Safety ping** — `POST /api/evidence/safety-ping` stores a dead-man / interrupt audit record (SMS remains client-side for now).
+6. **Multi-device incident** — `POST /api/evidence/incident/create|join|heartbeat|signal` + `GET /api/evidence/incident/:id`. Heartbeats detect `PEER_LOST` when a recording peer goes silent.
 
 Merkle root = `SHA-256(transcriptHash + ":" + audioHash + ":" + videoHash)` (see `evidence-crypto.js`).
 
@@ -53,11 +57,11 @@ Merkle root = `SHA-256(transcriptHash + ":" + audioHash + ":" + videoHash)` (see
 
 ```bash
 cd witness
-npm test                 # transcript packaging + Whisper wiring contract
+npm test                 # packaging, Whisper, rural sync, safety, incident wiring
 npx tsc --noEmit         # when dependencies are installed
 ```
 
-Native hashing must stay aligned with Worker hex digests (`@noble/hashes` full-file SHA-256). Whisper defaults to an honest `TRANSCRIPT_PENDING` stub unless `EXPO_PUBLIC_WHISPER=1` + a native module / model are present. See `witness/BUILD.md` for EAS + model fetch.
+Native hashing must stay aligned with Worker hex digests (`@noble/hashes` full-file SHA-256). Whisper defaults to an honest `TRANSCRIPT_PENDING` stub unless `EXPO_PUBLIC_WHISPER=1` + a native module / model are present. See `witness/BUILD.md` for EAS + model fetch. Multi-device incident UX: create/join code, coordinated start, `incidentId` + `PEER_LOST` notes on packages.
 
 ## Production checklist (not automated)
 

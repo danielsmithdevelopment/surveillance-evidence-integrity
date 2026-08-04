@@ -43,7 +43,7 @@ Aligned docs in this repo: `technical-standards.md`, `model-legislation.md`, `mo
 ## Build sequence
 
 1. ~~Civilian single-device integrity + rural sync + safety alerts~~  
-2. **Civilian multi-device incident MVP** (this work) — create/join, start signal, heartbeat, `PEER_LOST`, `incidentId` on packages  
+2. ~~**Civilian multi-device incident MVP** — create/join, start signal, heartbeat, `PEER_LOST`, `incidentId` on packages~~
 3. Attorney library: group sessions by `incidentId` + transcript cross-reference UI  
 4. Publish Challenge-grade one-pager for city councils / PDs  
 5. Push via contracts + model legislation (BWC + ALPR), informed by what phones already do  
