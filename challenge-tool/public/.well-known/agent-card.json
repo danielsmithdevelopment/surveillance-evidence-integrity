@@ -1,0 +1,77 @@
+{
+  "name": "Challenge the Footage",
+  "description": "Generate legal document templates challenging surveillance camera / ALPR evidence under FRE 901, FRE 702, the Fourth Amendment, and 42 U.S.C. § 1983. Not legal advice — attorney review required.",
+  "version": "1.0.0",
+  "url": "https://challengethefootage.com/",
+  "provider": {
+    "organization": "Challenge the Footage / ClawQL",
+    "url": "https://challengethefootage.com"
+  },
+  "documentationUrl": "https://challengethefootage.com/AGENTS.md",
+  "defaultInputModes": ["text/plain", "application/json"],
+  "defaultOutputModes": ["text/plain", "application/json", "text/markdown"],
+  "supported_interfaces": [
+    {
+      "url": "https://challengethefootage.com/openapi.json",
+      "protocol_binding": "REST",
+      "protocol_version": "3.1"
+    },
+    {
+      "url": "https://challengethefootage.com/",
+      "protocol_binding": "HTTPS",
+      "protocol_version": "1.1"
+    },
+    {
+      "url": "https://clawql.com/mcp",
+      "protocol_binding": "HTTP",
+      "protocol_version": "2025-11-25"
+    }
+  ],
+  "supportedInterfaces": [
+    {
+      "url": "https://challengethefootage.com/openapi.json",
+      "protocol_binding": "REST",
+      "protocol_version": "3.1"
+    },
+    {
+      "url": "https://challengethefootage.com/",
+      "protocol_binding": "HTTPS",
+      "protocol_version": "1.1"
+    },
+    {
+      "url": "https://clawql.com/mcp",
+      "protocol_binding": "HTTP",
+      "protocol_version": "2025-11-25"
+    }
+  ],
+  "capabilities": {
+    "streaming": false,
+    "pushNotifications": false,
+    "extendedAgentCard": false
+  },
+  "securitySchemes": {
+    "googleIdToken": {
+      "type": "http",
+      "scheme": "bearer",
+      "bearerFormat": "JWT",
+      "description": "Google Sign-In ID token (see auth.md)"
+    }
+  },
+  "security": [{ "googleIdToken": [] }],
+  "skills": [
+    {
+      "id": "generate_challenge_docs",
+      "name": "Generate surveillance challenge documents",
+      "description": "Produce FRE 901, FRE 702, Fourth Amendment, and §1983 templates for a named vendor and case.",
+      "tags": ["legal", "surveillance", "alpr", "fre901"],
+      "examples": ["Generate Flock Safety FRE 901 and Daubert motions for case 24-CR-001"]
+    }
+  ],
+  "openApiUrl": "https://challengethefootage.com/openapi.json",
+  "skillsUrl": "https://challengethefootage.com/.well-known/agent-skills/index.json",
+  "metadata": {
+    "mcpServerCard": "https://challengethefootage.com/.well-known/mcp/server-card.json",
+    "authMd": "https://challengethefootage.com/auth.md",
+    "llmsTxt": "https://challengethefootage.com/llms.txt"
+  }
+}

@@ -17,7 +17,7 @@ async function expectNoA11yViolations(page, path) {
     });
     if (await checkbox.isVisible().catch(() => false)) {
       await checkbox.check();
-      await page.getByRole("button", { name: "Continue" }).click();
+      await page.getByRole("button", { name: "Continue", exact: true }).click();
       await expect(page.getByRole("heading", { name: /Challenge/i })).toBeVisible();
     }
   }
@@ -61,6 +61,10 @@ test.describe("WCAG axe scans", () => {
 
   test("public defenders page meets WCAG 2.2 AA (axe)", async ({ page }) => {
     await expectNoA11yViolations(page, "/public-defenders.html");
+  });
+
+  test("evidence page meets WCAG 2.2 AA (axe)", async ({ page }) => {
+    await expectNoA11yViolations(page, "/evidence.html");
   });
 });
 

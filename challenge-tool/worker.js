@@ -13,16 +13,126 @@
  *   POST /api/generate
  *   GET  /api/history
  *   GET  /api/session/:id
+ *   GET  /api/health
+ *
+ * Also: Link headers, Markdown negotiation (Accept: text/markdown), agent-ready well-known files.
+ *
+ * Local/dev testing (see .dev.vars.example):
+ *   ALLOW_TEST_AUTH=true  + Authorization: Bearer test:<userId>:<email>
+ *   GENERATION_MODE=offline  (or omit CLAWQL_* secrets) → deterministic templates
  */
+
+import { buildOfflineDocs } from "./offline-docs.js";
+import { evidenceMerkleRoot, randomClaimCode, sha256Hex } from "./evidence-crypto.js";
+import { gunzipBase64ToText } from "./evidence-gzip.js";
+import { r2Configured, r2PutObject } from "./r2.js";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization",
+  "Access-Control-Allow-Methods": "GET, POST, PUT, OPTIONS",
+  "Access-Control-Allow-Headers":
+    "Content-Type, Authorization, X-Device-Id, X-Claim-Code, X-Content-SHA256",
 };
 
 const FREE_GENERATIONS = 1;
 const FREE_TTL_S = 60 * 60 * 24 * 365;
+
+const AGENT_LINK_HEADER = [
+  '<https://challengethefootage.com/sitemap.xml>; rel="sitemap"',
+  '</llms.txt>; rel="alternate"; type="text/plain"',
+  '</llms-full.txt>; rel="alternate"; type="text/plain"',
+  '</auth.md>; rel="alternate"; type="text/markdown"',
+  '</AGENTS.md>; rel="author"',
+  '</openapi.json>; rel="service-desc"; type="application/openapi+json"',
+  '</.well-known/api-catalog>; rel="api-catalog"',
+  '</.well-known/agent-card.json>; rel="agent-card"; type="application/json"',
+  '</.well-known/mcp/server-card.json>; rel="mcp-server-card"; type="application/json"',
+  '</.well-known/oauth-authorization-server>; rel="oauth-authorization-server"; type="application/json"',
+  '</.well-known/acp.json>; rel="payment-method"',
+  '</api/health>; rel="status"',
+  '<https://github.com/danielsmithdevelopment/surveillance-evidence-integrity>; rel="describedby"',
+].join(", ");
+
+const CONTENT_TYPE_OVERRIDES = {
+  "/.well-known/api-catalog":
+    'application/linkset+json; profile="https://www.rfc-editor.org/info/rfc9727"',
+  "/.well-known/agent-card.json": "application/json; charset=utf-8",
+  "/.well-known/mcp/server-card.json": "application/json; charset=utf-8",
+  "/.well-known/oauth-protected-resource": "application/json; charset=utf-8",
+  "/.well-known/oauth-authorization-server": "application/json; charset=utf-8",
+  "/.well-known/openid-configuration": "application/json; charset=utf-8",
+  "/.well-known/acp.json": "application/json; charset=utf-8",
+  "/.well-known/agent-skills/index.json": "application/json; charset=utf-8",
+  "/openapi.json": "application/openapi+json; charset=utf-8",
+  "/robots.txt": "text/plain; charset=utf-8",
+  "/sitemap.xml": "application/xml; charset=utf-8",
+  "/llms.txt": "text/plain; charset=utf-8",
+  "/llms-full.txt": "text/plain; charset=utf-8",
+  "/auth.md": "text/markdown; charset=utf-8",
+  "/AGENTS.md": "text/markdown; charset=utf-8",
+};
+
+function wantsMarkdown(request) {
+  const accept = (request.headers.get("Accept") || "").toLowerCase();
+  if (!accept.includes("text/markdown")) return false;
+  const md = accept.indexOf("text/markdown");
+  const html = accept.indexOf("text/html");
+  if (html === -1) return true;
+  return md !== -1 && md < html;
+}
+
+function markdownAssetPath(pathname) {
+  if (pathname === "/" || pathname === "/index.html") return "/index.md";
+  if (pathname === "/terms.html" || pathname === "/terms") return "/terms.md";
+  if (pathname === "/public-defenders.html" || pathname === "/public-defenders") {
+    return "/public-defenders.md";
+  }
+  if (pathname === "/evidence.html" || pathname === "/evidence") return "/evidence.md";
+  return null;
+}
+
+async function serveAssets(request, env) {
+  const url = new URL(request.url);
+  let assetRequest = request;
+
+  if (request.method === "GET" && wantsMarkdown(request)) {
+    const mdPath = markdownAssetPath(url.pathname);
+    if (mdPath) {
+      const mdUrl = new URL(mdPath, url.origin);
+      assetRequest = new Request(mdUrl, request);
+    }
+  }
+
+  let response = await env.ASSETS.fetch(assetRequest);
+  // Fallback: if markdown missing, serve HTML as usual
+  if (response.status === 404 && assetRequest.url !== request.url) {
+    response = await env.ASSETS.fetch(request);
+  }
+
+  const headers = new Headers(response.headers);
+  headers.set("Link", AGENT_LINK_HEADER);
+  headers.set("Vary", mergeVary(headers.get("Vary"), "Accept"));
+
+  const path = new URL(assetRequest.url).pathname;
+  if (CONTENT_TYPE_OVERRIDES[path]) {
+    headers.set("Content-Type", CONTENT_TYPE_OVERRIDES[path]);
+  } else if (path.endsWith(".md") || wantsMarkdown(request)) {
+    headers.set("Content-Type", "text/markdown; charset=utf-8");
+  }
+
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
+}
+
+function mergeVary(existing, value) {
+  if (!existing) return value;
+  const parts = existing.split(",").map((s) => s.trim().toLowerCase());
+  if (parts.includes(value.toLowerCase())) return existing;
+  return `${existing}, ${value}`;
+}
 
 // ─── Vendor profiles ──────────────────────────────────────────────────────────
 
@@ -262,6 +372,15 @@ export default {
     if (request.method === "OPTIONS") return new Response(null, { headers: CORS_HEADERS });
     const url = new URL(request.url);
     try {
+      if (url.pathname === "/api/health" && request.method === "GET") {
+        return json({
+          ok: true,
+          service: "challenge-the-footage",
+          time: new Date().toISOString(),
+          generationMode: wantsOfflineGeneration(env) ? "offline" : "gateway",
+          testAuthEnabled: env.ALLOW_TEST_AUTH === "true",
+        });
+      }
       if (url.pathname === "/api/checkout" && request.method === "POST")
         return handleCheckout(request, env);
       if (url.pathname === "/api/entitlement" && request.method === "GET")
@@ -273,9 +392,37 @@ export default {
       if (url.pathname.startsWith("/api/session/") && request.method === "GET") {
         return handleSession(request, env, url.pathname.split("/api/session/")[1]);
       }
-      // Static assets (Pages / Workers assets binding)
+      if (url.pathname === "/api/evidence/secure" && request.method === "POST") {
+        return handleEvidenceSecure(request, env);
+      }
+      if (url.pathname === "/api/evidence/secure-device" && request.method === "POST") {
+        return handleEvidenceSecureDevice(request, env);
+      }
+      if (url.pathname === "/api/evidence/sync-lite" && request.method === "POST") {
+        return handleEvidenceSyncLite(request, env);
+      }
+      if (url.pathname === "/api/evidence/safety-ping" && request.method === "POST") {
+        return handleEvidenceSafetyPing(request, env);
+      }
+      if (url.pathname === "/api/evidence/claim" && request.method === "POST") {
+        return handleEvidenceClaim(request, env);
+      }
+      if (url.pathname === "/api/evidence/upload-url" && request.method === "POST") {
+        return handleEvidenceUploadUrl(request, env);
+      }
+      if (url.pathname.startsWith("/api/evidence/object/") && request.method === "PUT") {
+        const parts = url.pathname.split("/api/evidence/object/")[1].split("/");
+        return handleEvidenceObjectPut(request, env, parts[0], parts[1]);
+      }
+      if (url.pathname === "/api/evidence/sessions" && request.method === "GET") {
+        return handleEvidenceSessions(request, env);
+      }
+      if (url.pathname.startsWith("/api/evidence/verify/") && request.method === "GET") {
+        return handleEvidenceVerify(request, env, url.pathname.split("/api/evidence/verify/")[1]);
+      }
+      // Static assets (Pages / Workers assets binding) + agent-ready headers
       if (env.ASSETS) {
-        return env.ASSETS.fetch(request);
+        return serveAssets(request, env);
       }
       return json({ error: "Not found" }, 404);
     } catch (err) {
@@ -296,10 +443,40 @@ async function verifyGoogleToken(token, clientId) {
   return { userId: p.sub, email: p.email, name: p.name };
 }
 
+/**
+ * Resolve the caller. When ALLOW_TEST_AUTH=true, accepts:
+ *   Authorization: Bearer test:<userId>:<email>
+ * Never enable ALLOW_TEST_AUTH in production.
+ */
+async function resolveUser(request, env) {
+  const token = extractBearer(request);
+  if (env.ALLOW_TEST_AUTH === "true" && token.startsWith("test:")) {
+    const parts = token.split(":");
+    const userId = parts[1] || "test-user";
+    const email = parts.slice(2).join(":") || "test@example.com";
+    return {
+      userId,
+      email,
+      name: "Test User",
+      testAuth: true,
+    };
+  }
+  if (!env.GOOGLE_CLIENT_ID) {
+    throw new Error("GOOGLE_CLIENT_ID not configured");
+  }
+  return verifyGoogleToken(token, env.GOOGLE_CLIENT_ID);
+}
+
 function extractBearer(req) {
   const auth = req.headers.get("Authorization") || "";
   if (!auth.startsWith("Bearer ")) throw new Error("Missing authorization header");
   return auth.slice(7);
+}
+
+function wantsOfflineGeneration(env) {
+  if (env.GENERATION_MODE === "offline") return true;
+  if (env.GENERATION_MODE === "gateway") return false;
+  return !env.CLAWQL_GATEWAY_URL || !env.CLAWQL_API_KEY;
 }
 
 // ─── Gateway helpers ──────────────────────────────────────────────────────────
@@ -375,7 +552,17 @@ async function gwChat(env, system, userMsg) {
 
 // ─── Entitlement ──────────────────────────────────────────────────────────────
 
-async function getEntitlement(env, userId, email) {
+async function getEntitlement(env, userId, email, { testAuth = false } = {}) {
+  // Local/demo tokens must not be blocked by the free-generation gate.
+  if (testAuth) {
+    return {
+      entitled: true,
+      generationsUsed: 0,
+      generationsAllowed: Infinity,
+      isPD: false,
+      testAuth: true,
+    };
+  }
   // Public defender whitelist — checked before gateway entitlement
   // Set via: wrangler kv:key put --binding=RATE_LIMIT_KV "pd_whitelist:{email}" "true"
   if (email) {
@@ -394,19 +581,32 @@ async function getEntitlement(env, userId, email) {
   }
 }
 async function getFreeUsed(env, userId) {
-  const v = await env.RATE_LIMIT_KV.get(`free:${userId}`, { type: "json" });
-  return v?.count || 0;
+  try {
+    const v = await env.RATE_LIMIT_KV.get(`free:${userId}`, { type: "json" });
+    return v?.count || 0;
+  } catch (e) {
+    console.warn("getFreeUsed:", e.message);
+    return 0;
+  }
 }
 async function incrementFree(env, userId) {
-  const c = await getFreeUsed(env, userId);
-  await env.RATE_LIMIT_KV.put(`free:${userId}`, JSON.stringify({ count: c + 1 }), {
-    expirationTtl: FREE_TTL_S,
-  });
+  try {
+    const c = await getFreeUsed(env, userId);
+    await env.RATE_LIMIT_KV.put(`free:${userId}`, JSON.stringify({ count: c + 1 }), {
+      expirationTtl: FREE_TTL_S,
+    });
+  } catch (e) {
+    console.warn("incrementFree:", e.message);
+  }
 }
 
 // ─── Document generation ──────────────────────────────────────────────────────
 
-async function generateAllDocs(env, system, ctx, enriched, vendorName) {
+async function generateAllDocs(env, system, ctx, enriched, vendorName, profile) {
+  if (wantsOfflineGeneration(env)) {
+    return buildOfflineDocs({ vendorName, profile, ctx, enriched });
+  }
+
   const base = `
 Vendor: ${vendorName}
 Camera / footage type: ${ctx.cameraType || "surveillance camera footage"}
@@ -510,9 +710,12 @@ Write the complete demand letter in formal legal correspondence format.`
 async function handleCheckout(request, env) {
   let user;
   try {
-    user = await verifyGoogleToken(extractBearer(request), env.GOOGLE_CLIENT_ID);
+    user = await resolveUser(request, env);
   } catch (e) {
     return json({ error: `Auth failed: ${e.message}` }, 401);
+  }
+  if (user.testAuth) {
+    return json({ error: "Checkout disabled under test auth" }, 400);
   }
   let body = {};
   try {
@@ -539,11 +742,11 @@ async function handleCheckout(request, env) {
 async function handleEntitlement(request, env) {
   let user;
   try {
-    user = await verifyGoogleToken(extractBearer(request), env.GOOGLE_CLIENT_ID);
+    user = await resolveUser(request, env);
   } catch (e) {
     return json({ error: `Auth failed: ${e.message}` }, 401);
   }
-  const ent = await getEntitlement(env, user.userId, user.email);
+  const ent = await getEntitlement(env, user.userId, user.email, { testAuth: !!user.testAuth });
   const freeUsed = await getFreeUsed(env, user.userId);
   return json({
     entitled: ent.entitled,
@@ -553,18 +756,19 @@ async function handleEntitlement(request, env) {
     freeUsed,
     freeAllowed: FREE_GENERATIONS,
     canGenerate: ent.entitled || freeUsed < FREE_GENERATIONS,
+    testAuth: !!user.testAuth,
   });
 }
 
 async function handleGenerate(request, env) {
   let user;
   try {
-    user = await verifyGoogleToken(extractBearer(request), env.GOOGLE_CLIENT_ID);
+    user = await resolveUser(request, env);
   } catch (e) {
     return json({ error: `Auth failed: ${e.message}` }, 401);
   }
 
-  const ent = await getEntitlement(env, user.userId, user.email);
+  const ent = await getEntitlement(env, user.userId, user.email, { testAuth: !!user.testAuth });
   const freeUsed = await getFreeUsed(env, user.userId);
   if (!ent.entitled && freeUsed >= FREE_GENERATIONS) {
     return json(
@@ -593,17 +797,20 @@ async function handleGenerate(request, env) {
     additionalVendorFacts: form.additionalVendorFacts,
   });
 
-  const [memoryContext, onyxContext] = await Promise.all([
-    recallMemory(
-      env,
-      user.userId,
-      `surveillance evidence challenge ${vendorName} ${form.jurisdiction || ""} ${form.court || ""}`
-    ),
-    searchOnyx(
-      env,
-      `FRE 901 702 Daubert surveillance ALPR wrongful arrest civil rights ${vendorName} ${form.jurisdiction || ""}`
-    ),
-  ]);
+  const offline = wantsOfflineGeneration(env);
+  const [memoryContext, onyxContext] = offline
+    ? [null, null]
+    : await Promise.all([
+        recallMemory(
+          env,
+          user.userId,
+          `surveillance evidence challenge ${vendorName} ${form.jurisdiction || ""} ${form.court || ""}`
+        ),
+        searchOnyx(
+          env,
+          `FRE 901 702 Daubert surveillance ALPR wrongful arrest civil rights ${vendorName} ${form.jurisdiction || ""}`
+        ),
+      ]);
 
   const enriched = [
     memoryContext ? `RECALLED CONTEXT:\n${memoryContext}` : "",
@@ -628,7 +835,7 @@ async function handleGenerate(request, env) {
 
   let docs;
   try {
-    docs = await generateAllDocs(env, system, ctx, enriched, vendorName);
+    docs = await generateAllDocs(env, system, ctx, enriched, vendorName, profile);
   } catch (e) {
     return json({ error: `Generation failed: ${e.message}` }, 500);
   }
@@ -642,13 +849,15 @@ async function handleGenerate(request, env) {
 
   if (!ent.entitled) await incrementFree(env, user.userId);
 
-  await ingestMemory(
-    env,
-    user.userId,
-    sessionId,
-    `# Surveillance Challenge — ${new Date().toISOString()}\nVendor: ${vendorName}\nCase: ${ctx.caseNumber} | ${ctx.defendant} | ${ctx.court}\nJurisdiction: ${ctx.jurisdiction} | City: ${ctx.city}\n\n## Motion Summary\n${docs.motion.slice(0, 400)}...`.trim(),
-    [vendorName, ctx.jurisdiction, ctx.city].filter(Boolean)
-  );
+  if (!offline) {
+    await ingestMemory(
+      env,
+      user.userId,
+      sessionId,
+      `# Surveillance Challenge — ${new Date().toISOString()}\nVendor: ${vendorName}\nCase: ${ctx.caseNumber} | ${ctx.defendant} | ${ctx.court}\nJurisdiction: ${ctx.jurisdiction} | City: ${ctx.city}\n\n## Motion Summary\n${docs.motion.slice(0, 400)}...`.trim(),
+      [vendorName, ctx.jurisdiction, ctx.city].filter(Boolean)
+    );
+  }
 
   return json({
     sessionId,
@@ -659,6 +868,8 @@ async function handleGenerate(request, env) {
       memoryContextUsed: !!memoryContext,
       onyxContextUsed: !!onyxContext,
       entitled: ent.entitled,
+      generationMode: offline ? "offline" : "gateway",
+      testAuth: !!user.testAuth,
     },
   });
 }
@@ -666,7 +877,7 @@ async function handleGenerate(request, env) {
 async function handleHistory(request, env) {
   let user;
   try {
-    user = await verifyGoogleToken(extractBearer(request), env.GOOGLE_CLIENT_ID);
+    user = await resolveUser(request, env);
   } catch (e) {
     return json({ error: `Auth failed: ${e.message}` }, 401);
   }
@@ -681,13 +892,678 @@ async function handleHistory(request, env) {
 async function handleSession(request, env, sessionId) {
   let user;
   try {
-    user = await verifyGoogleToken(extractBearer(request), env.GOOGLE_CLIENT_ID);
+    user = await resolveUser(request, env);
   } catch (e) {
     return json({ error: `Auth failed: ${e.message}` }, 401);
   }
   const results = await recallMemory(env, user.userId, `session:${sessionId}`);
   if (!results) return json({ error: "Session not found" }, 404);
   return json({ content: results });
+}
+
+// ─── Evidence (web / Witness) — Stripe for docs; ClawQL anchors behind the scenes ─
+
+async function handleEvidenceSecure(request, env) {
+  let user;
+  try {
+    user = await resolveUser(request, env);
+  } catch (e) {
+    return json({ error: `Auth failed: ${e.message}` }, 401);
+  }
+
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return json({ error: "Invalid request body" }, 400);
+  }
+
+  const { transcriptHash, audioHash, videoHash } = body;
+  if (!transcriptHash || !audioHash || !videoHash) {
+    return json({ error: "transcriptHash, audioHash, and videoHash are required" }, 400);
+  }
+
+  const sessionId = `ev-${user.userId.slice(0, 12)}-${Date.now().toString(36)}`;
+  const record = await persistEvidenceRecord(env, {
+    sessionId,
+    userId: user.userId,
+    email: user.email,
+    transcriptHash,
+    audioHash,
+    videoHash,
+    transcriptText: body.transcriptText,
+    mimeType: body.mimeType,
+    startedAt: body.startedAt,
+    endedAt: body.endedAt,
+    stateCode: body.stateCode,
+    source: body.source || "web",
+    claimable: false,
+  });
+
+  return json({
+    sessionId: record.sessionId,
+    status: record.status,
+    merkleRoot: record.merkleRoot,
+    securedAt: record.securedAt,
+    verificationId: record.sessionId,
+  });
+}
+
+/**
+ * Native / emergency path: record without Google mid-encounter.
+ * Returns a one-time claimCode so the user can attach the session after sign-in.
+ */
+async function handleEvidenceSecureDevice(request, env) {
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return json({ error: "Invalid request body" }, 400);
+  }
+
+  const { deviceId, transcriptHash, audioHash, videoHash } = body;
+  if (!deviceId || !transcriptHash || !audioHash || !videoHash) {
+    return json({ error: "deviceId, transcriptHash, audioHash, and videoHash are required" }, 400);
+  }
+
+  const sessionId = `ev-dev-${String(deviceId).slice(0, 8)}-${Date.now().toString(36)}`;
+  const claimCode = randomClaimCode();
+  const claimCodeHash = await sha256Hex(claimCode);
+
+  const record = await persistEvidenceRecord(env, {
+    sessionId,
+    userId: null,
+    email: null,
+    deviceId: String(deviceId),
+    transcriptHash,
+    audioHash,
+    videoHash,
+    transcriptText: body.transcriptText,
+    mimeType: body.mimeType,
+    startedAt: body.startedAt,
+    endedAt: body.endedAt,
+    stateCode: body.stateCode,
+    source: body.source || "native",
+    claimable: true,
+    claimCodeHash,
+    location: body.location || null,
+  });
+
+  try {
+    await env.RATE_LIMIT_KV.put(
+      `device:${deviceId}`,
+      JSON.stringify({ deviceId, lastSessionId: sessionId, seenAt: new Date().toISOString() }),
+      { expirationTtl: 60 * 60 * 24 * 365 * 5 }
+    );
+  } catch (e) {
+    console.warn("device registry:", e.message);
+  }
+
+  return json({
+    sessionId: record.sessionId,
+    status: record.status,
+    merkleRoot: record.merkleRoot,
+    securedAt: record.securedAt,
+    verificationId: record.sessionId,
+    claimCode,
+    claimUrl: `https://challengethefootage.com/evidence.html?claim=${encodeURIComponent(sessionId)}&code=${encodeURIComponent(claimCode)}`,
+  });
+}
+
+/**
+ * Rural / 2G path: one request registers hashes and delivers a gzip transcript.
+ * Media (audio/video) can follow later when the link improves.
+ */
+async function handleEvidenceSyncLite(request, env) {
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return json({ error: "Invalid request body" }, 400);
+  }
+
+  const { deviceId, transcriptHash, audioHash, videoHash } = body;
+  if (!deviceId || !transcriptHash || !audioHash || !videoHash) {
+    return json({ error: "deviceId, transcriptHash, audioHash, and videoHash are required" }, 400);
+  }
+
+  let transcriptText = "";
+  if (body.transcriptEncoding === "gzip+base64" && body.transcriptGzipB64) {
+    try {
+      transcriptText = await gunzipBase64ToText(String(body.transcriptGzipB64));
+    } catch (e) {
+      return json({ error: `gzip transcript decode failed: ${e.message}` }, 400);
+    }
+  } else if (typeof body.transcriptText === "string") {
+    transcriptText = body.transcriptText;
+  } else {
+    return json({ error: "transcriptGzipB64 (gzip+base64) or transcriptText is required" }, 400);
+  }
+
+  // Cap inline transcript for KV (2G payloads should be far smaller).
+  const MAX_CHARS = 64 * 1024;
+  if (transcriptText.length > MAX_CHARS) {
+    return json({ error: `Transcript exceeds ${MAX_CHARS} characters` }, 413);
+  }
+
+  const digest = await sha256Hex(transcriptText);
+  if (digest !== String(transcriptHash).toLowerCase()) {
+    return json({ error: "transcriptHash does not match gzip payload" }, 400);
+  }
+
+  const sessionId = `ev-dev-${String(deviceId).slice(0, 8)}-${Date.now().toString(36)}`;
+  const claimCode = randomClaimCode();
+  const claimCodeHash = await sha256Hex(claimCode);
+
+  const record = await persistEvidenceRecord(env, {
+    sessionId,
+    userId: null,
+    email: null,
+    deviceId: String(deviceId),
+    transcriptHash,
+    audioHash,
+    videoHash,
+    transcriptText,
+    mimeType: body.mimeType,
+    startedAt: body.startedAt,
+    endedAt: body.endedAt,
+    stateCode: body.stateCode,
+    source: body.source || "native",
+    claimable: true,
+    claimCodeHash,
+    location: body.location || null,
+  });
+
+  // Inline store transcript so a second PUT is not required on 2G.
+  record.objects = record.objects || {};
+  record.objects.transcript = {
+    key: `inline:${sessionId}:transcript`,
+    sha256: transcriptHash,
+    bytes: new TextEncoder().encode(transcriptText).byteLength,
+    storage: "inline",
+    uploadedAt: new Date().toISOString(),
+    linkTier: body.linkTier || "constrained",
+  };
+  record.transcriptEngine = body.transcriptEngine || null;
+  record.sync = "lite";
+  record.mediaPending = true;
+  record.interrupted = !!body.interrupted;
+  record.interruptReason = body.interruptReason || null;
+  record.scenario = body.scenario || null;
+
+  try {
+    await env.RATE_LIMIT_KV.put(`evidence:${sessionId}`, JSON.stringify(record), {
+      expirationTtl: 60 * 60 * 24 * 365 * 5,
+    });
+    await env.RATE_LIMIT_KV.put(
+      `device:${deviceId}`,
+      JSON.stringify({ deviceId, lastSessionId: sessionId, seenAt: new Date().toISOString() }),
+      { expirationTtl: 60 * 60 * 24 * 365 * 5 }
+    );
+  } catch (e) {
+    console.warn("sync-lite KV:", e.message);
+  }
+
+  return json({
+    sessionId: record.sessionId,
+    status: record.status,
+    merkleRoot: record.merkleRoot,
+    securedAt: record.securedAt,
+    verificationId: record.sessionId,
+    claimCode,
+    claimUrl: `https://challengethefootage.com/evidence.html?claim=${encodeURIComponent(sessionId)}&code=${encodeURIComponent(claimCode)}`,
+    transcriptStored: true,
+    mediaPending: true,
+    interrupted: !!record.interrupted,
+    sync: "lite",
+  });
+}
+
+/**
+ * Personal-safety alert ping (dead-man / interrupt). Stored for audit; SMS is client-side for now.
+ */
+async function handleEvidenceSafetyPing(request, env) {
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return json({ error: "Invalid request body" }, 400);
+  }
+
+  const deviceId = body.deviceId ? String(body.deviceId) : "";
+  const kind = body.kind ? String(body.kind) : "";
+  if (!deviceId || !kind) {
+    return json({ error: "deviceId and kind are required" }, 400);
+  }
+  if (!["deadman", "interrupt", "manual", "checkin_ok"].includes(kind)) {
+    return json({ error: "Invalid kind" }, 400);
+  }
+
+  const pingId = `ping-${deviceId.slice(0, 8)}-${Date.now().toString(36)}`;
+  const record = {
+    pingId,
+    deviceId,
+    kind,
+    message: String(body.message || "").slice(0, 4000),
+    scenario: body.scenario || null,
+    location: body.location || null,
+    sessionId: body.sessionId || null,
+    localId: body.localId || null,
+    interruptReason: body.interruptReason || null,
+    at: body.at || new Date().toISOString(),
+  };
+
+  try {
+    await env.RATE_LIMIT_KV.put(`safety-ping:${pingId}`, JSON.stringify(record), {
+      expirationTtl: 60 * 60 * 24 * 90,
+    });
+    const indexKey = `safety-ping-index:${deviceId}`;
+    let index = [];
+    try {
+      index = (await env.RATE_LIMIT_KV.get(indexKey, { type: "json" })) || [];
+    } catch {
+      index = [];
+    }
+    if (!Array.isArray(index)) index = [];
+    index.unshift({ pingId, kind, at: record.at });
+    await env.RATE_LIMIT_KV.put(indexKey, JSON.stringify(index.slice(0, 50)), {
+      expirationTtl: 60 * 60 * 24 * 90,
+    });
+  } catch (e) {
+    console.warn("safety-ping KV:", e.message);
+  }
+
+  return json({ ok: true, pingId, stored: true });
+}
+
+async function handleEvidenceClaim(request, env) {
+  let user;
+  try {
+    user = await resolveUser(request, env);
+  } catch (e) {
+    return json({ error: `Auth failed: ${e.message}` }, 401);
+  }
+
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return json({ error: "Invalid request body" }, 400);
+  }
+
+  const { sessionId, claimCode } = body;
+  if (!sessionId || !claimCode) {
+    return json({ error: "sessionId and claimCode are required" }, 400);
+  }
+
+  let record;
+  try {
+    const raw = await env.RATE_LIMIT_KV.get(`evidence:${sessionId}`);
+    if (!raw) return json({ error: "Not found" }, 404);
+    record = JSON.parse(raw);
+  } catch (e) {
+    return json({ error: e.message }, 500);
+  }
+
+  if (record.userId && record.userId !== user.userId) {
+    return json({ error: "Evidence already linked to another account" }, 409);
+  }
+  if (record.userId === user.userId) {
+    return json({ sessionId, status: record.status, alreadyClaimed: true });
+  }
+  if (!record.claimable || !record.claimCodeHash) {
+    return json({ error: "This session cannot be claimed" }, 400);
+  }
+
+  const givenHash = await sha256Hex(String(claimCode));
+  if (givenHash !== record.claimCodeHash) {
+    return json({ error: "Invalid claim code" }, 403);
+  }
+
+  record.userId = user.userId;
+  record.email = user.email;
+  record.claimable = false;
+  record.claimCodeHash = null;
+  record.claimedAt = new Date().toISOString();
+
+  try {
+    await env.RATE_LIMIT_KV.put(`evidence:${sessionId}`, JSON.stringify(record), {
+      expirationTtl: 60 * 60 * 24 * 365 * 5,
+    });
+    await appendEvidenceIndex(env, user.userId, {
+      sessionId,
+      securedAt: record.securedAt,
+      status: record.status,
+      source: record.source,
+      claimedAt: record.claimedAt,
+    });
+  } catch (e) {
+    return json({ error: `Failed to claim: ${e.message}` }, 500);
+  }
+
+  return json({
+    sessionId,
+    status: record.status,
+    claimedAt: record.claimedAt,
+    verificationId: sessionId,
+  });
+}
+
+async function assertEvidenceUploadAuth(env, sessionId, { deviceId, claimCode, bearerUser }) {
+  const raw = await env.RATE_LIMIT_KV.get(`evidence:${sessionId}`);
+  if (!raw) throw Object.assign(new Error("Session not found"), { status: 404 });
+  const record = JSON.parse(raw);
+
+  if (bearerUser && record.userId && record.userId === bearerUser.userId) {
+    return record;
+  }
+  if (deviceId && claimCode && record.deviceId === deviceId && record.claimCodeHash) {
+    const given = await sha256Hex(String(claimCode));
+    if (given === record.claimCodeHash) return record;
+    // After claim, claimCodeHash is cleared — allow deviceId match + known claimed owner upload window
+  }
+  if (deviceId && record.deviceId === deviceId && record.userId) {
+    // Claimed sessions: device may still finish blob uploads briefly
+    return record;
+  }
+  throw Object.assign(new Error("Not authorized to upload for this session"), { status: 403 });
+}
+
+async function handleEvidenceUploadUrl(request, env) {
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return json({ error: "Invalid request body" }, 400);
+  }
+
+  const { sessionId, artifactType, contentType, sha256, deviceId, claimCode } = body;
+  if (!sessionId || !artifactType || !contentType || !sha256) {
+    return json({ error: "sessionId, artifactType, contentType, and sha256 are required" }, 400);
+  }
+  if (!["transcript", "audio", "video"].includes(artifactType)) {
+    return json({ error: "artifactType must be transcript|audio|video" }, 400);
+  }
+
+  let bearerUser = null;
+  try {
+    bearerUser = await resolveUser(request, env);
+  } catch {
+    bearerUser = null;
+  }
+
+  try {
+    await assertEvidenceUploadAuth(env, sessionId, { deviceId, claimCode, bearerUser });
+  } catch (e) {
+    return json({ error: e.message }, e.status || 403);
+  }
+
+  const ext =
+    artifactType === "transcript"
+      ? "txt"
+      : artifactType === "audio"
+        ? "m4a"
+        : contentType.includes("webm")
+          ? "webm"
+          : "mp4";
+  const key = `evidence/${sessionId}/${artifactType}-${sha256.slice(0, 16)}.${ext}`;
+
+  // Always use Worker-proxied PUT so clients never need AWS4.
+  const origin = new URL(request.url).origin;
+  const uploadUrl = `${origin}/api/evidence/object/${encodeURIComponent(sessionId)}/${encodeURIComponent(artifactType)}`;
+
+  try {
+    await env.RATE_LIMIT_KV.put(
+      `evidence-upload:${sessionId}:${artifactType}`,
+      JSON.stringify({
+        sessionId,
+        artifactType,
+        contentType,
+        sha256,
+        key,
+        deviceId: deviceId || null,
+        createdAt: new Date().toISOString(),
+        r2Ready: r2Configured(env),
+      }),
+      { expirationTtl: 60 * 60 * 24 }
+    );
+  } catch (e) {
+    console.warn("upload meta:", e.message);
+  }
+
+  return json({
+    uploadUrl,
+    key,
+    storage: r2Configured(env) ? "r2" : "metadata_only",
+  });
+}
+
+async function handleEvidenceObjectPut(request, env, sessionId, artifactType) {
+  if (!sessionId || !artifactType) return json({ error: "Missing path" }, 400);
+
+  const deviceId = request.headers.get("X-Device-Id") || "";
+  const claimCode = request.headers.get("X-Claim-Code") || "";
+  const contentSha = (request.headers.get("X-Content-SHA256") || "").toLowerCase();
+  const contentType = request.headers.get("Content-Type") || "application/octet-stream";
+
+  let bearerUser = null;
+  try {
+    bearerUser = await resolveUser(request, env);
+  } catch {
+    bearerUser = null;
+  }
+
+  let record;
+  try {
+    record = await assertEvidenceUploadAuth(env, sessionId, { deviceId, claimCode, bearerUser });
+  } catch (e) {
+    return json({ error: e.message }, e.status || 403);
+  }
+
+  const metaRaw = await env.RATE_LIMIT_KV.get(`evidence-upload:${sessionId}:${artifactType}`);
+  if (!metaRaw) return json({ error: "Upload URL expired or not created" }, 400);
+  const meta = JSON.parse(metaRaw);
+  if (contentSha && meta.sha256 && contentSha !== meta.sha256.toLowerCase()) {
+    return json({ error: "X-Content-SHA256 does not match registered hash" }, 400);
+  }
+
+  const body = await request.arrayBuffer();
+  if (!body.byteLength) return json({ error: "Empty body" }, 400);
+
+  let putResult;
+  try {
+    putResult = await r2PutObject(env, {
+      key: meta.key,
+      body,
+      contentType: meta.contentType || contentType,
+      sha256: meta.sha256,
+    });
+  } catch (e) {
+    return json({ error: `Storage failed: ${e.message}` }, 500);
+  }
+
+  const objects = record.objects || {};
+  objects[artifactType] = {
+    key: meta.key,
+    sha256: meta.sha256,
+    bytes: body.byteLength,
+    storage: putResult.storage,
+    uploadedAt: new Date().toISOString(),
+  };
+  record.objects = objects;
+  if (record.objects.audio && record.objects.video) {
+    record.mediaPending = false;
+  }
+  try {
+    await env.RATE_LIMIT_KV.put(`evidence:${sessionId}`, JSON.stringify(record), {
+      expirationTtl: 60 * 60 * 24 * 365 * 5,
+    });
+  } catch (e) {
+    console.warn("evidence object index:", e.message);
+  }
+
+  return json({
+    ok: true,
+    key: meta.key,
+    bytes: body.byteLength,
+    storage: putResult.storage,
+    skipped: !!putResult.skipped,
+  });
+}
+
+async function persistEvidenceRecord(env, input) {
+  const securedAt = new Date().toISOString();
+  const merkleRoot = await evidenceMerkleRoot(
+    input.transcriptHash,
+    input.audioHash,
+    input.videoHash
+  );
+
+  let status = "secured";
+  let verificationRef = null;
+  if (env.CLAWQL_GATEWAY_URL && env.CLAWQL_API_KEY && env.GENERATION_MODE !== "offline") {
+    try {
+      const anchored = await gwPost(env, "/surveillance/witness/anchor", {
+        sessionId: input.sessionId,
+        userId: input.userId,
+        email: input.email,
+        deviceId: input.deviceId,
+        merkleRoot,
+        transcriptHash: input.transcriptHash,
+        audioHash: input.audioHash,
+        videoHash: input.videoHash,
+        source: input.source,
+        startedAt: input.startedAt,
+        endedAt: input.endedAt || securedAt,
+        stateCode: input.stateCode,
+      });
+      verificationRef = anchored.arweaveTxId || anchored.txId || anchored.id || null;
+      if (verificationRef) status = "anchored";
+    } catch (e) {
+      console.warn("Evidence anchor via ClawQL:", e.message);
+      status = "secured_pending_anchor";
+    }
+  } else {
+    status = "secured_local";
+  }
+
+  const record = {
+    sessionId: input.sessionId,
+    userId: input.userId,
+    email: input.email,
+    deviceId: input.deviceId || null,
+    transcriptHash: input.transcriptHash,
+    audioHash: input.audioHash,
+    videoHash: input.videoHash,
+    merkleRoot,
+    status,
+    verificationRef,
+    source: input.source || "web",
+    stateCode: input.stateCode || null,
+    startedAt: input.startedAt || null,
+    endedAt: input.endedAt || securedAt,
+    securedAt,
+    mimeType: input.mimeType || null,
+    location: input.location || null,
+    claimable: !!input.claimable,
+    claimCodeHash: input.claimCodeHash || null,
+  };
+
+  try {
+    await env.RATE_LIMIT_KV.put(`evidence:${input.sessionId}`, JSON.stringify(record), {
+      expirationTtl: 60 * 60 * 24 * 365 * 5,
+    });
+    if (input.userId) {
+      await appendEvidenceIndex(env, input.userId, {
+        sessionId: input.sessionId,
+        securedAt,
+        status,
+        source: record.source,
+      });
+    }
+  } catch (e) {
+    console.warn("Evidence KV store:", e.message);
+  }
+
+  if (input.transcriptText && input.userId && !wantsOfflineGeneration(env)) {
+    await ingestMemory(
+      env,
+      input.userId,
+      input.sessionId,
+      `# Evidence session ${input.sessionId}\nStatus: ${status}\nNotes:\n${String(input.transcriptText).slice(0, 2000)}`,
+      ["evidence", record.source].filter(Boolean)
+    );
+  }
+
+  return record;
+}
+
+async function appendEvidenceIndex(env, userId, entry) {
+  const indexKey = `evidence-index:${userId}`;
+  let index = [];
+  try {
+    index = (await env.RATE_LIMIT_KV.get(indexKey, { type: "json" })) || [];
+  } catch {
+    index = [];
+  }
+  if (!Array.isArray(index)) index = [];
+  index = index.filter((e) => e.sessionId !== entry.sessionId);
+  index.unshift(entry);
+  await env.RATE_LIMIT_KV.put(indexKey, JSON.stringify(index.slice(0, 100)), {
+    expirationTtl: 60 * 60 * 24 * 365 * 5,
+  });
+}
+
+async function handleEvidenceSessions(request, env) {
+  let user;
+  try {
+    user = await resolveUser(request, env);
+  } catch (e) {
+    return json({ error: `Auth failed: ${e.message}` }, 401);
+  }
+  try {
+    const index =
+      (await env.RATE_LIMIT_KV.get(`evidence-index:${user.userId}`, { type: "json" })) || [];
+    return json({ sessions: Array.isArray(index) ? index : [] });
+  } catch (e) {
+    return json({ sessions: [], warning: e.message });
+  }
+}
+
+async function handleEvidenceVerify(request, env, sessionId) {
+  if (!sessionId) return json({ error: "Missing session id" }, 400);
+  try {
+    const raw = await env.RATE_LIMIT_KV.get(`evidence:${sessionId}`);
+    if (!raw) return json({ error: "Not found" }, 404);
+    const record = JSON.parse(raw);
+    return json({
+      sessionId: record.sessionId,
+      status: record.status,
+      securedAt: record.securedAt,
+      transcriptHash: record.transcriptHash,
+      audioHash: record.audioHash,
+      videoHash: record.videoHash,
+      merkleRoot: record.merkleRoot,
+      source: record.source,
+      claimable: !!record.claimable,
+      independentlyVerifiable: record.status === "anchored",
+      mediaPending: !!record.mediaPending,
+      interrupted: !!record.interrupted,
+      interruptReason: record.interruptReason || null,
+      scenario: record.scenario || null,
+      sync: record.sync || null,
+      objects: record.objects
+        ? Object.fromEntries(
+            Object.entries(record.objects).map(([k, v]) => [
+              k,
+              { bytes: v.bytes, uploadedAt: v.uploadedAt, storage: v.storage },
+            ])
+          )
+        : undefined,
+    });
+  } catch (e) {
+    return json({ error: e.message }, 500);
+  }
 }
 
 function json(data, status = 200) {

@@ -69,3 +69,21 @@ jobs:
           name: playwright-report
           path: challenge-tool/playwright-report
           retention-days: 14
+
+  witness:
+    name: witness (transcript packaging)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: witness
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Transcript / Whisper contract tests
+        run: node --test test/*.test.mjs

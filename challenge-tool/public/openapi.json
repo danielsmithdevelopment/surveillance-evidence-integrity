@@ -1,0 +1,447 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Challenge the Footage API",
+    "version": "1.0.0",
+    "description": "Challenge the Footage — evidence capture APIs plus FRE 901 / FRE 702 / Fourth Amendment / §1983 document templates. Stripe for payments. ClawQL for inference and independent anchoring. Not legal advice.",
+    "contact": {
+      "name": "Challenge the Footage",
+      "url": "https://challengethefootage.com",
+      "email": "hello@clawql.com"
+    },
+    "license": {
+      "name": "See repository LICENSE",
+      "url": "https://github.com/danielsmithdevelopment/surveillance-evidence-integrity"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://challengethefootage.com",
+      "description": "Production"
+    }
+  ],
+  "security": [
+    {
+      "googleIdToken": []
+    }
+  ],
+  "paths": {
+    "/api/entitlement": {
+      "get": {
+        "operationId": "getEntitlement",
+        "summary": "Check generation entitlement",
+        "responses": {
+          "200": {
+            "description": "Entitlement status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "entitled": { "type": "boolean" },
+                    "isPD": { "type": "boolean" },
+                    "canGenerate": { "type": "boolean" },
+                    "freeUsed": { "type": "integer" },
+                    "freeAllowed": { "type": "integer" }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "description": "Missing or invalid Google token" }
+        }
+      }
+    },
+    "/api/checkout": {
+      "post": {
+        "operationId": "createCheckout",
+        "summary": "Create Stripe Checkout session ($9)",
+        "x-payment-info": {
+          "amount": 900,
+          "currency": "usd",
+          "provider": "stripe",
+          "via": "clawql-payments"
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "origin": { "type": "string" },
+                  "successUrl": { "type": "string" },
+                  "cancelUrl": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Checkout URL",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "checkoutUrl": { "type": "string", "format": "uri" }
+                  }
+                }
+              }
+            }
+          },
+          "402": { "description": "Payment required (if applicable)" }
+        }
+      }
+    },
+    "/api/generate": {
+      "post": {
+        "operationId": "generateDocuments",
+        "summary": "Generate all four legal document templates",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["tosAccepted"],
+                "properties": {
+                  "tosAccepted": { "type": "boolean" },
+                  "vendor": {
+                    "type": "string",
+                    "enum": ["flock", "axon", "motorola", "genetec", "verkada", "custom"]
+                  },
+                  "customVendorName": { "type": "string" },
+                  "caseNumber": { "type": "string" },
+                  "defendant": { "type": "string" },
+                  "court": { "type": "string" },
+                  "jurisdiction": { "type": "string" },
+                  "city": { "type": "string" },
+                  "cameraType": { "type": "string" },
+                  "additionalFacts": { "type": "string" },
+                  "searchFacts": { "type": "string" },
+                  "civilHarm": { "type": "string" },
+                  "additionalVendorFacts": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Generated documents",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "sessionId": { "type": "string" },
+                    "docs": {
+                      "type": "object",
+                      "properties": {
+                        "motion": { "type": "string" },
+                        "accuracy": { "type": "string" },
+                        "access": { "type": "string" },
+                        "civil": { "type": "string" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "402": { "description": "Payment required — free generation exhausted" }
+        }
+      }
+    },
+    "/api/history": {
+      "get": {
+        "operationId": "listHistory",
+        "summary": "List prior generation session previews",
+        "responses": {
+          "200": { "description": "Session previews" }
+        }
+      }
+    },
+    "/api/session/{sessionId}": {
+      "get": {
+        "operationId": "getSession",
+        "summary": "Recall one generation session",
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Session content" },
+          "404": { "description": "Not found" }
+        }
+      }
+    },
+    "/api/evidence/secure": {
+      "post": {
+        "operationId": "secureEvidence",
+        "summary": "Secure a recording package to the signed-in account",
+        "description": "Stores hashes and Merkle root. ClawQL may independently anchor verification; end users are not asked for a crypto wallet.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["transcriptHash", "audioHash", "videoHash"],
+                "properties": {
+                  "transcriptHash": { "type": "string" },
+                  "audioHash": { "type": "string" },
+                  "videoHash": { "type": "string" },
+                  "transcriptText": { "type": "string" },
+                  "mimeType": { "type": "string" },
+                  "startedAt": { "type": "string", "format": "date-time" },
+                  "endedAt": { "type": "string", "format": "date-time" },
+                  "stateCode": { "type": "string" },
+                  "source": { "type": "string", "enum": ["web", "native"] }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Evidence secured",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "sessionId": { "type": "string" },
+                    "status": { "type": "string" },
+                    "verificationId": { "type": "string" },
+                    "securedAt": { "type": "string", "format": "date-time" }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "description": "Unauthorized" }
+        }
+      }
+    },
+    "/api/evidence/secure-device": {
+      "post": {
+        "operationId": "secureEvidenceDevice",
+        "summary": "Secure evidence from the native app without Google (record-first)",
+        "security": [],
+        "description": "Returns sessionId + one-time claimCode. User claims on the website after sign-in.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["deviceId", "transcriptHash", "audioHash", "videoHash"],
+                "properties": {
+                  "deviceId": { "type": "string" },
+                  "transcriptHash": { "type": "string" },
+                  "audioHash": { "type": "string" },
+                  "videoHash": { "type": "string" },
+                  "transcriptText": { "type": "string" },
+                  "source": { "type": "string", "enum": ["native", "web"] }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Secured; includes claimCode and claimUrl"
+          }
+        }
+      }
+    },
+    "/api/evidence/sync-lite": {
+      "post": {
+        "operationId": "syncEvidenceLite",
+        "summary": "Rural / 2G one-shot: register hashes + gzip transcript",
+        "security": [],
+        "description": "Designed for poor connectivity. Delivers a gzip+base64 transcript and media hashes in a single request. Audio/video can upload later via upload-url when the link improves. On-device Whisper should produce the transcript before this call.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["deviceId", "transcriptHash", "audioHash", "videoHash"],
+                "properties": {
+                  "deviceId": { "type": "string" },
+                  "transcriptHash": { "type": "string" },
+                  "audioHash": { "type": "string" },
+                  "videoHash": { "type": "string" },
+                  "transcriptEncoding": { "type": "string", "enum": ["gzip+base64"] },
+                  "transcriptGzipB64": { "type": "string" },
+                  "transcriptText": { "type": "string" },
+                  "linkTier": { "type": "string", "enum": ["offline", "constrained", "ok"] },
+                  "source": { "type": "string", "enum": ["native", "web"] }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Secured with claimCode; transcriptStored=true; mediaPending=true"
+          }
+        }
+      }
+    },
+    "/api/evidence/safety-ping": {
+      "post": {
+        "operationId": "evidenceSafetyPing",
+        "summary": "Record a personal-safety alert (dead-man / interrupt)",
+        "security": [],
+        "description": "Stores an audit ping. Native app also opens SMS drafts to emergency contacts. Not a 911 replacement.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["deviceId", "kind"],
+                "properties": {
+                  "deviceId": { "type": "string" },
+                  "kind": {
+                    "type": "string",
+                    "enum": ["deadman", "interrupt", "manual", "checkin_ok"]
+                  },
+                  "message": { "type": "string" },
+                  "scenario": { "type": "string" },
+                  "location": { "type": "object" },
+                  "sessionId": { "type": "string" },
+                  "localId": { "type": "string" },
+                  "interruptReason": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "ok + pingId" }
+        }
+      }
+    },
+    "/api/evidence/claim": {
+      "post": {
+        "operationId": "claimEvidence",
+        "summary": "Link a device-secured session to the signed-in account",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["sessionId", "claimCode"],
+                "properties": {
+                  "sessionId": { "type": "string" },
+                  "claimCode": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Claimed" },
+          "403": { "description": "Invalid claim code" },
+          "409": { "description": "Already linked to another account" }
+        }
+      }
+    },
+    "/api/evidence/upload-url": {
+      "post": {
+        "operationId": "createEvidenceUploadUrl",
+        "summary": "Create a Worker-proxied upload URL for an evidence artifact",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["sessionId", "artifactType", "contentType", "sha256"],
+                "properties": {
+                  "sessionId": { "type": "string" },
+                  "artifactType": { "type": "string", "enum": ["transcript", "audio", "video"] },
+                  "contentType": { "type": "string" },
+                  "sha256": { "type": "string" },
+                  "deviceId": { "type": "string" },
+                  "claimCode": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "uploadUrl + storage key" }
+        }
+      }
+    },
+    "/api/evidence/object/{sessionId}/{artifactType}": {
+      "put": {
+        "operationId": "putEvidenceObject",
+        "summary": "Upload evidence bytes (Worker proxies to R2 when configured)",
+        "security": [],
+        "parameters": [
+          { "name": "sessionId", "in": "path", "required": true, "schema": { "type": "string" } },
+          {
+            "name": "artifactType",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "enum": ["transcript", "audio", "video"] }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Stored (or metadata-only when R2 unset)" }
+        }
+      }
+    },
+    "/api/evidence/sessions": {
+      "get": {
+        "operationId": "listEvidenceSessions",
+        "summary": "List evidence sessions for the signed-in account",
+        "responses": {
+          "200": { "description": "Evidence session index" }
+        }
+      }
+    },
+    "/api/evidence/verify/{sessionId}": {
+      "get": {
+        "operationId": "verifyEvidence",
+        "summary": "Public verification status for an evidence session",
+        "security": [],
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Verification summary" },
+          "404": { "description": "Not found" }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "googleIdToken": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Google Sign-In ID token (aud must match GOOGLE_CLIENT_ID)"
+      }
+    }
+  }
+}

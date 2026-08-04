@@ -1,0 +1,28 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/v1/server-card.schema.json",
+  "name": "io.github.danielsmithdevelopment/challenge-the-footage",
+  "version": "1.0.0",
+  "description": "Challenge the Footage — generate FRE 901 / 702 / Fourth Amendment / §1983 templates for surveillance evidence. Discovery card; generation runs via HTTPS OpenAPI + Google auth, with ClawQL gateway for inference/payments.",
+  "title": "Challenge the Footage",
+  "websiteUrl": "https://challengethefootage.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/danielsmithdevelopment/surveillance-evidence-integrity.git"
+  },
+  "serverInfo": {
+    "name": "challenge-the-footage",
+    "version": "1.0.0"
+  },
+  "capabilities": {
+    "tools": {
+      "listChanged": false
+    }
+  },
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://clawql.com/mcp",
+      "supportedProtocolVersions": ["2025-03-12", "2025-06-18", "2025-11-25"]
+    }
+  ]
+}

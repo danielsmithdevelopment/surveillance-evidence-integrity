@@ -1,73 +1,89 @@
-# Witness
+# Challenge the Footage — Evidence (native)
 
-Civilian encounter recording app (iOS + Android via Expo). Records video + audio, transcribes on-device, uploads **transcript → audio → video** so evidence reaches safety on a weak signal, signs with a device key, and anchors a Merkle root to Arweave via the ClawQL gateway.
+Expo / React Native companion for [challengethefootage.com](https://challengethefootage.com).
 
-Free to record. Document generation hands off to [challengethefootage.com](https://challengethefootage.com) ($9 / free for public defenders).
+**Stack decision:** Expo/RN (not Tauri / pure Rust mobile) — see [NATIVE.md](./NATIVE.md).
 
-## Architecture
+## What users do
 
-```
-[Witness app]
-  record video + audio
-  on-device Whisper transcript
-  SHA-256 artifacts
-  device signature (secure store / enclave target)
-       |
-       | priority upload
-       v
-[Cloudflare Worker]  witness/worker/worker.js
-  POST /api/upload-url   → R2 key + upload URL
-  POST /api/anchor       → ClawQL /surveillance/witness/anchor → Arweave
-  GET  /api/session/:id
-  GET  /api/verify/:id   → public verification record (no auth)
-       |
-       v
-[challengethefootage.com/?witnessSession=…]
-```
+1. Pick a **situation** (police, meetup, date, night walk, …) and optional **emergency contacts**
+2. **Start recording** (no Google required; works offline)
+3. Optional **check-in timer** — missed check-in opens SMS drafts to contacts with last location
+4. Stop (or survive a force-quit) → Whisper + hashes → local queue → 2G-first sync
+5. Link to account on the website → documents / Stripe there
 
-## Setup
+No crypto wallet. Not a 911 replacement — a private record + trusted-contact signal.
+
+## Rural / poor connectivity
+
+Designed for places where video upload is unrealistic mid-day:
+
+| Tier | What leaves the phone |
+|---|---|
+| Offline | Nothing — hashes + transcript stored in `documentDirectory/evidence-queue/` |
+| Constrained (slow RTT / weak cell) | Gzip transcript + three hashes (`sync-lite`) |
+| OK | Transcript + audio + video |
+
+Tap **Retry sync** when bars improve. Media never blocks securing the transcript.
+
+## Audio strategy
+
+1. **Parallel mic capture** with `expo-av` while the camera records (preferred in Expo)
+2. Optional **ffmpeg-kit** extract if a native module is linked (dev client / bare)
+3. If neither works, audio is marked `pending` with an honest hash marker (not a fake copy of the video hash)
+
+## Develop
 
 ```bash
 cd witness
 npm install
+# Point at local CTF worker while developing:
+export EXPO_PUBLIC_CTF_API=http://127.0.0.1:8787
+export EXPO_PUBLIC_CTF_WEB=http://127.0.0.1:8787
 npx expo start
 ```
 
-Environment:
+| Variable                  | Purpose                                   |
+| ------------------------- | ----------------------------------------- |
+| `EXPO_PUBLIC_CTF_API`     | CTF Worker base (default production site) |
+| `EXPO_PUBLIC_CTF_WEB`     | Website base for claim / docs deep links  |
+| `EXPO_PUBLIC_WITNESS_API` | Legacy alias for `EXPO_PUBLIC_CTF_API`    |
 
-| Variable | Purpose |
-|---|---|
-| `EXPO_PUBLIC_WITNESS_API` | Worker base URL |
+## EAS / TestFlight / Play
 
-Worker secrets (`wrangler secret put` in `witness/worker`):
+See **[BUILD.md](./BUILD.md)** for the full Whisper + EAS flow.
 
-- `CLAWQL_GATEWAY_URL`
-- `CLAWQL_API_KEY`
-- `R2_ACCOUNT_ID`
-- `R2_ACCESS_KEY_ID`
-- `R2_SECRET_ACCESS_KEY`
-- `R2_BUCKET_NAME`
+```bash
+npm i -g eas-cli
+eas login
+eas init
+npm run whisper:fetch          # or rely on eas-build-pre-install
+npm run eas:preview:ios
+```
 
-KV bindings: `SESSIONS_KV`, `DEVICE_REGISTRY_KV` (see `witness/worker/wrangler.toml`).
+Profiles live in [`eas.json`](./eas.json): `development` (dev client), `preview` (internal), `production`. All set `EXPO_PUBLIC_WHISPER=1`.
 
 ## Incomplete (known)
 
-1. **Audio extraction** — `stopAndProcess` uses a placeholder file. Wire `ffmpeg-kit-react-native` to extract AAC/WAV from the recorded video before hashing/upload.
-2. **R2 presigned PUT URLs** — Worker `handleUploadUrl` returns a placeholder URL. Implement AWS4 signing for R2.
-3. **Whisper** — `react-native-whisper` is listed in `package.json`; live streaming transcription is stubbed in `App.tsx`.
-4. **Device keys** — SecureStore HMAC placeholder; replace with secure-enclave / Keychain-backed signing keys before production.
-5. **File hashing** — `sha256File` hashes a size+head marker for MVP; replace with full-file SHA-256 before court use.
+1. ~~Whisper module scaffold~~ — stub + optional `whisper.rn`; model fetch/bundle + Wi‑Fi prep UI
+2. ~~Rural 2G sync-lite~~ — gzip transcript first; media deferred
+3. Run `eas init` + first signed preview (needs Expo/Apple/Google credentials)
+4. Enclave / Keychain-backed device keys
+5. Production R2 bucket binding + secrets on the CTF Worker
+6. Background recording / shake-to-activate shortcuts
 
-## Two-party consent
+## Whisper
 
-First-run screen collects a state code and shows an all-party notice for CA, CT, FL, IL, MD, MA, MI, MT, NH, PA, WA. Recording laws vary — this is not legal advice.
+Default Expo Go builds stay on an **honest stub**. Custom EAS / `expo-dev-client` builds enable `whisper.rn` when `EXPO_PUBLIC_WHISPER=1`.
 
-## Verification
+- **Bundled:** `npm run whisper:fetch` or automatic `eas-build-pre-install`
+- **Field prep:** Ready screen → “Download speech model (Wi‑Fi, ~75MB)” → works offline afterward
+- **2G sync:** only the gzip transcript + hashes leave the device until the link improves
 
-Anyone with a session ID can call:
-
+```bash
+npm test
 ```
-GET /api/verify/:sessionId
-```
 
-Compare local SHA-256 of transcript/audio/video to the returned hashes, recompute `SHA-256(transcriptHash:audioHash:videoHash)`, and confirm the Merkle root matches the Arweave transaction at `https://arweave.net/{arweaveTxId}`.
+## Legacy worker
+
+`witness/worker/` is deprecated in favor of `challenge-tool/worker.js` evidence APIs.

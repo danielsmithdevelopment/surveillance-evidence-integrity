@@ -1,0 +1,53 @@
+{
+  "cli": {
+    "version": ">= 12.0.0",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "ios": {
+        "simulator": true
+      },
+      "env": {
+        "EXPO_PUBLIC_WHISPER": "1",
+        "EXPO_PUBLIC_CTF_API": "https://challengethefootage.com",
+        "EXPO_PUBLIC_CTF_WEB": "https://challengethefootage.com"
+      }
+    },
+    "preview": {
+      "distribution": "internal",
+      "ios": {
+        "simulator": false
+      },
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_WHISPER": "1",
+        "EXPO_PUBLIC_CTF_API": "https://challengethefootage.com",
+        "EXPO_PUBLIC_CTF_WEB": "https://challengethefootage.com"
+      }
+    },
+    "production": {
+      "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_WHISPER": "1",
+        "EXPO_PUBLIC_CTF_API": "https://challengethefootage.com",
+        "EXPO_PUBLIC_CTF_WEB": "https://challengethefootage.com"
+      }
+    }
+  },
+  "submit": {
+    "production": {
+      "ios": {
+        "ascAppId": "REPLACE_WITH_APP_STORE_CONNECT_APP_ID"
+      },
+      "android": {
+        "serviceAccountKeyPath": "./google-service-account.json",
+        "track": "internal"
+      }
+    }
+  }
+}

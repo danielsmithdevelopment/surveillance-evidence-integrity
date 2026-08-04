@@ -9,6 +9,7 @@ import {
   btnSecondary,
   inputClass,
 } from "./Shell.jsx";
+import { registerWebMcpTools } from "./webmcp.js";
 
 const TOS_KEY = "surv_tos_v1";
 const API = typeof window !== "undefined" ? window.CTF_API_BASE || "" : "";
@@ -91,7 +92,7 @@ function TosModal({ onAccept }) {
 
   return (
     <div
-      className="fixed inset-0 z-50 grid place-items-center bg-ink/50 px-4 backdrop-blur-sm animate-fade"
+      className="fixed inset-0 z-50 grid place-items-center bg-ink/70 px-4 animate-fade"
       role="presentation"
     >
       <div
@@ -166,7 +167,7 @@ function TosModal({ onAccept }) {
   );
 }
 
-function SignIn({ onCredential }) {
+function SignIn({ onCredential, allowTestAuth }) {
   const slot = useRef(null);
 
   useEffect(() => {
@@ -187,10 +188,27 @@ function SignIn({ onCredential }) {
 
   if (!window.GOOGLE_CLIENT_ID) {
     return (
-      <p className="max-w-xs text-sm leading-snug text-ink-muted">
-        Sign in with Google after deploy — set{" "}
-        <code className="font-mono text-[0.8rem] text-teal-deep">GOOGLE_CLIENT_ID</code>
-      </p>
+      <div className="flex max-w-sm flex-col gap-3">
+        <p className="text-sm leading-snug text-ink-muted">
+          Sign in with Google after deploy — set{" "}
+          <code className="font-mono text-[0.8rem] text-teal-deep">GOOGLE_CLIENT_ID</code>
+        </p>
+        {allowTestAuth ? (
+          <button
+            type="button"
+            className={btnSecondary}
+            onClick={() => {
+              const id = `demo-ui-${Date.now()}`;
+              onCredential(`test:${id}:demo.attorney@example.com`, {
+                testAuth: true,
+                email: "demo.attorney@example.com",
+              });
+            }}
+          >
+            Continue with local demo account
+          </button>
+        ) : null}
+      </div>
     );
   }
   return <div ref={slot} aria-label="Google Sign-In" />;
@@ -201,6 +219,7 @@ export default function App() {
   const [userEmail, setUserEmail] = useState(null);
   const [tosOk, setTosOk] = useState(() => !!localStorage.getItem(TOS_KEY));
   const [entitlement, setEntitlement] = useState(null);
+  const [allowTestAuth, setAllowTestAuth] = useState(false);
   const [vendor, setVendor] = useState("flock");
   const [customVendorName, setCustomVendorName] = useState("");
   const [form, setForm] = useState({
@@ -236,8 +255,21 @@ export default function App() {
     }
   }, []);
 
-  const onCredential = useCallback((cred) => {
+  useEffect(() => registerWebMcpTools(), []);
+
+  useEffect(() => {
+    fetch(`${API}/api/health`)
+      .then((r) => r.json())
+      .then((h) => setAllowTestAuth(!!h.testAuthEnabled))
+      .catch(() => setAllowTestAuth(false));
+  }, []);
+
+  const onCredential = useCallback((cred, meta) => {
     setToken(cred);
+    if (meta?.email) {
+      setUserEmail(meta.email);
+      return;
+    }
     try {
       const payload = JSON.parse(atob(cred.split(".")[1]));
       setUserEmail(payload.email || null);
@@ -350,12 +382,12 @@ export default function App() {
               <span className="italic text-teal-deep">the Footage</span>
             </h1>
             <p className="mt-6 max-w-md text-lg leading-relaxed text-ink-muted sm:text-xl">
-              Four legal templates for any major surveillance vendor — authentication, reliability,
-              access abuse, and civil damages.
+              Record encounters, secure evidence, and generate challenge documents — one account,
+              pay by card.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-4">
               {!token ? (
-                <SignIn onCredential={onCredential} />
+                <SignIn onCredential={onCredential} allowTestAuth={allowTestAuth} />
               ) : (
                 <div
                   className="flex flex-wrap items-center gap-2 rounded-full border border-line bg-white/70 px-4 py-2 text-sm"
@@ -364,12 +396,17 @@ export default function App() {
                   <span>
                     Signed in as <strong>{userEmail || "Google user"}</strong>
                   </span>
+                  {entitlement?.testAuth && (
+                    <span className="rounded-md bg-teal px-2 py-0.5 text-xs font-semibold text-white">
+                      Local demo
+                    </span>
+                  )}
                   {entitlement?.isPD && (
                     <span className="rounded-md bg-teal px-2 py-0.5 text-xs font-semibold text-white">
                       PD · unlimited
                     </span>
                   )}
-                  {entitlement && !entitlement.isPD && (
+                  {entitlement && !entitlement.isPD && !entitlement.testAuth && (
                     <span className="rounded-md bg-ink px-2 py-0.5 text-xs font-semibold text-white">
                       {entitlement.canGenerate
                         ? entitlement.entitled
@@ -419,7 +456,11 @@ export default function App() {
             className="mb-6 rounded-xl border border-teal/25 bg-teal-soft/70 px-4 py-3 text-sm text-ink animate-fade"
             role="status"
           >
-            Witness session linked: <code className="font-mono">{witnessSession}</code>
+            Witness evidence linked: <code className="font-mono">{witnessSession}</code>
+            {" · "}
+            <a className="font-medium text-teal-deep underline" href="/evidence.html">
+              Evidence library
+            </a>
           </div>
         )}
 

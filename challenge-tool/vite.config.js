@@ -13,6 +13,7 @@ export default defineConfig({
         main: resolve(__dirname, "index.html"),
         terms: resolve(__dirname, "terms.html"),
         publicDefenders: resolve(__dirname, "public-defenders.html"),
+        evidence: resolve(__dirname, "evidence.html"),
       },
     },
   },

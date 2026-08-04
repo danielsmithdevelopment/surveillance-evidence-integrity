@@ -1,6 +1,13 @@
 # challengethefootage.com
 
-Web tool that generates four legal document templates for challenging surveillance camera evidence.
+One product for **evidence + legal document templates**.
+
+1. Record a police encounter (`/evidence.html`)
+2. Secure evidence to the user’s account (ClawQL anchors independently — **no crypto wallet**)
+3. Generate FRE 901 / 702 / Fourth Amendment / § 1983 templates
+4. Pay with **Stripe** (card) when past the free generation; public defenders free
+
+See [PRODUCT.md](./PRODUCT.md).
 
 Free first generation per account. Public defenders: free unlimited access (email pd@challengethefootage.com). Additional generations: $9 via Stripe (clawql-payments).
 
@@ -13,18 +20,32 @@ npm run dev          # Vite UI on :5173 (proxies /api → :8787)
 npm run worker       # build + wrangler dev (UI + API together)
 ```
 
+### Local generation without Google / ClawQL secrets
+
+Copy `.dev.vars.example` → `.dev.vars` (gitignored). With `ALLOW_TEST_AUTH=true` and `GENERATION_MODE=offline`:
+
+```bash
+npm run worker
+# other terminal:
+npm run generate:sample
+```
+
+Sample docs land in `.artifacts/sample-generation/`. Test bearer format: `Authorization: Bearer test:<userId>:<email>`.
+
+Never set `ALLOW_TEST_AUTH` in production.
+
 ## Quality gates (CI)
 
 ```bash
 npm run format:check   # Prettier
 npm run lint           # ESLint + jsx-a11y strict
-npm test               # smoke tests
+npm test               # smoke + offline docs + evidence crypto/API
 npm run test:a11y      # Playwright + axe WCAG 2.2 A/AA
 npm run lighthouse     # Lighthouse CI (a11y 100, BP/SEO ≥90)
 npm run ci             # all of the above
 ```
 
-GitHub Actions: `.github/workflows/ci.yml` runs the same suite on PRs and pushes.
+Full walkthrough: [TESTING.md](./TESTING.md). GitHub Actions: `.github/workflows/ci.yml`.
 
 ### Accessibility policy
 
@@ -56,8 +77,12 @@ Automated tools cannot prove full WCAG conformance. Before each release, manuall
 ```
 challenge-tool/
 ├── src/                 # React + Tailwind UI
-├── test/e2e/            # Playwright + axe WCAG suites
-├── worker.js            # Auth, entitlement, payment, generation
+├── test/                # node:test + Playwright + Lighthouse
+├── evidence-crypto.js   # Shared SHA-256 / merkle helpers
+├── worker.js            # Auth, entitlement, payment, generation, evidence
+├── r2.js                # Optional R2 PUT signing
+├── PRODUCT.md           # Product model
+├── TESTING.md           # How to run / what CI covers
 ├── eslint.config.js
 ├── lighthouserc.cjs
 ├── playwright.config.js
@@ -75,3 +100,7 @@ wrangler kv:key put --binding=RATE_LIMIT_KV "pd_whitelist:{email}" "true"
 ## ToS acceptance
 
 Frontend stores acceptance under localStorage key `surv_tos_v1`. Increment to `v2` if terms change materially.
+
+## Agent readiness (isitagentready.com)
+
+See [AGENT-READY.md](./AGENT-READY.md). Static discovery files live in `public/` (copied into `static/` on build). The Worker adds `Link` headers and Markdown content negotiation.
