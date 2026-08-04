@@ -254,6 +254,7 @@ Copy from [TESTING.md](./TESTING.md) production section:
 - [ ] Free first generation; second hits paywall → Stripe Checkout
 - [ ] Body-worn + recording status `missing` produces Stage‑1 failure-to-record language
 - [ ] Evidence secure (web) creates a session; R2/object upload when configured
+- [ ] `GET /api/evidence/verify/{sessionId}` returns hashes + `merkleRoot` (+ `verificationRef` after ClawQL anchor)
 - [ ] PD whitelist email gets `isPD` / unlimited
 - [ ] `ALLOW_TEST_AUTH` unset
 - [ ] Manual keyboard / screen-reader pass (README accessibility policy)
@@ -265,6 +266,16 @@ Witness native builds should use:
 EXPO_PUBLIC_CTF_API=https://challengethefootage.com
 EXPO_PUBLIC_CTF_WEB=https://challengethefootage.com
 ```
+
+There is **no separate Witness Worker** anymore — native and web share this Worker. Legacy `witness/worker/` is deprecated.
+
+### Public verification (attorneys / courts)
+
+```
+GET https://challengethefootage.com/api/evidence/verify/{sessionId}
+```
+
+Response includes `howToVerify` steps. Do **not** put Arweave TX IDs or wallet prompts in the primary civilian UI; the verify endpoint is the counsel-facing surface. See [../witness/README.md](../witness/README.md).
 
 ---
 

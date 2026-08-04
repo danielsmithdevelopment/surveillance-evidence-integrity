@@ -2014,6 +2014,7 @@ async function handleEvidenceVerify(request, env, sessionId) {
     const raw = await env.RATE_LIMIT_KV.get(`evidence:${sessionId}`);
     if (!raw) return json({ error: "Not found" }, 404);
     const record = JSON.parse(raw);
+    const verificationRef = record.verificationRef || null;
     return json({
       sessionId: record.sessionId,
       status: record.status,
@@ -2022,15 +2023,26 @@ async function handleEvidenceVerify(request, env, sessionId) {
       audioHash: record.audioHash,
       videoHash: record.videoHash,
       merkleRoot: record.merkleRoot,
+      // External anchor id when ClawQL anchored (often an Arweave tx). Null until anchored.
+      verificationRef,
       source: record.source,
       claimable: !!record.claimable,
-      independentlyVerifiable: record.status === "anchored",
+      independentlyVerifiable: record.status === "anchored" && !!verificationRef,
       mediaPending: !!record.mediaPending,
       interrupted: !!record.interrupted,
       interruptReason: record.interruptReason || null,
       scenario: record.scenario || null,
       incidentId: record.incidentId || null,
       sync: record.sync || null,
+      // Attorney / court checklist — audio+video hashes are authoritative; STT may be imperfect.
+      howToVerify: [
+        "Confirm merkleRoot equals SHA-256 of transcriptHash + ':' + audioHash + ':' + videoHash (lowercase hex).",
+        "Hash the transcript, audio, and video files with SHA-256; each digest must match this response.",
+        verificationRef
+          ? `If status is anchored, retrieve the external record for verificationRef (${verificationRef}) and confirm it commits to the same merkleRoot.`
+          : "If status is not yet anchored, hashes + merkleRoot are still the local integrity commitment; re-check after ClawQL anchoring completes.",
+        "Treat the transcript as a convenience layer (on-device STT). Audio and video bytes remain authoritative if wording differs.",
+      ],
       objects: record.objects
         ? Object.fromEntries(
             Object.entries(record.objects).map(([k, v]) => [
