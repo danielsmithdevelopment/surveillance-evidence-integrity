@@ -139,4 +139,3 @@ The following provisions go beyond what most cities will be able to negotiate in
 **Vendor shall submit to independent third-party certification of its integrity controls on an annual basis, conducted by a qualified information security firm with no material relationship to Vendor, and shall publish the certification report publicly.**
 
 **Vendor shall provide source code review access for the integrity-critical components of its system — specifically, the hash computation, Merkle chaining, and external anchoring modules — to independent security researchers under a responsible disclosure arrangement.**
-
