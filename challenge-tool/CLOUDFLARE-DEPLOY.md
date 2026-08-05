@@ -49,6 +49,9 @@ Browser / Witness app
 
 ## Recommended: Pulumi + Wrangler
 
+**CI:** pushes to `main` that touch `infra/**` run [Infra (Pulumi)](../.github/workflows/infra-pulumi.yml) (`pulumi up` + sync `wrangler.toml`). PRs get `pulumi preview`. Set secrets/vars per [../infra/README.md](../infra/README.md#github-actions).
+
+
 ### 0. Clone + login
 
 ```bash

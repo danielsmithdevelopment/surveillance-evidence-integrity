@@ -14,7 +14,46 @@ infra/ (this folder)          challenge-tool/
 
 ---
 
+## GitHub Actions
+
+Workflow: [`.github/workflows/infra-pulumi.yml`](../.github/workflows/infra-pulumi.yml)
+
+| Event | Behavior |
+|---|---|
+| PR touching `infra/**` | `pulumi preview` (+ PR comment) |
+| Push to `main` touching `infra/**` | `pulumi up` → sync `wrangler.toml` → commit bindings if changed |
+| Actions → “Infra (Pulumi)” → Run workflow | Manual `preview` or `up` |
+
+### Repo secrets
+
+| Name | Purpose |
+|---|---|
+| `CLOUDFLARE_API_TOKEN` | Cloudflare API (KV + R2 + Routes Edit) |
+| `PULUMI_ACCESS_TOKEN` | [Pulumi Cloud](https://app.pulumi.com) access token |
+
+### Repo variables
+
+| Name | Purpose | Example |
+|---|---|---|
+| `CLOUDFLARE_ACCOUNT_ID` | **Required** account id | `…` |
+| `PULUMI_STACK` | Stack name | `prod` (default) |
+| `CTF_DOMAIN` | Apex domain | `challengethefootage.com` |
+| `PULUMI_ENABLE_R2` | Create R2 buckets | `true` (default) |
+| `CLOUDFLARE_ZONE_ID` | Zone id (for routes) | from CF dashboard |
+| `PULUMI_ENABLE_ROUTES` | Attach Worker routes | `true` only **after** first `wrangler deploy` |
+
+Worker secrets (`GOOGLE_CLIENT_ID`, `CLAWQL_*`) stay on Wrangler — not in this workflow.
+
+```bash
+# After Actions syncs wrangler.toml on main:
+cd challenge-tool
+npm run deploy
+```
+
+---
+
 ## Prerequisites
+
 
 | Tool | Notes |
 |---|---|

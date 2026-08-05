@@ -46,8 +46,16 @@ describe("challenge-tool artifacts", () => {
     const infraReadme = readFileSync(join(root, "..", "infra", "README.md"), "utf8");
     assert.match(infraReadme, /pulumi up/);
     assert.match(infraReadme, /sync-wrangler-bindings/);
+    assert.match(infraReadme, /GitHub Actions/);
     readFileSync(join(root, "..", "infra", "index.ts"));
     readFileSync(join(root, "..", "infra", "Pulumi.yaml"));
+    const workflow = readFileSync(
+      join(root, "..", ".github", "workflows", "infra-pulumi.yml"),
+      "utf8",
+    );
+    assert.match(workflow, /pulumi\/actions@v6/);
+    assert.match(workflow, /CLOUDFLARE_API_TOKEN/);
+    assert.match(workflow, /PULUMI_ACCESS_TOKEN/);
   });
 
   it("disclaimer names Challenge the Footage", () => {
