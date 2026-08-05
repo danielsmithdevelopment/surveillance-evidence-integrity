@@ -137,11 +137,7 @@ async function serveAssets(request, env) {
 
   const contentType = headers.get("Content-Type") || "";
   // Inject public GIS client id so Sign-In works without baking secrets into static/.
-  if (
-    response.status === 200 &&
-    contentType.includes("text/html") &&
-    env.GOOGLE_CLIENT_ID
-  ) {
+  if (response.status === 200 && contentType.includes("text/html") && env.GOOGLE_CLIENT_ID) {
     const clientId = String(env.GOOGLE_CLIENT_ID).replace(/</g, "\\u003c");
     const inject = `<script>window.GOOGLE_CLIENT_ID=${JSON.stringify(clientId)};</script>`;
     return new HTMLRewriter()
@@ -155,7 +151,7 @@ async function serveAssets(request, env) {
           status: response.status,
           statusText: response.statusText,
           headers,
-        }),
+        })
       );
   }
 
