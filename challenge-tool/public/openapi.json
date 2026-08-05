@@ -637,7 +637,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Verification summary"
+            "description": "Verification summary: hashes, merkleRoot, optional verificationRef, howToVerify checklist. Audio/video authoritative over STT."
           },
           "404": {
             "description": "Not found"

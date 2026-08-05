@@ -39,6 +39,8 @@ challengethefootage.com/
 
 Native `witness/` is the **Expo / React Native** companion for high-reliability capture (see [witness/NATIVE.md](../witness/NATIVE.md)). Branding and account live on Challenge the Footage. Tauri / pure Rust mobile are deferred.
 
+**Ship the website:** [CLOUDFLARE-DEPLOY.md](./CLOUDFLARE-DEPLOY.md) (Workers + KV + R2 + DNS). Native APK after that: [witness/FIRST-NATIVE-DEPLOY.md](../witness/FIRST-NATIVE-DEPLOY.md).
+
 ## Payments
 
 - **Stripe Checkout only** (via ClawQL payments gateway).
@@ -95,8 +97,10 @@ Same pattern we want for multi-BWC and multi-sensor incidents — demonstrated f
 
 - Ship **web recording** for one-URL onboarding; ship **Expo native** for reliability (full-file SHA-256, parallel audio, Worker→R2 uploads).
 - Multi-device incident → attorney UI grouping by `incidentId` + transcript cross-reference (intersection / union / conflicts).
+- Faster activation: Siri / Google Assistant shortcuts, shake-to-record, home-screen widget (open-app shortcuts work today; in-app triggers not shipped).
+- Enclave / Keychain device signatures on the Merkle root (hashes + ClawQL anchor ship today).
 - Push Challenge-grade requirements into body-cam / ALPR procurement (model legislation + contracts).
-- Never surface “connect wallet”, token tickers, or Arweave TX IDs in primary UI.
+- Never surface “connect wallet”, token tickers, or Arweave TX IDs in primary UI — counsel uses `GET /api/evidence/verify/{sessionId}` (`verificationRef` + `howToVerify`).
 - Consider Rust only as a crypto/hash native module later — not as the app shell.
 
 ## Testing & quality

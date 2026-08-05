@@ -29,6 +29,8 @@ Like multiple body cams on one stop:
 
 Civilian multi-device incidents prove the pattern. Body-cam fleets and fixed cams should use the same incident-correlation and integrity ideas.
 
+When ClawQL anchors a civilian session, it should live in the same [clawql-surveillance](https://docs.clawql.com/surveillance)-class audit world as agency footage (`WITNESS_SESSION`-style events). If both sides of an encounter are anchored, timestamp / content discrepancies become detectable; if only the civilian package is anchored, that is the independently verifiable record.
+
 ## Procurement checklist (body cam / ALPR)
 
 1. Cryptographic commitment (hash) **at or before** media leaves the capture device  

@@ -107,6 +107,10 @@ describe("evidence API (wrangler local)", () => {
     assert.equal(verify.json.merkleRoot, expectedRoot);
     assert.equal(verify.json.claimable, false);
     assert.equal(verify.json.independentlyVerifiable, false);
+    assert.equal(verify.json.verificationRef, null);
+    assert.ok(Array.isArray(verify.json.howToVerify));
+    assert.ok(verify.json.howToVerify.length >= 3);
+    assert.match(verify.json.howToVerify.join(" "), /authoritative/i);
   });
 
   it("device secure → claim → upload metadata path", async () => {

@@ -27,6 +27,15 @@ describe("challenge-tool artifacts", () => {
     assert.match(workerSrc, /buildOfflineDocs/);
     assert.match(workerSrc, /wantsOfflineGeneration/);
     assert.match(workerSrc, /from "\.\/evidence-crypto\.js"/);
+    assert.match(workerSrc, /HTMLRewriter/);
+    assert.match(workerSrc, /window\.GOOGLE_CLIENT_ID/);
+  });
+
+  it("Cloudflare production deploy guide exists", () => {
+    const guide = readFileSync(join(root, "CLOUDFLARE-DEPLOY.md"), "utf8");
+    assert.match(guide, /wrangler secret put GOOGLE_CLIENT_ID/);
+    assert.match(guide, /ALLOW_TEST_AUTH/);
+    assert.match(guide, /challengethefootage\.com/);
   });
 
   it("disclaimer names Challenge the Footage", () => {

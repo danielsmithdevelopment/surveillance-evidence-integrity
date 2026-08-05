@@ -26,9 +26,9 @@ This repository is the response to that.
 
 **[challengethefootage.com](https://challengethefootage.com)** — One product for civilians and public defenders: **record** encounters, **secure** evidence (ClawQL handles independent verification behind the scenes — no crypto wallet), and **generate** four attorney-review legal templates (FRE 901, FRE 702, Fourth Amendment, § 1983) for **fixed/ALPR, body-worn** (including failure-to-record), **and cell phone** footage. Sign in with Google. Pay with Stripe. Free first generation; PDs unlimited.
 
-Source: **[challenge-tool/](./challenge-tool/)** · Product: **[challenge-tool/PRODUCT.md](./challenge-tool/PRODUCT.md)** · Challenge-grade: **[challenge-tool/CHALLENGE-GRADE.md](./challenge-tool/CHALLENGE-GRADE.md)** · **How to challenge all three camera classes:** **[challenge-tool/FOOTAGE-CHALLENGE.md](./challenge-tool/FOOTAGE-CHALLENGE.md)** · Testing: **[challenge-tool/TESTING.md](./challenge-tool/TESTING.md)** · Evidence UI: `/evidence.html`
+Source: **[challenge-tool/](./challenge-tool/)** · Product: **[challenge-tool/PRODUCT.md](./challenge-tool/PRODUCT.md)** · Challenge-grade: **[challenge-tool/CHALLENGE-GRADE.md](./challenge-tool/CHALLENGE-GRADE.md)** · **How to challenge all three camera classes:** **[challenge-tool/FOOTAGE-CHALLENGE.md](./challenge-tool/FOOTAGE-CHALLENGE.md)** · **Production deploy (Cloudflare):** **[challenge-tool/CLOUDFLARE-DEPLOY.md](./challenge-tool/CLOUDFLARE-DEPLOY.md)** · Testing: **[challenge-tool/TESTING.md](./challenge-tool/TESTING.md)** · Evidence UI: `/evidence.html`
 
-**[Witness](./witness/)** — Optional native (Expo) capture module for the same product: offline / 2G-first sync, personal-safety alerts, and optional **multi-device incident** capture (shared `incidentId`, coordinated start, `PEER_LOST`). Prefer the website for one-URL onboarding; keep native for higher-reliability field capture. Deep-links back to Challenge the Footage with `?witnessSession=`.
+**[Witness](./witness/)** — Optional native (Expo) capture module for the same product: offline / 2G-first sync (transcript → audio → video), on-device Whisper when linked, personal-safety alerts, and optional **multi-device incident** capture (shared `incidentId`, coordinated start, `PEER_LOST`). Prefer the website for one-URL onboarding; keep native for higher-reliability field capture. Deep-links back to Challenge the Footage with `?witnessSession=`. Public verify: `GET /api/evidence/verify/{sessionId}`.
 
 ### For defense attorneys
 
@@ -60,11 +60,11 @@ Source: **[challenge-tool/](./challenge-tool/)** · Product: **[challenge-tool/P
 A person gets pulled over
         |
         v
-[Witness app activates]
-   Records video + audio + transcript
-   Uploads in priority order (transcript first)
-   Signs with device key
-   Anchors to Arweave
+[Witness / Evidence capture activates]
+   Records video + audio + on-device transcript
+   Hashes each artifact (SHA-256); Merkle root on Worker
+   Uploads in priority order (transcript → audio → video)
+   ClawQL anchors behind the scenes when online
         |
         v
 [Encounter ends]
@@ -129,7 +129,7 @@ Areas where contributions are most useful:
 - **State-specific model legislation** — the current draft is written for federal proceedings; state variations are needed
 - **Case law citations** — the authentication challenge guide needs jurisdiction-specific precedent
 - **Vendor documentation updates** — if a vendor publishes new technical documentation about integrity controls, open an issue or PR
-- **Witness app** — audio extraction, two-party consent notices by state, offline retry logic
+- **Witness app** — shake / Siri / Assistant activation, enclave device keys, attorney incident cross-ref UI
 - **Translations** — Spanish translation of the council letter and Witness app UI
 
 ---
@@ -138,13 +138,15 @@ Areas where contributions are most useful:
 
 ### challengethefootage.com (the web tool)
 
-See [challenge-tool/README.md](./challenge-tool/README.md). Cloudflare Pages frontend, Cloudflare Worker backend, ClawQL gateway for inference and memory, Stripe via clawql-payments for $9 per-generation purchases.
+**One Cloudflare Worker** serves the UI (`static/`) and `/api/*` — not a separate Pages + Worker split.
 
-### Witness (the mobile app)
+Production runbook: **[challenge-tool/CLOUDFLARE-DEPLOY.md](./challenge-tool/CLOUDFLARE-DEPLOY.md)** (KV, R2, Google Sign-In, ClawQL secrets, custom domain). Develop notes: [challenge-tool/README.md](./challenge-tool/README.md).
 
-See [witness/README.md](./witness/README.md) and [witness/NATIVE.md](./witness/NATIVE.md). **Expo / React Native** companion for Challenge the Footage (record-first, claim on the website). Not Tauri for v1.
+### Witness (the native companion)
 
-Both tools can be self-hosted. The ClawQL integration is optional but provides memory-layer context across sessions and independent evidence anchoring — users never need a crypto wallet.
+See [witness/README.md](./witness/README.md), [witness/FIRST-NATIVE-DEPLOY.md](./witness/FIRST-NATIVE-DEPLOY.md), and [witness/NATIVE.md](./witness/NATIVE.md). Expo / React Native → same CTF Worker evidence APIs (legacy `witness/worker/` is deprecated).
+
+Both can be self-hosted. ClawQL is optional for LLM docs + Arweave-class anchoring; users never need a crypto wallet.
 
 ---
 
