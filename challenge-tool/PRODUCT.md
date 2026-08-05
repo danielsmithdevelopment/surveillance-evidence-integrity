@@ -7,6 +7,7 @@
 
 Canonical challenge operator guide: [FOOTAGE-CHALLENGE.md](./FOOTAGE-CHALLENGE.md).  
 Production deploy: [CLOUDFLARE-DEPLOY.md](./CLOUDFLARE-DEPLOY.md).  
+Go-live (entity, Stripe, ClawQL, soft launch): [../GO-LIVE.md](../GO-LIVE.md).  
 Challenge-grade integrity thesis: [CHALLENGE-GRADE.md](./CHALLENGE-GRADE.md).
 
 ---
@@ -394,6 +395,7 @@ surveillance-evidence-integrity/
 | Item | Reference | Priority |
 |---|---|---|
 | Deploy production Worker + DNS | [CLOUDFLARE-DEPLOY.md](./CLOUDFLARE-DEPLOY.md) | **Blocker** (site 530) |
+| Go live: entity, Stripe, ClawQL, soft launch | [../GO-LIVE.md](../GO-LIVE.md) | **Blocker** for charging money |
 | First Android EAS preview APK | [FIRST-NATIVE-DEPLOY.md](../witness/FIRST-NATIVE-DEPLOY.md) | High |
 | Attorney UI: group by `incidentId` + transcript cross-ref | CHALLENGE-GRADE / NATIVE roadmap | High |
 | Challenge-grade one-pager for councils / PDs | [../outreach/ONE-PAGERS.md](../outreach/ONE-PAGERS.md) (draft landed) | High — print / distribute |
