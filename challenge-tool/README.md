@@ -10,7 +10,7 @@ One product for **evidence + legal document templates**.
 
 See [PRODUCT.md](./PRODUCT.md), [CHALLENGE-GRADE.md](./CHALLENGE-GRADE.md), and the full challenge guide [FOOTAGE-CHALLENGE.md](./FOOTAGE-CHALLENGE.md).
 
-**Production (Cloudflare):** [CLOUDFLARE-DEPLOY.md](./CLOUDFLARE-DEPLOY.md) — KV, R2, secrets, Google Sign-In, custom domain, post-deploy checks.
+**Production (Cloudflare):** [CLOUDFLARE-DEPLOY.md](./CLOUDFLARE-DEPLOY.md) · [../infra/README.md](../infra/README.md) (Pulumi KV/R2)
 
 Free first generation per account. Public defenders: free unlimited access (email pd@challengethefootage.com). Additional generations: $9 via Stripe (clawql-payments).
 
@@ -86,6 +86,7 @@ challenge-tool/
 ├── r2.js                # Optional R2 PUT signing
 ├── PRODUCT.md           # Current product specification (PRs #1–#9)
 ├── CLOUDFLARE-DEPLOY.md # Production Workers / DNS / secrets
+├── ../infra/            # Pulumi: KV, R2, optional routes
 ├── TESTING.md           # How to run / what CI covers
 ├── eslint.config.js
 ├── lighthouserc.cjs
@@ -99,9 +100,10 @@ Vendor profiles live **server-side in `worker.js`**. Update them there.
 
 ```bash
 npm run deploy           # build + wrangler deploy
+npm run infra:sync       # pull Pulumi KV/R2 ids into wrangler.toml (from ../infra)
 ```
 
-Full production runbook (KV, R2, Google, ClawQL, domain): [CLOUDFLARE-DEPLOY.md](./CLOUDFLARE-DEPLOY.md).
+Full production runbook (Pulumi + Wrangler): [CLOUDFLARE-DEPLOY.md](./CLOUDFLARE-DEPLOY.md) · [../infra/README.md](../infra/README.md).
 
 ## Public defender whitelist
 

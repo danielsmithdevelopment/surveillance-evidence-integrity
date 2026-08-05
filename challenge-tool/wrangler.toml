@@ -1,4 +1,5 @@
 # Production deploy walkthrough: CLOUDFLARE-DEPLOY.md
+# Prefer infra/ (Pulumi) to create KV/R2 and sync bindings — see infra/README.md
 name = "challenge-the-footage"
 main = "worker.js"
 compatibility_date = "2025-06-01"
@@ -12,22 +13,24 @@ directory = "./static"
 binding = "ASSETS"
 run_worker_first = true
 
-# Optional custom domain (uncomment after the zone is on Cloudflare):
+# Optional custom domain — prefer Pulumi WorkersRoute (infra/, enableRoutes=true) after first deploy.
 # routes = [
 #   { pattern = "challengethefootage.com/*", zone_name = "challengethefootage.com" },
 #   { pattern = "www.challengethefootage.com/*", zone_name = "challengethefootage.com" }
 # ]
 
-# Prefer R2 binding for evidence blobs in production (see CLOUDFLARE-DEPLOY.md).
-# [[r2_buckets]]
-# binding = "EVIDENCE_BUCKET"
-# bucket_name = "ctf-evidence"
-# preview_bucket_name = "ctf-evidence-preview"
-
+# BEGIN PULUMI-MANAGED — do not edit by hand; npm run sync from infra/
 [[kv_namespaces]]
 binding = "RATE_LIMIT_KV"
 id = "REPLACE_WITH_RATE_LIMIT_KV_ID"
 preview_id = "REPLACE_WITH_RATE_LIMIT_KV_PREVIEW_ID"
+
+# R2 disabled until Pulumi sync (or uncomment manually)
+# [[r2_buckets]]
+# binding = "EVIDENCE_BUCKET"
+# bucket_name = "ctf-evidence"
+# preview_bucket_name = "ctf-evidence-preview"
+# END PULUMI-MANAGED
 
 # Secrets (wrangler secret put) — never commit; never set ALLOW_TEST_AUTH in production:
 #   GOOGLE_CLIENT_ID

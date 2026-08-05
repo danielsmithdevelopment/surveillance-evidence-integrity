@@ -1,0 +1,23 @@
+{
+  "name": "ctf-cloudflare-infra",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Pulumi: Cloudflare KV + R2 (+ optional routes) for challengethefootage.com",
+  "main": "index.ts",
+  "scripts": {
+    "build": "tsc",
+    "preview": "pulumi preview",
+    "up": "pulumi up",
+    "destroy": "pulumi destroy",
+    "sync": "node scripts/sync-wrangler-bindings.mjs",
+    "up:sync": "pulumi up --yes && node scripts/sync-wrangler-bindings.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "typescript": "^5.7.0"
+  },
+  "dependencies": {
+    "@pulumi/cloudflare": "^6.3.1",
+    "@pulumi/pulumi": "^3.150.0"
+  }
+}
