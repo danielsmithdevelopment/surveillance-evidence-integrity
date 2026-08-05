@@ -13,7 +13,7 @@ Empowerment (civilian capture) without pressure (court challenges + procurement)
 | **Body-worn / in-car** | Axon Evidence, Motorola, WatchGuard | Failure to activate; mute/buffer/dock gaps; cloud re-encode; vault as sole oracle | Stage 1 duty-to-record remedies → Stage 2 authenticity; clawql-surveillance-class controls |
 | **Cell phone** | iPhone/Android, WhatsApp/Snapchat/iCloud re-exports | AI edit/deepfake risk; re-encode destroys provenance; selective clips | No authenticity presumption without cryptographic proof; Challenge-grade civilian capture as the floor |
 
-Related: [CHALLENGE-GRADE.md](./CHALLENGE-GRADE.md) (integrity vision) · [authentication-challenge-guide.md](../authentication-challenge-guide.md) (Flock deep-dive) · [PRODUCT.md](./PRODUCT.md)
+Related: [PRODUCT.md](./PRODUCT.md) (full current product specification) · [CHALLENGE-GRADE.md](./CHALLENGE-GRADE.md) (integrity vision) · [CLOUDFLARE-DEPLOY.md](./CLOUDFLARE-DEPLOY.md) · [authentication-challenge-guide.md](../authentication-challenge-guide.md) (Flock deep-dive)
 
 ---
 
