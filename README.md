@@ -26,17 +26,21 @@ This repository is the response to that.
 
 **[challengethefootage.com](https://challengethefootage.com)** — One product for civilians and public defenders: **record** encounters, **secure** evidence (ClawQL handles independent verification behind the scenes — no crypto wallet), and **generate** four attorney-review legal templates (FRE 901, FRE 702, Fourth Amendment, § 1983) for **fixed/ALPR, body-worn** (including failure-to-record), **and cell phone** footage. Sign in with Google. Pay with Stripe. Free first generation; PDs unlimited.
 
-Source: **[challenge-tool/](./challenge-tool/)** · Product: **[challenge-tool/PRODUCT.md](./challenge-tool/PRODUCT.md)** · Challenge-grade: **[challenge-tool/CHALLENGE-GRADE.md](./challenge-tool/CHALLENGE-GRADE.md)** · **How to challenge all three camera classes:** **[challenge-tool/FOOTAGE-CHALLENGE.md](./challenge-tool/FOOTAGE-CHALLENGE.md)** · **Production deploy (Cloudflare):** **[challenge-tool/CLOUDFLARE-DEPLOY.md](./challenge-tool/CLOUDFLARE-DEPLOY.md)** · Testing: **[challenge-tool/TESTING.md](./challenge-tool/TESTING.md)** · Evidence UI: `/evidence.html`
+Source: **[challenge-tool/](./challenge-tool/)** · **Product spec:** **[challenge-tool/PRODUCT.md](./challenge-tool/PRODUCT.md)** · Challenge-grade: **[challenge-tool/CHALLENGE-GRADE.md](./challenge-tool/CHALLENGE-GRADE.md)** · **How to challenge all three camera classes:** **[challenge-tool/FOOTAGE-CHALLENGE.md](./challenge-tool/FOOTAGE-CHALLENGE.md)** · **Production deploy (Cloudflare):** **[challenge-tool/CLOUDFLARE-DEPLOY.md](./challenge-tool/CLOUDFLARE-DEPLOY.md)** · Testing: **[challenge-tool/TESTING.md](./challenge-tool/TESTING.md)** · Evidence UI: `/evidence.html`
 
 **[Witness](./witness/)** — Optional native (Expo) capture module for the same product: offline / 2G-first sync (transcript → audio → video), on-device Whisper when linked, personal-safety alerts, and optional **multi-device incident** capture (shared `incidentId`, coordinated start, `PEER_LOST`). Prefer the website for one-URL onboarding; keep native for higher-reliability field capture. Deep-links back to Challenge the Footage with `?witnessSession=`. Public verify: `GET /api/evidence/verify/{sessionId}`.
 
 ### For defense attorneys
+
+**[PD one-pager](./outreach/ONE-PAGERS.md)** — Four vectors, BWC ratchet, cellphone path, free access.
 
 **[Authentication Challenge Guide](./authentication-challenge-guide.md)** — Ten specific discovery requests, a motion in limine framework under FRE 901, how to use Flock's responses (or non-responses) to build the argument, and guidance on expert witnesses.
 
 **[challengethefootage.com](https://challengethefootage.com)** — generates all four documents pre-populated with vendor-specific documented facts. Public defenders: email pd@challengethefootage.com for free unlimited access.
 
 ### For city councils and contracting authorities
+
+**[One-pager (print-ready)](./outreach/ONE-PAGERS.md)** — Before you renew: authentication gap, accuracy, access, three contract clauses.
 
 **[Model Contract Language](./model-contract-language.md)** — Clause-ready amendment language covering hash at capture, Merkle chaining, external immutable anchoring, mandatory access logging, prohibition on undetectable alteration integrations, independent audit rights, and non-compliance consequences.
 

@@ -84,7 +84,7 @@ challenge-tool/
 ├── evidence-crypto.js   # Shared SHA-256 / merkle helpers
 ├── worker.js            # Auth, entitlement, payment, generation, evidence
 ├── r2.js                # Optional R2 PUT signing
-├── PRODUCT.md           # Product model
+├── PRODUCT.md           # Current product specification (PRs #1–#9)
 ├── CLOUDFLARE-DEPLOY.md # Production Workers / DNS / secrets
 ├── TESTING.md           # How to run / what CI covers
 ├── eslint.config.js
