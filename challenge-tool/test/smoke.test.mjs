@@ -36,6 +36,18 @@ describe("challenge-tool artifacts", () => {
     assert.match(guide, /wrangler secret put GOOGLE_CLIENT_ID/);
     assert.match(guide, /ALLOW_TEST_AUTH/);
     assert.match(guide, /challengethefootage\.com/);
+    assert.match(guide, /Pulumi/);
+  });
+
+  it("Pulumi infra scaffolds KV/R2 sync markers", () => {
+    const wrangler = readFileSync(join(root, "wrangler.toml"), "utf8");
+    assert.match(wrangler, /BEGIN PULUMI-MANAGED/);
+    assert.match(wrangler, /END PULUMI-MANAGED/);
+    const infraReadme = readFileSync(join(root, "..", "infra", "README.md"), "utf8");
+    assert.match(infraReadme, /pulumi up/);
+    assert.match(infraReadme, /sync-wrangler-bindings/);
+    readFileSync(join(root, "..", "infra", "index.ts"));
+    readFileSync(join(root, "..", "infra", "Pulumi.yaml"));
   });
 
   it("disclaimer names Challenge the Footage", () => {

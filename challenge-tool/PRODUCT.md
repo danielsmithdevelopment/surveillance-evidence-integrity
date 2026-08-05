@@ -81,7 +81,7 @@ challenge-tool Worker
 | **ClawQL gateway** | Doc LLM, Stripe checkout, evidence anchor |
 | **ClawQL payments** | Entitlement + Checkout — **no raw Stripe secret in this Worker** |
 
-Deploy creates **one** KV namespace (`RATE_LIMIT_KV`) and optionally one R2 bucket (`ctf-evidence`). There are no separate `SESSIONS_KV` / `DEVICE_REGISTRY_KV` bindings in the current `wrangler.toml`.
+Deploy creates **one** KV namespace (`RATE_LIMIT_KV`) and optionally R2 (`ctf-evidence`) — preferably via [../infra/](../infra/) Pulumi, then `npm run sync` into `wrangler.toml`. There are no separate `SESSIONS_KV` / `DEVICE_REGISTRY_KV` bindings.
 
 ### Authentication
 
@@ -309,26 +309,29 @@ Evidence metadata TTL is long-lived in KV (years). Upload mint URLs are short-li
 
 ## Deployment
 
-Full runbook: **[CLOUDFLARE-DEPLOY.md](./CLOUDFLARE-DEPLOY.md)**.
+Full runbook: **[CLOUDFLARE-DEPLOY.md](./CLOUDFLARE-DEPLOY.md)**.  
+Infra (KV / R2 / routes): **[../infra/README.md](../infra/README.md)**.
 
-Summary:
+Summary (Pulumi + Wrangler):
 
 ```bash
-cd challenge-tool
-npx wrangler login
-npx wrangler kv namespace create RATE_LIMIT_KV
-npx wrangler kv namespace create RATE_LIMIT_KV --preview
-# paste ids into wrangler.toml
+cd infra
+npm install && pulumi stack init prod
+pulumi config set accountId <CLOUDFLARE_ACCOUNT_ID>
+export CLOUDFLARE_API_TOKEN=…
+npm run up:sync                 # creates KV+R2, writes wrangler.toml bindings
 
-npx wrangler r2 bucket create ctf-evidence   # then uncomment [[r2_buckets]]
-
+cd ../challenge-tool
 npx wrangler secret put GOOGLE_CLIENT_ID
 npx wrangler secret put CLAWQL_GATEWAY_URL
 npx wrangler secret put CLAWQL_API_KEY
-# optional R2_* if not using EVIDENCE_BUCKET binding
-
 npm run deploy
-# attach challengethefootage.com route / custom domain
+
+# phase 2 — custom domain
+cd ../infra
+pulumi config set zoneId <ZONE_ID>
+pulumi config set enableRoutes true
+pulumi up
 ```
 
 **Do not** set `ALLOW_TEST_AUTH` or put a Stripe secret key on this Worker.  

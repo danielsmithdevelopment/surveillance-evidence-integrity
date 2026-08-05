@@ -10,6 +10,8 @@
     "preview": "vite preview",
     "worker": "npm run build && wrangler dev",
     "deploy": "npm run build && wrangler deploy",
+    "infra:sync": "npm --prefix ../infra run sync",
+    "deploy:synced": "npm run infra:sync && npm run deploy",
     "test": "node --test test/*.test.mjs",
     "generate:sample": "node test/generate-sample.mjs",
     "test:a11y": "npm run build && playwright test",

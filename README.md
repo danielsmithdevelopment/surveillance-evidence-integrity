@@ -144,7 +144,9 @@ Areas where contributions are most useful:
 
 **One Cloudflare Worker** serves the UI (`static/`) and `/api/*` — not a separate Pages + Worker split.
 
-Production runbook: **[challenge-tool/CLOUDFLARE-DEPLOY.md](./challenge-tool/CLOUDFLARE-DEPLOY.md)** (KV, R2, Google Sign-In, ClawQL secrets, custom domain). Develop notes: [challenge-tool/README.md](./challenge-tool/README.md).
+- Infra (KV / R2 / routes): **[infra/](./infra/)** (Pulumi)  
+- Deploy runbook: **[challenge-tool/CLOUDFLARE-DEPLOY.md](./challenge-tool/CLOUDFLARE-DEPLOY.md)**  
+- Develop notes: [challenge-tool/README.md](./challenge-tool/README.md)
 
 ### Witness (the native companion)
 

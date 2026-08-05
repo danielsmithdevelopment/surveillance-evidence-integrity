@@ -4,6 +4,8 @@ Ship **challengethefootage.com** as one Worker: static UI (`static/`) + `/api/*`
 
 Today the domain returns **Cloudflare 530** until a Worker is attached. This guide gets you from empty Cloudflare account → live site with Google Sign-In, Stripe (via ClawQL), evidence storage, and PD whitelist.
 
+**Preferred path:** [Pulumi](../infra/README.md) templates KV + R2 (+ optional routes); **Wrangler** builds and uploads the Worker + assets.
+
 Native Android/iOS is separate — see [../witness/FIRST-NATIVE-DEPLOY.md](../witness/FIRST-NATIVE-DEPLOY.md). Deploy this Worker **before** expecting Witness sync/claim to hit production.
 
 ---
@@ -13,18 +15,20 @@ Native Android/iOS is separate — see [../witness/FIRST-NATIVE-DEPLOY.md](../wi
 ```
 Browser / Witness app
   → Cloudflare Worker  (challenge-the-footage)
-       ├── ASSETS        → Vite build in static/
-       ├── RATE_LIMIT_KV → entitlements, evidence metadata, incidents, PD whitelist
-       ├── R2 (optional) → transcript / audio / video bytes
-       └── ClawQL gateway (secrets) → docs LLM, Stripe checkout, evidence anchor
+       ├── ASSETS        → Vite build in static/          (Wrangler)
+       ├── RATE_LIMIT_KV → entitlements, evidence meta…  (Pulumi)
+       ├── R2            → transcript / audio / video    (Pulumi)
+       ├── Routes        → challengethefootage.com/*     (Pulumi, phase 2)
+       └── ClawQL gateway (secrets) → docs / Stripe / anchor  (wrangler secret put)
 ```
 
-| Piece | Cloudflare product |
-|---|---|
-| Site + API | Workers (+ Workers Static Assets) |
-| Sessions / free-gen counters / evidence index | Workers KV |
-| Media blobs | R2 |
-| DNS + TLS for `challengethefootage.com` | Cloudflare DNS (zone on Cloudflare) |
+| Piece | Cloudflare product | Owned by |
+|---|---|---|
+| Site + API | Workers (+ Static Assets) | Wrangler |
+| Sessions / free-gen / evidence index | Workers KV | Pulumi → sync into `wrangler.toml` |
+| Media blobs | R2 | Pulumi → sync |
+| Custom domain routes | Workers Route | Pulumi (after first Worker upload) |
+| DNS + TLS | Cloudflare DNS | Zone must be on Cloudflare |
 
 ---
 
@@ -34,74 +38,52 @@ Browser / Witness app
 |---|---|
 | Cloudflare account | Free plan is enough to start |
 | Domain on Cloudflare DNS | `challengethefootage.com` (or temporary `*.workers.dev`) |
-| Node 20+ | Local machine for `npm run deploy` |
-| Wrangler logged in | `npx wrangler login` |
+| Node 20+ | |
+| [Pulumi CLI](https://www.pulumi.com/docs/install/) | `curl -fsSL https://get.pulumi.com \| sh` |
+| `CLOUDFLARE_API_TOKEN` | KV + R2 (+ Workers Routes if attaching domain) |
+| Wrangler | `npx wrangler login` (for deploy + secrets) |
 | Google Cloud OAuth client | Web application type — see § Google Sign-In |
 | ClawQL gateway URL + API key | Docs generation, Stripe checkout, evidence anchor |
-| Stripe via ClawQL | Card payments — no Stripe keys in this Worker |
 
 ---
 
-## 0. One-time: login + clone
+## Recommended: Pulumi + Wrangler
+
+### 0. Clone + login
 
 ```bash
 git clone https://github.com/danielsmithdevelopment/surveillance-evidence-integrity.git
-cd surveillance-evidence-integrity/challenge-tool
-git checkout main
+cd surveillance-evidence-integrity
+export CLOUDFLARE_API_TOKEN=…      # Cloudflare dashboard → API Tokens
+
+cd infra
 npm install
-npx wrangler login
+pulumi login                       # or: pulumi login --local
+pulumi stack init prod
+pulumi config set accountId <CLOUDFLARE_ACCOUNT_ID>
+# optional: pulumi config set domain challengethefootage.com
 ```
 
-Confirm the account:
+Also:
 
 ```bash
+cd ../challenge-tool
+npm install
+npx wrangler login
 npx wrangler whoami
 ```
 
----
-
-## 1. Create KV namespace
+### 1–2. Create KV + R2 and sync bindings
 
 ```bash
-npx wrangler kv namespace create RATE_LIMIT_KV
-npx wrangler kv namespace create RATE_LIMIT_KV --preview
+cd infra
+npm run up:sync
+# pulumi up --yes && sync-wrangler-bindings.mjs
 ```
 
-Copy the two IDs into `wrangler.toml`:
+Creates namespaces/buckets and rewrites the `# BEGIN PULUMI-MANAGED` block in `challenge-tool/wrangler.toml`. Details: [../infra/README.md](../infra/README.md).
 
-```toml
-[[kv_namespaces]]
-binding = "RATE_LIMIT_KV"
-id = "<production id>"
-preview_id = "<preview id>"
-```
-
----
-
-## 2. Create R2 bucket (recommended for evidence)
-
-```bash
-npx wrangler r2 bucket create ctf-evidence
-# optional separate preview bucket:
-npx wrangler r2 bucket create ctf-evidence-preview
-```
-
-Uncomment (and adjust names) in `wrangler.toml`:
-
-```toml
-[[r2_buckets]]
-binding = "EVIDENCE_BUCKET"
-bucket_name = "ctf-evidence"
-preview_bucket_name = "ctf-evidence-preview"
-```
-
-**Prefer the R2 binding** in production. The `R2_*` secrets + S3-style presign in `r2.js` are a fallback when the binding is absent.
-
-If you skip R2 for a first ship, evidence **metadata** still works in KV; large media uploads will fail or stay pending until storage is configured.
-
----
-
-## 3. Set production secrets
+### 3. Set production secrets
 
 Never put these in git. Never set `ALLOW_TEST_AUTH` in production.
 
@@ -109,11 +91,7 @@ Never put these in git. Never set `ALLOW_TEST_AUTH` in production.
 cd challenge-tool
 
 npx wrangler secret put GOOGLE_CLIENT_ID
-# paste the OAuth Web client ID (….apps.googleusercontent.com)
-
 npx wrangler secret put CLAWQL_GATEWAY_URL
-# e.g. https://docs.clawql.com   (or your gateway host — no trailing slash issues; paths are appended)
-
 npx wrangler secret put CLAWQL_API_KEY
 ```
 
@@ -126,24 +104,48 @@ npx wrangler secret put R2_SECRET_ACCESS_KEY
 npx wrangler secret put R2_BUCKET_NAME
 ```
 
-### Production vars (plain, not secret)
+In `wrangler.toml` `[vars]` keep `TOOL_NAME = "Challenge the Footage"`. Do **not** set `ALLOW_TEST_AUTH` or `GENERATION_MODE=offline` in production. The Worker injects `GOOGLE_CLIENT_ID` into HTML — no bake into `static/`.
 
-In `wrangler.toml` under `[vars]` keep:
+### 4. Deploy Worker + assets
 
-```toml
-TOOL_NAME = "Challenge the Footage"
+```bash
+cd challenge-tool
+npm run deploy
+# = npm run build && wrangler deploy
 ```
 
-Do **not** set:
+### 5. Attach custom domain (Pulumi phase 2)
 
-- `ALLOW_TEST_AUTH` — would accept `Bearer test:…` from anyone
-- `GENERATION_MODE=offline` — production should use the ClawQL gateway when keys are present (omit the var, or set `GENERATION_MODE=gateway`)
+Routes require the Worker script to already exist.
 
-`GOOGLE_CLIENT_ID` is also injected into HTML responses by the Worker so Google Identity Services can run in the browser. You only need the secret — do not hardcode the client ID into `static/`.
+```bash
+cd infra
+pulumi config set zoneId <CLOUDFLARE_ZONE_ID>
+pulumi config set enableRoutes true
+pulumi up
+```
+
+Then update Google OAuth JavaScript origins for `https://challengethefootage.com`.
 
 ---
 
-## 4. Google Sign-In (OAuth client)
+## Manual fallback (no Pulumi)
+
+```bash
+cd challenge-tool
+npx wrangler kv namespace create RATE_LIMIT_KV
+npx wrangler kv namespace create RATE_LIMIT_KV --preview
+npx wrangler r2 bucket create ctf-evidence
+npx wrangler r2 bucket create ctf-evidence-preview
+```
+
+Paste ids into the `# BEGIN PULUMI-MANAGED` … `# END PULUMI-MANAGED` block in `wrangler.toml` (or uncomment R2 by hand), set secrets, `npm run deploy`, attach routes in the dashboard.
+
+**Prefer the R2 binding** in production. `R2_*` secrets + S3-style presign in `r2.js` are a fallback.
+
+---
+
+## 6. Google Sign-In (OAuth client)
 
 1. [Google Cloud Console](https://console.cloud.google.com/) → APIs & Services → Credentials  
 2. Create **OAuth client ID** → application type **Web application**  
@@ -158,19 +160,9 @@ OAuth consent screen: External (or Internal for workspace-only dogfood). Add tes
 
 ---
 
-## 5. First deploy (workers.dev)
+## 7. Smoke the workers.dev URL
 
-```bash
-cd challenge-tool
-npm run deploy
-# = npm run build && wrangler deploy
-```
-
-Wrangler prints a URL like:
-
-`https://challenge-the-footage.<account>.workers.dev`
-
-Smoke:
+After `npm run deploy` (Pulumi path §4 or manual fallback):
 
 ```bash
 curl -sS https://challenge-the-footage.<account>.workers.dev/api/health
@@ -189,7 +181,9 @@ If health shows `"testAuthEnabled":true`, dig for a leftover var/secret and remo
 
 ---
 
-## 6. Attach custom domain
+## 8. Attach custom domain (dashboard fallback)
+
+Prefer Pulumi (`enableRoutes` + `zoneId`) in §5. If you are not using Pulumi:
 
 ### A. Zone already on Cloudflare
 
@@ -216,7 +210,7 @@ Update Google OAuth origins to the production hostname if you only added `worker
 
 ---
 
-## 7. Public defender whitelist
+## 9. Public defender whitelist
 
 After KV is bound:
 
@@ -228,7 +222,7 @@ They sign in with that Google email → unlimited generations (no Stripe).
 
 ---
 
-## 8. Payments + generation (ClawQL)
+## 10. Payments + generation (ClawQL)
 
 With `CLAWQL_GATEWAY_URL` + `CLAWQL_API_KEY` set:
 
@@ -245,7 +239,7 @@ If ClawQL secrets are missing, the Worker falls back to **offline** templates �
 
 ---
 
-## 9. Post-deploy checklist
+## 11. Post-deploy checklist
 
 Copy from [TESTING.md](./TESTING.md) production section:
 
@@ -279,7 +273,7 @@ Response includes `howToVerify` steps. Do **not** put Arweave TX IDs or wallet p
 
 ---
 
-## 10. Redeploys
+## 12. Redeploys
 
 ```bash
 cd challenge-tool
@@ -293,7 +287,7 @@ Secrets persist across deploys. Changing `wrangler.toml` bindings (KV/R2/routes)
 
 ---
 
-## 11. Rollback
+## 13. Rollback
 
 ```bash
 npx wrangler deployments list
@@ -346,8 +340,9 @@ npm run worker                   # http://127.0.0.1:8787
 
 ## Related docs
 
+- [../infra/README.md](../infra/README.md) — Pulumi KV / R2 / routes  
 - [README.md](./README.md) — develop + quality gates  
-- [PRODUCT.md](./PRODUCT.md) — product model  
+- [PRODUCT.md](./PRODUCT.md) — product specification  
 - [TESTING.md](./TESTING.md) — CI + production checklist  
 - [AGENT-READY.md](./AGENT-READY.md) — post-deploy agent scan  
 - [../witness/FIRST-NATIVE-DEPLOY.md](../witness/FIRST-NATIVE-DEPLOY.md) — Android APK after the Worker is live  

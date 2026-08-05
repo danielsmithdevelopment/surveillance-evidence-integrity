@@ -1,0 +1,6 @@
+name: ctf-cloudflare
+runtime:
+  name: nodejs
+  options:
+    typescript: true
+description: Challenge the Footage — Cloudflare KV, R2, and optional Worker routes (Wrangler deploys the Worker bundle)
