@@ -53,9 +53,11 @@ describe("challenge-tool artifacts", () => {
       join(root, "..", ".github", "workflows", "infra-pulumi.yml"),
       "utf8",
     );
-    assert.match(workflow, /pulumi\/actions@v6/);
-    assert.match(workflow, /CLOUDFLARE_API_TOKEN/);
-    assert.match(workflow, /PULUMI_ACCESS_TOKEN/);
+    assert.match(workflow, /pulumi login/);
+    assert.match(workflow, /PULUMI_STATE_ACCESS_KEY_ID/);
+    assert.match(workflow, /r2\.cloudflarestorage\.com/);
+    assert.doesNotMatch(workflow, /PULUMI_ACCESS_TOKEN/);
+    assert.doesNotMatch(workflow, /api\.pulumi\.com/);
   });
 
   it("disclaimer names Challenge the Footage", () => {

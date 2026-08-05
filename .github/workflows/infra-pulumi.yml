@@ -1,6 +1,7 @@
 name: Infra (Pulumi)
 
 # Applies Cloudflare KV / R2 / optional routes via Pulumi.
+# State lives in an R2 bucket (S3-compatible DIY backend) — no Pulumi Cloud.
 # Worker script + assets still deploy with Wrangler (not this workflow).
 
 on:
@@ -30,7 +31,6 @@ concurrency:
 
 permissions:
   contents: write
-  pull-requests: write
 
 jobs:
   pulumi:
@@ -41,9 +41,13 @@ jobs:
         working-directory: infra
     env:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-      PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
       PULUMI_STACK: ${{ vars.PULUMI_STACK || 'prod' }}
+      PULUMI_CONFIG_PASSPHRASE: ${{ secrets.PULUMI_CONFIG_PASSPHRASE }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.PULUMI_STATE_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.PULUMI_STATE_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: auto
+      PULUMI_STATE_BUCKET: ${{ vars.PULUMI_STATE_BUCKET || 'ctf-pulumi-state' }}
 
     steps:
       - name: Checkout
@@ -55,11 +59,13 @@ jobs:
         run: |
           missing=
           [ -z "$CLOUDFLARE_API_TOKEN" ] && missing="${missing} CLOUDFLARE_API_TOKEN"
-          [ -z "$PULUMI_ACCESS_TOKEN" ] && missing="${missing} PULUMI_ACCESS_TOKEN"
           [ -z "$CLOUDFLARE_ACCOUNT_ID" ] && missing="${missing} CLOUDFLARE_ACCOUNT_ID (repo variable)"
+          [ -z "$PULUMI_CONFIG_PASSPHRASE" ] && missing="${missing} PULUMI_CONFIG_PASSPHRASE"
+          [ -z "$AWS_ACCESS_KEY_ID" ] && missing="${missing} PULUMI_STATE_ACCESS_KEY_ID"
+          [ -z "$AWS_SECRET_ACCESS_KEY" ] && missing="${missing} PULUMI_STATE_SECRET_ACCESS_KEY"
           if [ -n "$missing" ]; then
             echo "::error::Missing required secrets/vars:$missing"
-            echo "See infra/README.md → GitHub Actions"
+            echo "See infra/README.md → GitHub Actions (R2 DIY state — no Pulumi Cloud)"
             exit 1
           fi
 
@@ -87,6 +93,13 @@ jobs:
             echo "command=up" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Login to R2 state backend
+        run: |
+          ENDPOINT="https://${CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com"
+          BACKEND="s3://${PULUMI_STATE_BUCKET}?endpoint=${ENDPOINT}&region=auto&s3ForcePathStyle=true"
+          echo "DIY backend: s3://${PULUMI_STATE_BUCKET} (Cloudflare R2) — not Pulumi Cloud"
+          pulumi login "$BACKEND"
+
       - name: Stack select + config
         run: |
           pulumi stack select "$PULUMI_STACK" --create
@@ -105,32 +118,11 @@ jobs:
 
       - name: Pulumi preview
         if: steps.cmd.outputs.command == 'preview'
-        uses: pulumi/actions@v6
-        with:
-          command: preview
-          stack-name: ${{ env.PULUMI_STACK }}
-          work-dir: infra
-          comment-on-pr: true
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          cloud-url: https://api.pulumi.com
-        env:
-          PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+        run: pulumi preview --stack "$PULUMI_STACK" --non-interactive
 
       - name: Pulumi up
         if: steps.cmd.outputs.command == 'up'
-        uses: pulumi/actions@v6
-        with:
-          command: up
-          stack-name: ${{ env.PULUMI_STACK }}
-          work-dir: infra
-          upsert: true
-          cloud-url: https://api.pulumi.com
-        env:
-          PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+        run: pulumi up --stack "$PULUMI_STACK" --yes --non-interactive
 
       - name: Sync wrangler.toml bindings
         if: steps.cmd.outputs.command == 'up'
