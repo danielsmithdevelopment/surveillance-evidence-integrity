@@ -60,7 +60,7 @@ The docs generator branches on `footageCategory` (+ `bodyCamRecordingStatus` for
 4. ~~**BWC failure-to-record ratchet** (`bodyCamRecordingStatus`: missing / partial / recorded)~~  
 5. ~~**Sourced BWC + cellphone precedents** parallel to Flock FOIA/IJ facts~~  
 6. Attorney library: group sessions by `incidentId` + transcript cross-reference UI  
-7. Publish Challenge-grade one-pager for city councils / PDs  
+7. ~~Publish Challenge-grade one-pager for city councils / PDs~~ — [outreach/ONE-PAGERS.md](../outreach/ONE-PAGERS.md)
 8. Push via contracts + model legislation (BWC + ALPR + phone-video authenticity), informed by what phones already do  
 
 ## Non-goals (near term)

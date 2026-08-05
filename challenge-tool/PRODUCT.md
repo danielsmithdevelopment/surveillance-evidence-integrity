@@ -393,7 +393,7 @@ surveillance-evidence-integrity/
 | Deploy production Worker + DNS | [CLOUDFLARE-DEPLOY.md](./CLOUDFLARE-DEPLOY.md) | **Blocker** (site 530) |
 | First Android EAS preview APK | [FIRST-NATIVE-DEPLOY.md](../witness/FIRST-NATIVE-DEPLOY.md) | High |
 | Attorney UI: group by `incidentId` + transcript cross-ref | CHALLENGE-GRADE / NATIVE roadmap | High |
-| Challenge-grade one-pager for councils / PDs | CHALLENGE-GRADE | High |
+| Challenge-grade one-pager for councils / PDs | [../outreach/ONE-PAGERS.md](../outreach/ONE-PAGERS.md) (draft landed) | High — print / distribute |
 | Shake / Siri / widget activation | witness README | Medium |
 | Enclave / Keychain device signatures | NATIVE.md | Medium |
 | Two-party consent first-run polish (state-specific) | Evidence web + native | Medium |

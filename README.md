@@ -32,11 +32,15 @@ Source: **[challenge-tool/](./challenge-tool/)** · **Product spec:** **[challen
 
 ### For defense attorneys
 
+**[PD one-pager](./outreach/ONE-PAGERS.md)** — Four vectors, BWC ratchet, cellphone path, free access.
+
 **[Authentication Challenge Guide](./authentication-challenge-guide.md)** — Ten specific discovery requests, a motion in limine framework under FRE 901, how to use Flock's responses (or non-responses) to build the argument, and guidance on expert witnesses.
 
 **[challengethefootage.com](https://challengethefootage.com)** — generates all four documents pre-populated with vendor-specific documented facts. Public defenders: email pd@challengethefootage.com for free unlimited access.
 
 ### For city councils and contracting authorities
+
+**[One-pager (print-ready)](./outreach/ONE-PAGERS.md)** — Before you renew: authentication gap, accuracy, access, three contract clauses.
 
 **[Model Contract Language](./model-contract-language.md)** — Clause-ready amendment language covering hash at capture, Merkle chaining, external immutable anchoring, mandatory access logging, prohibition on undetectable alteration integrations, independent audit rights, and non-compliance consequences.
 
