@@ -14,6 +14,7 @@ export default defineConfig({
         terms: resolve(__dirname, "terms.html"),
         publicDefenders: resolve(__dirname, "public-defenders.html"),
         evidence: resolve(__dirname, "evidence.html"),
+        media: resolve(__dirname, "media.html"),
       },
     },
   },

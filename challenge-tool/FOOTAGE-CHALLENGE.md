@@ -67,7 +67,7 @@ Offline / CI templates: `offline-docs.js`. Live prompts: `worker.js`. Fact packs
 
 See [authentication-challenge-guide.md](../authentication-challenge-guide.md).
 
-Backbone: FOIA-derived Flock logs ([haveibeenflocked.com](https://haveibeenflocked.com)), Institute for Justice wrongful-stop / stalking documentation, Oak Park cancellation, DHS SAVER ALPR survey, Toka/Haaretz alteration risk.
+Backbone: FOIA-derived Flock logs ([haveibeenflocked.com](https://haveibeenflocked.com)), Institute for Justice wrongful-stop / stalking documentation, Oak Park cancellation, DHS SAVER ALPR survey, Toka/Haaretz alteration risk, 404 Media’s August 2026 Flock series (interstate travel-pattern pretext stops; Wapello County “DO NOT MENTION ALPR USAGE” SOP; FBI/DOJ “as vague as permissible” guidance; traffic-enforcement mission creep), and the *Carpenter* → *Smith* (geofence) → Reeves tower-dump (S.D. Miss. Aug. 5, 2026) line for warrantless ALPR dragnet arguments.
 
 ---
 

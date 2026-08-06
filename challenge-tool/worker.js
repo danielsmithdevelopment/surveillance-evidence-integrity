@@ -103,6 +103,7 @@ function markdownAssetPath(pathname) {
     return "/public-defenders.md";
   }
   if (pathname === "/evidence.html" || pathname === "/evidence") return "/evidence.md";
+  if (pathname === "/media.html" || pathname === "/media") return "/media.md";
   return null;
 }
 
@@ -193,6 +194,11 @@ const VENDORS = {
       "By August 2025, members of Congress had opened a formal investigation into Flock Safety's role in enabling surveillance of women, immigrants, and other vulnerable groups.",
       "FOIA-derived audit logs from haveibeenflocked.com show 233 million searches against Flock's network, with 84% carrying no case number — the absence of case numbers making unauthorized personal use structurally undetectable within the system.",
       "Flock Safety claims that with 140,000 monthly active users, abuse incidents are 'rare.' Investigators and researchers describe documented cases as almost certainly a vast undercount, noting that most misconduct is never detected because audits are infrequent and officers frequently cite vague or inaccurate reasons for searches.",
+      "In April 2025, Wisconsin police used Flock hits along Interstate 41 to track Edward Abrams-Phillips from Wisconsin into Michigan (where marijuana is legal) and back, then cited his frequent Michigan travel — described in the charging document as travel to a 'known source state for marijuana' — as part of the probable cause justification to search his car for weed. The bail-jumping charge that initiated the investigation was dismissed; he was found guilty only of marijuana possession (State v. Abrams-Phillips court records via 404 Media, August 5–6, 2026). This is travel-pattern / pretext-stop surveillance — not a single hotlist hit.",
+      "Wapello County, Iowa's November 2025 standard operating procedures for Flock cameras instruct officers: 'DO NOT MENTION ALPR USAGE TO THE OCCUPANTS OF THE VEHICLE. DO NOT MENTION ALPR USAGE IN YOUR REPORT OR COMPLAINT UNLESS ABSOLUTELY NECESSARY,' and advise referring to Flock as 'county resources' and treating ALPR information 'like you would intelligence' (SOP obtained via public records request; 404 Media, August 4, 2026).",
+      "404 Media reported that FBI and Department of Justice guidance shared with police in multiple states advised officers to be 'as vague as permissible' about why they were using Flock, because Flock searches can be obtained via public records requests (referenced in 404 Media coverage, 2026).",
+      "In December 2025, Georgia State Patrol used a Flock camera capture ('CAPTURED ON FLOCK CAMERA 31 MM 1 HOLDING PHONE IN LEFT HAND') as the basis for a traffic citation for holding a wireless device — despite many jurisdictions publicly claiming Flock cameras are not used for traffic enforcement or minor code violations (404 Media, August 2026; ticket later dropped).",
+      "On August 5, 2026, U.S. District Judge Carlton W. Reeves (S.D. Miss.) affirmed denial of four FBI 'tower dump' warrant applications, holding tower dumps — collecting location data for every device that connected to specified cell towers near crime scenes so police can later sift for unknown suspects — are per se unconstitutional under the Fourth Amendment as general warrants. In re Four Applications for Search Warrants Seeking Information Associated with Particular Cellular Towers a/k/a Tower-Dump Warrants, No. 3:25-cr-00038 (S.D. Miss. Aug. 5, 2026) (order affirming magistrate denial), building on United States v. Smith, 110 F.4th 817 (5th Cir. 2024) (geofence warrants per se unconstitutional). ALPR networks like Flock passively collect vehicle location data on every vehicle that passes a camera and allow retroactive multi-hit sifting to build suspect profiles — a structurally analogous dragnet. Counsel in circuits following Carpenter / Smith should argue that warrantless ALPR queries used to reconstruct travel patterns require particularized probable cause under Carpenter v. United States, 585 U.S. 296 (2018).",
     ],
     authFacts: [
       "Flock Safety's audit logs obtained via FOIA do not contain cryptographic hash values for footage segments and show no evidence of Merkle chaining or external immutable anchoring.",
@@ -212,7 +218,13 @@ const VENDORS = {
       "EFF — ALPR accuracy and misuse reporting",
       "Haaretz 2022 — Toka internal documents",
       "DHS SAVER ALPR Market Survey Report, June 2025",
-      "404 Media — Flock stalking case reporting",
+      "404 Media — Flock stalking, travel-pattern pretext stops, ALPR non-disclosure SOPs, and traffic-enforcement misuse reporting (2024–2026)",
+      "404 Media — 'Cops Used Flock to Track a Man Across State Lines…' (Abrams-Phillips / I-41), August 2026",
+      "404 Media — 'DO NOT MENTION ALPR USAGE' (Wapello County, Iowa SOP), August 4, 2026",
+      "404 Media — 'Police Used Flock to Give a Man a Traffic Ticket' (Georgia State Patrol), August 2026",
+      "In re Four Applications… a/k/a Tower-Dump Warrants, No. 3:25-cr-00038 (S.D. Miss. Aug. 5, 2026) (Reeves, C.J.) — CourtListener ECF 41",
+      "United States v. Smith, 110 F.4th 817 (5th Cir. 2024) — geofence warrants",
+      "Carpenter v. United States, 585 U.S. 296 (2018)",
       "ACLU — ALPR abuse documentation",
     ],
   },
@@ -426,7 +438,13 @@ Surveillance footage offered as evidence must be authenticated under FRE 901. FR
 AI-generated evidence is subject to reliability scrutiny under FRE 702 and Daubert. ALPR systems operate at a documented error rate of approximately 10% for plate misreads — confirmed by a 2019 industry estimate and acknowledged in DHS's own June 2025 market survey. The appropriate standard for evidence used in criminal prosecution should be no worse than 1 error per 1,000 reads (0.1%), independently verified.
 
 ### Vector 3 — Access abuse and Fourth Amendment
-ALPR data used to initiate a stop or investigation is a search. Unauthorized personal-use queries (28+ documented cases) and queries without case numbers support suppression. Discovery into officer query history is essential.
+ALPR data used to initiate a stop or investigation is a search. Argue on three prongs when facts fit: (1) unauthorized / undocumented access (28+ personal-use cases; 84% FOIA queries without case numbers); (2) concealment and pretext (404 Media August 2026 series); (3) the ALPR dragnet itself as a warrantless general search under the Carpenter → Smith → Reeves tower-dump line. Discovery into officer query history and warrant authorization is essential.
+
+Additional Fourth Amendment vectors (include when facts fit):
+- **General warrant / tower-dump analogy (structural):** Tower dumps that collect everyone's location data near a scene for later sifting are per se unconstitutional general warrants — In re Four Applications… a/k/a Tower-Dump Warrants, No. 3:25-cr-00038 (S.D. Miss. Aug. 5, 2026) (Reeves, C.J.), following United States v. Smith, 110 F.4th 817 (5th Cir. 2024) on geofence warrants. ALPR networks passively capture every vehicle and allow retroactive multi-camera sifting to identify suspects — collect the haystack, find the needle later. Argue that warrantless ALPR queries used to build travel-pattern suspect profiles require particularized probable cause under Carpenter v. United States, 585 U.S. 296 (2018), regardless of the officer's subjective purpose. Post-collection filtering does not cure the initial overbreadth.
+- **Pretext stop via travel-pattern analysis:** Mass ALPR networks used to reconstruct interstate travel (e.g. Wisconsin↔Michigan marijuana corridor / Abrams-Phillips) and retrofit that pattern into probable cause. Whren v. United States permits many pretextual stops, but using a dragnet surveillance network to build a behavioral profile of travel to an activity legal in another state is contestable — and is the fact pattern that maps most cleanly onto the tower-dump / geofence line.
+- **Concealment / bad faith / Franks:** Written policies instructing officers not to mention ALPR usage to occupants, in reports, or in complaints (Wapello County, Iowa SOP Nov. 2025), plus FBI/DOJ guidance to be "as vague as permissible" about Flock use because searches are public-records-discoverable, are evidence of systemic concealment. Omitting material ALPR reliance from a probable cause affidavit at the direction of policy can support a Franks v. Delaware challenge.
+- **Mission creep / traffic enforcement:** Flock pitched for serious crime / stolen vehicles / missing persons but used for minor traffic citations despite public "not for traffic enforcement" claims — undermines stated purpose limitations and supports overbreadth / pretext arguments.
 
 ### Vector 4 — Civil damages (Section 1983)
 Wrongful stops and detentions based on ALPR misidentification are actionable under § 1983. Settlement ranges commonly $10,000–$75,000 for brief detentions to $100,000–$500,000+ for prolonged harm.`;
@@ -855,19 +873,22 @@ Requirements:
 9. Prayer for relief: exclusion or evidentiary hearing
 10. Signature block placeholder
 Write the complete motion. Number all argument paragraphs.`,
-    access: `Draft a motion to suppress evidence obtained through ${vendorName} surveillance on Fourth Amendment grounds, focusing on unauthorized access and lack of documented law enforcement purpose.
+    access: `Draft a motion to suppress evidence obtained through ${vendorName} surveillance on Fourth Amendment grounds. Cover three prongs when facts support them: (A) unauthorized / undocumented access; (B) pretext travel-pattern stops and concealment of ALPR use; (C) the ALPR network query itself as a warrantless general search under the Carpenter–Smith–Reeves tower-dump line.
 ${base}
 Additional facts about this specific search (if provided by user): ${ctx.searchFacts || "not specified — draft to address the general pattern and include discovery requests to establish the specific facts"}
 Requirements:
 1. Caption block with full case details
 2. Introduction: evidence obtained through an unconstitutional search must be suppressed under the exclusionary rule
-3. Legal standard: Fourth Amendment; ALPR queries as searches when used to initiate stops; Mapp v. Ohio
+3. Legal standard: Fourth Amendment; ALPR queries as searches when used to initiate stops; Mapp v. Ohio; Carpenter v. United States, 585 U.S. 296 (2018); United States v. Smith, 110 F.4th 817 (5th Cir. 2024) (geofence warrants); In re Four Applications… a/k/a Tower-Dump Warrants, No. 3:25-cr-00038 (S.D. Miss. Aug. 5, 2026) (Reeves, C.J.) (tower dumps per se unconstitutional as general warrants); address Whren where the stop is framed as pretextual, and Franks where material ALPR reliance was omitted from affidavits or reports
 4. Access abuse pattern: 28+ documented personal-use cases; 84% of FOIA-derived Flock searches without case numbers
 5. Argument that without case number / purpose / authorization the search cannot be distinguished from abuse
-6. Cryptographic audit-trail failures taint vendor logs
-7. Ten discovery requests on officer query history and department policy
-8. Prayer for suppression
-9. Signature block placeholder
+6. Structural general-warrant argument: ${vendorName} / ALPR networks passively collect location data on all vehicles and allow retroactive multi-hit sifting to identify suspects — "access to an entire haystack because it may contain a needle." Argue that warrantless ALPR queries used to build suspect / travel-pattern profiles require particularized probable cause; post-collection filtering does not cure overbreadth. Note the ALPR extension of Smith / Reeves is not yet circuit-settled — preserve the argument for appellate review
+7. When relevant: travel-pattern / interstate surveillance as probable-cause padding (e.g. Abrams-Phillips / I-41 Wisconsin–Michigan) — the cleanest fact pattern for the tower-dump analogy
+8. When relevant: departmental SOPs or federal guidance instructing officers to hide or vaguely describe ALPR use (Wapello County "DO NOT MENTION ALPR USAGE" SOP; FBI/DOJ "as vague as permissible" guidance) as evidence of bad faith and Franks materiality
+9. Cryptographic audit-trail failures taint vendor logs
+10. Ten discovery requests including: officer query history; ALPR disclosure / SOP policy on the incident date; whether ALPR was omitted from affidavits; and any warrant, court order, or supervisory authorization obtained before the ALPR queries that led to the stop (or documentation of the legal basis for concluding no warrant was required)
+11. Prayer for suppression
+12. Signature block placeholder
 Write the complete motion. Number all argument paragraphs.`,
   };
 }

@@ -64,13 +64,13 @@ const TOOLS = [
   {
     name: "ctf_navigate",
     description:
-      "Navigate the browser to a Challenge the Footage page (home, terms, or public defenders).",
+      "Navigate the browser to a Challenge the Footage page (home, media, terms, or public defenders).",
     inputSchema: {
       type: "object",
       properties: {
         page: {
           type: "string",
-          enum: ["home", "terms", "public-defenders"],
+          enum: ["home", "media", "terms", "public-defenders"],
           description: "Which page to open",
         },
       },
@@ -80,6 +80,7 @@ const TOOLS = [
     async execute({ page }) {
       const map = {
         home: "/",
+        media: "/media.html",
         terms: "/terms.html",
         "public-defenders": "/public-defenders.html",
       };

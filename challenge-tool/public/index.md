@@ -7,6 +7,7 @@ title: Challenge the Footage
 Record encounters, secure evidence, and generate **FRE 901**, **FRE 702 / Daubert**, **Fourth Amendment**, and **§ 1983** document templates for surveillance / ALPR evidence challenges — one account, pay by card.
 
 - [Evidence — record & secure](https://challengethefootage.com/evidence.html)
+- [Media & sources](https://challengethefootage.com/media.html)
 - [Public defender free access](https://challengethefootage.com/public-defenders.html)
 - [Terms of Service](https://challengethefootage.com/terms.html)
 - [Agent instructions](https://challengethefootage.com/AGENTS.md)

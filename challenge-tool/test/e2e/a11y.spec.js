@@ -63,6 +63,10 @@ test.describe("WCAG axe scans", () => {
     await expectNoA11yViolations(page, "/public-defenders.html");
   });
 
+  test("media page meets WCAG 2.2 AA (axe)", async ({ page }) => {
+    await expectNoA11yViolations(page, "/media.html");
+  });
+
   test("evidence page meets WCAG 2.2 AA (axe)", async ({ page }) => {
     await expectNoA11yViolations(page, "/evidence.html");
   });

@@ -14,7 +14,7 @@ import lighthouse from "lighthouse";
 
 const root = join(fileURLToPath(new URL(".", import.meta.url)), "../static");
 const outDir = join(fileURLToPath(new URL(".", import.meta.url)), "../.lighthouseci");
-const urls = ["/", "/terms.html", "/public-defenders.html"];
+const urls = ["/", "/terms.html", "/public-defenders.html", "/media.html"];
 const debugPort = 9333;
 
 const MIME = {
