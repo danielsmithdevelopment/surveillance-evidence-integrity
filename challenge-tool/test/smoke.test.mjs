@@ -51,7 +51,7 @@ describe("challenge-tool artifacts", () => {
     readFileSync(join(root, "..", "infra", "Pulumi.yaml"));
     const workflow = readFileSync(
       join(root, "..", ".github", "workflows", "infra-pulumi.yml"),
-      "utf8",
+      "utf8"
     );
     assert.match(workflow, /pulumi login/);
     assert.match(workflow, /PULUMI_STATE_ACCESS_KEY_ID/);
