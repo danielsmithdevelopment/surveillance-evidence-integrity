@@ -34,13 +34,21 @@ export function SiteNav() {
         </li>
         <li>
           <a
+            href="/media.html"
+            className="text-ink-muted transition hover:text-teal focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-teal"
+          >
+            Media
+          </a>
+        </li>
+        <li>
+          <a
             href="/public-defenders.html"
             className="text-ink-muted transition hover:text-teal focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-teal"
           >
             Public defenders
           </a>
         </li>
-        <li>
+        <li className="hidden sm:list-item">
           <a
             href="/terms.html"
             className="text-ink-muted transition hover:text-teal focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-teal"
@@ -82,6 +90,13 @@ export function SiteFooter() {
           href="https://clawql.com"
         >
           ClawQL
+        </a>
+        {" · "}
+        <a
+          className="font-medium text-teal-deep underline underline-offset-2 hover:text-teal focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal"
+          href="/media.html"
+        >
+          Media
         </a>
       </p>
       <p className="mt-2">Templates for attorney review — not legal advice.</p>

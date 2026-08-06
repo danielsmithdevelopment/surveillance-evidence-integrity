@@ -61,14 +61,22 @@ describe("challenge-tool artifacts", () => {
       "terms.html",
       "public-defenders.html",
       "evidence.html",
+      "media.html",
       "src/App.jsx",
       "src/EvidencePage.jsx",
+      "src/MediaPage.jsx",
       "src/index.css",
       "PRODUCT.md",
     ]) {
       readFileSync(join(root, f));
     }
-    for (const f of ["index.html", "terms.html", "public-defenders.html", "evidence.html"]) {
+    for (const f of [
+      "index.html",
+      "terms.html",
+      "public-defenders.html",
+      "evidence.html",
+      "media.html",
+    ]) {
       readFileSync(join(root, "static", f));
     }
   });
@@ -83,6 +91,7 @@ describe("challenge-tool artifacts", () => {
       "AGENTS.md",
       "index.md",
       "evidence.md",
+      "media.md",
       ".well-known/api-catalog",
       ".well-known/agent-card.json",
       ".well-known/mcp/server-card.json",

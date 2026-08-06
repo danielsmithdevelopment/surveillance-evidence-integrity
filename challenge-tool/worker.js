@@ -103,6 +103,7 @@ function markdownAssetPath(pathname) {
     return "/public-defenders.md";
   }
   if (pathname === "/evidence.html" || pathname === "/evidence") return "/evidence.md";
+  if (pathname === "/media.html" || pathname === "/media") return "/media.md";
   return null;
 }
 

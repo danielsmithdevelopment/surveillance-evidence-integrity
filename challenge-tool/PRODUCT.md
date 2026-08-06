@@ -111,6 +111,7 @@ Users are **not** expected to understand ClawQL, Arweave, Merkle trees, or R2.
 challengethefootage.com/
   /                      Docs generator
   /evidence.html         Record + library + verify status
+  /media.html
   /public-defenders.html
   /terms.html
   /api/*                 Auth, entitlement, checkout, generate, evidence

@@ -8,6 +8,7 @@
 
 - **Human UI:** https://challengethefootage.com/
 - **Evidence:** https://challengethefootage.com/evidence.html — record + secure encounters
+- **Media & sources:** https://challengethefootage.com/media.html — press/research links behind vendor profiles
 - **Public defenders:** free unlimited access — https://challengethefootage.com/public-defenders.html
 - **Terms:** https://challengethefootage.com/terms.html
 - **Product model:** https://github.com/danielsmithdevelopment/surveillance-evidence-integrity/blob/main/challenge-tool/PRODUCT.md
@@ -16,7 +17,7 @@
 
 ## Prefer Markdown
 
-Send `Accept: text/markdown` on `/`, `/evidence.html`, `/terms.html`, or `/public-defenders.html` for machine-readable content.
+Send `Accept: text/markdown` on `/`, `/evidence.html`, `/media.html`, `/terms.html`, or `/public-defenders.html` for machine-readable content.
 
 ## Key files for agents
 

@@ -8,6 +8,7 @@ This file helps AI agents find canonical entry points. Prefer `Accept: text/mark
 
 - [Home / generator](https://challengethefootage.com/): Case details form + four document types
 - [Evidence](https://challengethefootage.com/evidence.html): Record encounters + evidence library
+- [Media & sources](https://challengethefootage.com/media.html): Press/research behind vendor profiles (404 Media Flock series, FOIA, IJ, EFF)
 - [Public defenders](https://challengethefootage.com/public-defenders.html): Free unlimited access program
 - [Terms of Service](https://challengethefootage.com/terms.html): Legal terms
 - [Agent instructions](https://challengethefootage.com/AGENTS.md): How agents should use this site
