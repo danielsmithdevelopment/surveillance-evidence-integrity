@@ -419,11 +419,13 @@ IV. ARGUMENT
 
 5. Without a documented case number, stated law-enforcement purpose, and verifiable authorization chain, the search producing evidence against ${ctx.defendant} cannot be distinguished from the documented pattern of unauthorized personal use.
 
-6. Where ${vendorName} (or equivalent ALPR) hits were used to reconstruct interstate or multi-camera travel patterns and retrofit that pattern into probable cause — including travel to activity that is lawful in another state — the stop is a mass-surveillance pretext stop. Whren v. United States does not immunize dragnet behavioral profiling; counsel should preserve aggregate-location-privacy and particularity arguments for appellate review.
+6. Structural general-warrant argument: systems that passively collect location data on everyone and allow police to sift later for unknown suspects are the modern equivalent of the general warrants the Founders prohibited. Tower dumps are per se unconstitutional on that ground — In re Four Applications… a/k/a Tower-Dump Warrants, No. 3:25-cr-00038 (S.D. Miss. Aug. 5, 2026) (Reeves, C.J.), following United States v. Smith, 110 F.4th 817 (5th Cir. 2024) (geofence warrants). ALPR networks like ${vendorName} are structurally analogous: collect every vehicle, query retroactively. Warrantless ALPR queries used to build suspect / travel-pattern profiles should require particularized probable cause under Carpenter v. United States, 585 U.S. 296 (2018). Preserve the argument for appellate review where the ALPR extension is unsettled.
 
-7. Where departmental SOPs or federal guidance instruct officers not to mention ALPR usage to occupants or in reports/complaints (or to be "as vague as permissible" because searches are public-records-discoverable), concealment of material ALPR reliance supports bad-faith and Franks v. Delaware challenges to any affidavit or charging narrative that omits the surveillance basis.
+7. Where ${vendorName} (or equivalent ALPR) hits were used to reconstruct interstate or multi-camera travel patterns and retrofit that pattern into probable cause — including travel to activity that is lawful in another state — the stop is a mass-surveillance pretext stop and the clearest fact pattern for the tower-dump analogy. Whren v. United States does not immunize dragnet behavioral profiling.
 
-8. Systemic access-control failures and incomplete audit trails undermine reliance on vendor-controlled logs to justify the search.`;
+8. Where departmental SOPs or federal guidance instruct officers not to mention ALPR usage to occupants or in reports/complaints (or to be "as vague as permissible" because searches are public-records-discoverable), concealment of material ALPR reliance supports bad-faith and Franks v. Delaware challenges to any affidavit or charging narrative that omits the surveillance basis.
+
+9. Systemic access-control failures and incomplete audit trails undermine reliance on vendor-controlled logs to justify the search.`;
 
   const access = `${caption}
 ${t.access}

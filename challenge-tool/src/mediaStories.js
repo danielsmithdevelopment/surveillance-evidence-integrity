@@ -5,6 +5,35 @@
 
 export const MEDIA_SECTIONS = [
   {
+    id: "tower-dump",
+    title: "Court rulings — bulk location dragnets",
+    intro:
+      "The Carpenter → Smith → Reeves line on geofence and tower-dump warrants. Structural fuel for arguing warrantless ALPR travel-pattern queries are general searches.",
+    stories: [
+      {
+        outlet: "S.D. Miss. (Reeves, C.J.)",
+        date: "August 5, 2026",
+        title:
+          "In re Four Applications… a/k/a Tower-Dump Warrants — order affirming denial",
+        url: "https://www.courtlistener.com/docket/69660910/41/united-states-v-sealed/",
+        summary:
+          "Chief Judge Carlton W. Reeves affirmed a magistrate’s denial of four FBI tower-dump warrant applications in a Jackson, Mississippi gang-violence investigation. Tower dumps — records of every cellphone that connected to specified towers near crime scenes so police can later identify unknown suspects — are per se unconstitutional under the Fourth Amendment as general warrants. Builds on United States v. Smith (5th Cir. 2024) holding geofence warrants categorically unconstitutional.",
+        whyItMatters:
+          "Collect-everyone-sift-later is the same architecture as ALPR networks. Pair with Abrams-Phillips-style multi-camera travel profiling: argue warrantless Flock queries need particularized probable cause under Carpenter / Smith / Reeves.",
+      },
+      {
+        outlet: "Fifth Circuit",
+        date: "2024",
+        title: "United States v. Smith — geofence warrants per se unconstitutional",
+        url: "https://www.govinfo.gov/content/pkg/USCOURTS-ca5-23-60321/pdf/USCOURTS-ca5-23-60321-0.pdf",
+        summary:
+          "Fifth Circuit held geofence warrants (compel Google location data for everyone in a geographic box) are categorically unconstitutional general warrants — the controlling circuit precedent Reeves applied to tower dumps.",
+        whyItMatters:
+          "Doctrinal bridge from Carpenter CSLI privacy to bulk digital location tools. Cite with Reeves when arguing ALPR retroactive sifting.",
+      },
+    ],
+  },
+  {
     id: "404-aug-2026",
     title: "404 Media — August 2026 Flock series",
     intro:
@@ -19,7 +48,7 @@ export const MEDIA_SECTIONS = [
         summary:
           "Wisconsin police used Flock hits along Interstate 41 to reconstruct Edward Abrams-Phillips’s travel into Michigan (where marijuana is legal) and back, then cited that pattern — a “known source state for marijuana” — as part of probable cause to search his car. Bail jumping was dismissed; he was convicted only of weed possession.",
         whyItMatters:
-          "Establishes the travel-pattern / pretext-stop vector: mass ALPR used as behavioral profiling, not a single hotlist hit. Feeds the Fourth Amendment motion and discovery for multi-camera reconstruction logs.",
+          "Establishes the travel-pattern / pretext-stop vector — and the cleanest fact pattern for the tower-dump / general-warrant analogy (Reeves / Smith). Feeds the Fourth Amendment motion and discovery for multi-camera reconstruction logs and warrant authorization.",
       },
       {
         outlet: "404 Media",

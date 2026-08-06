@@ -6,6 +6,14 @@ title: Media & Sources — Challenge the Footage
 
 Press and research behind Challenge the Footage vendor profiles and document templates.
 
+## Court rulings — bulk location dragnets
+
+### [In re Four Applications… a/k/a Tower-Dump Warrants (S.D. Miss. Aug. 5, 2026)](https://www.courtlistener.com/docket/69660910/41/united-states-v-sealed/)
+Judge Reeves affirmed that tower dumps are per se unconstitutional general warrants. **Why it matters:** collect-everyone-sift-later architecture maps onto ALPR travel-pattern queries (*Carpenter* / *Smith* / Reeves).
+
+### [*United States v. Smith*, 110 F.4th 817 (5th Cir. 2024)](https://www.govinfo.gov/content/pkg/USCOURTS-ca5-23-60321/pdf/USCOURTS-ca5-23-60321-0.pdf)
+Geofence warrants categorically unconstitutional. **Why it matters:** circuit bridge from *Carpenter* to bulk digital location tools.
+
 ## 404 Media — August 2026 Flock series
 
 ### [Cops Used Flock to Track a Man Across State Lines…](https://www.404media.co/cops-used-flock-to-track-a-man-across-state-lines-to-create-pretext-to-search-his-car-for-weed/)
