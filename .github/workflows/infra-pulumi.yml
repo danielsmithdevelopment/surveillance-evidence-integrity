@@ -1,0 +1,163 @@
+name: Infra (Pulumi)
+
+# Applies Cloudflare KV / R2 / optional routes via Pulumi.
+# State lives in an R2 bucket (S3-compatible DIY backend) — no Pulumi Cloud.
+# Worker script + assets still deploy with Wrangler (not this workflow).
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "infra/**"
+      - ".github/workflows/infra-pulumi.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "infra/**"
+      - ".github/workflows/infra-pulumi.yml"
+  workflow_dispatch:
+    inputs:
+      command:
+        description: Pulumi command
+        type: choice
+        options:
+          - preview
+          - up
+        default: up
+
+concurrency:
+  group: infra-pulumi-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  pulumi:
+    name: pulumi
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: infra
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+      PULUMI_STACK: ${{ vars.PULUMI_STACK || 'prod' }}
+      PULUMI_CONFIG_PASSPHRASE: ${{ secrets.PULUMI_CONFIG_PASSPHRASE }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.PULUMI_STATE_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.PULUMI_STATE_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: auto
+      PULUMI_STATE_BUCKET: ${{ vars.PULUMI_STATE_BUCKET || 'ctf-pulumi-state' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Guard secrets
+        id: secrets
+        run: |
+          missing=
+          [ -z "$CLOUDFLARE_API_TOKEN" ] && missing="${missing} CLOUDFLARE_API_TOKEN"
+          [ -z "$CLOUDFLARE_ACCOUNT_ID" ] && missing="${missing} CLOUDFLARE_ACCOUNT_ID (repo variable)"
+          [ -z "$PULUMI_CONFIG_PASSPHRASE" ] && missing="${missing} PULUMI_CONFIG_PASSPHRASE"
+          [ -z "$AWS_ACCESS_KEY_ID" ] && missing="${missing} PULUMI_STATE_ACCESS_KEY_ID"
+          [ -z "$AWS_SECRET_ACCESS_KEY" ] && missing="${missing} PULUMI_STATE_SECRET_ACCESS_KEY"
+          if [ -n "$missing" ]; then
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            if [ "${{ github.event_name }}" = "pull_request" ]; then
+              echo "::warning::Skipping Pulumi preview — missing secrets/vars:$missing"
+              echo "See infra/README.md → GitHub Actions (R2 DIY state — no Pulumi Cloud)"
+              exit 0
+            fi
+            echo "::error::Missing required secrets/vars:$missing"
+            echo "See infra/README.md → GitHub Actions (R2 DIY state — no Pulumi Cloud)"
+            exit 1
+          fi
+          echo "configured=true" >> "$GITHUB_OUTPUT"
+
+      - name: Setup Node
+        if: steps.secrets.outputs.configured == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: infra/package-lock.json
+
+      - name: Install npm deps
+        if: steps.secrets.outputs.configured == 'true'
+        run: npm ci
+
+      - name: Setup Pulumi
+        if: steps.secrets.outputs.configured == 'true'
+        uses: pulumi/setup-pulumi@v2
+
+      - name: Resolve command
+        if: steps.secrets.outputs.configured == 'true'
+        id: cmd
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "command=preview" >> "$GITHUB_OUTPUT"
+          elif [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "command=${{ inputs.command }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "command=up" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Login to R2 state backend
+        if: steps.secrets.outputs.configured == 'true'
+        run: |
+          ENDPOINT="https://${CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com"
+          BACKEND="s3://${PULUMI_STATE_BUCKET}?endpoint=${ENDPOINT}&region=auto&s3ForcePathStyle=true"
+          echo "DIY backend: s3://${PULUMI_STATE_BUCKET} (Cloudflare R2) — not Pulumi Cloud"
+          pulumi login "$BACKEND"
+
+      - name: Stack select + config
+        if: steps.secrets.outputs.configured == 'true'
+        run: |
+          pulumi stack select "$PULUMI_STACK" --create
+          pulumi config set accountId "$CLOUDFLARE_ACCOUNT_ID"
+          pulumi config set workerName challenge-the-footage
+          pulumi config set domain "${{ vars.CTF_DOMAIN || 'challengethefootage.com' }}"
+          pulumi config set enableR2 "${{ vars.PULUMI_ENABLE_R2 || 'true' }}"
+          if [ -n "${{ vars.CLOUDFLARE_ZONE_ID }}" ]; then
+            pulumi config set zoneId "${{ vars.CLOUDFLARE_ZONE_ID }}"
+          fi
+          if [ "${{ vars.PULUMI_ENABLE_ROUTES }}" = "true" ]; then
+            pulumi config set enableRoutes true
+          else
+            pulumi config set enableRoutes false
+          fi
+
+      - name: Pulumi preview
+        if: steps.secrets.outputs.configured == 'true' && steps.cmd.outputs.command == 'preview'
+        run: pulumi preview --stack "$PULUMI_STACK" --non-interactive
+
+      - name: Pulumi up
+        if: steps.secrets.outputs.configured == 'true' && steps.cmd.outputs.command == 'up'
+        run: pulumi up --stack "$PULUMI_STACK" --yes --non-interactive
+
+      - name: Sync wrangler.toml bindings
+        if: steps.secrets.outputs.configured == 'true' && steps.cmd.outputs.command == 'up'
+        run: npm run sync
+        env:
+          STACK: ${{ env.PULUMI_STACK }}
+
+      - name: Commit binding sync
+        if: >
+          steps.secrets.outputs.configured == 'true' &&
+          steps.cmd.outputs.command == 'up' &&
+          github.ref == 'refs/heads/main' &&
+          github.event_name != 'pull_request'
+        working-directory: .
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add challenge-tool/wrangler.toml
+          if git diff --staged --quiet; then
+            echo "No wrangler.toml changes"
+            exit 0
+          fi
+          git commit -m "chore: sync wrangler bindings from Pulumi (${PULUMI_STACK})"
+          git push
