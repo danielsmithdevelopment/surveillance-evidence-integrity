@@ -404,13 +404,13 @@ export function discoveryRequests(vendorName, kind, footageCategory, recordingSt
       `Complete ${vendorName} query history for the searching officer for the 90 days surrounding the query at issue.`,
       `All queries by that officer lacking a case number or stated law-enforcement purpose.`,
       `Department policy on documentation requirements for ALPR / surveillance queries.`,
-      `Audit logs for the specific query that produced evidence against the defendant, with full metadata.`,
+      `The department's ALPR / ${vendorName} usage policy (SOP, general order, or training bulletin) in effect on the date of the incident — including any guidance about disclosing ALPR use to vehicle occupants, mentioning ALPR in reports or complaints, referring to the system as "county resources" or similar euphemisms, or treating ALPR hits as "intelligence."`,
+      `Audit logs for the specific query that produced evidence against the defendant, with full metadata — including any multi-camera / multi-jurisdiction travel-pattern reconstruction used to build probable cause.`,
       `Prior complaints, IA investigations, or discipline involving the officer's ALPR use.`,
       `Agency-wide statistics on queries without case numbers for the prior 12 months.`,
-      `Training materials provided to officers on lawful use of ${vendorName}.`,
+      `Training materials provided to officers on lawful use of ${vendorName}, including any federal (FBI/DOJ) or state guidance on how vaguely to describe Flock / ALPR searches in reports.`,
       `Any alerts or anomaly detection for personal / stalking-pattern queries.`,
-      `Retention and deletion policies for query logs.`,
-      `List of all agencies and federal partners with access to the local ${vendorName} network.`,
+      `Retention and deletion policies for query logs, and a list of all agencies and federal partners with access to the local ${vendorName} network.`,
     ],
   };
   return blocks[kind];

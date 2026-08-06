@@ -100,7 +100,7 @@ Proponents of surveillance footage must demonstrate the system producing it is r
 AI-generated identification evidence is subject to reliability scrutiny. A documented ~10% error rate does not meet the standard for evidence used to initiate stops, detentions, and arrests. The appropriate floor is 0.1% or better, independently certified.
 
 **Fourth Amendment — Unauthorized access**
-ALPR queries without documented case numbers and legitimate law enforcement purpose are constitutionally suspect. When 84% of queries in FOIA-derived audit logs carry no case number, and the documented pattern of officer abuse runs to at least 28 cases, a search without documentation cannot be distinguished from personal misuse.
+ALPR queries without documented case numbers and legitimate law enforcement purpose are constitutionally suspect. When 84% of queries in FOIA-derived audit logs carry no case number, and the documented pattern of officer abuse runs to at least 28 cases, a search without documentation cannot be distinguished from personal misuse. Documented uses also include interstate travel-pattern profiling as probable-cause padding and departmental SOPs instructing officers not to mention ALPR usage to suspects or in reports (404 Media Flock reporting, August 2026).
 
 **42 U.S.C. § 1983 — Civil damages**
 Wrongful stops, detentions at gunpoint, and arrests based on misidentification constitute Fourth Amendment violations actionable under Section 1983. Settlements range from $10,000–$75,000 for brief detentions to $100,000–$500,000+ for prolonged detention or physical harm.

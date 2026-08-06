@@ -419,7 +419,11 @@ IV. ARGUMENT
 
 5. Without a documented case number, stated law-enforcement purpose, and verifiable authorization chain, the search producing evidence against ${ctx.defendant} cannot be distinguished from the documented pattern of unauthorized personal use.
 
-6. Systemic access-control failures and incomplete audit trails undermine reliance on vendor-controlled logs to justify the search.`;
+6. Where ${vendorName} (or equivalent ALPR) hits were used to reconstruct interstate or multi-camera travel patterns and retrofit that pattern into probable cause — including travel to activity that is lawful in another state — the stop is a mass-surveillance pretext stop. Whren v. United States does not immunize dragnet behavioral profiling; counsel should preserve aggregate-location-privacy and particularity arguments for appellate review.
+
+7. Where departmental SOPs or federal guidance instruct officers not to mention ALPR usage to occupants or in reports/complaints (or to be "as vague as permissible" because searches are public-records-discoverable), concealment of material ALPR reliance supports bad-faith and Franks v. Delaware challenges to any affidavit or charging narrative that omits the surveillance basis.
+
+8. Systemic access-control failures and incomplete audit trails undermine reliance on vendor-controlled logs to justify the search.`;
 
   const access = `${caption}
 ${t.access}
