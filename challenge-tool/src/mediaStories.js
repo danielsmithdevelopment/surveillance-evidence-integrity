@@ -13,8 +13,7 @@ export const MEDIA_SECTIONS = [
       {
         outlet: "S.D. Miss. (Reeves, C.J.)",
         date: "August 5, 2026",
-        title:
-          "In re Four Applications… a/k/a Tower-Dump Warrants — order affirming denial",
+        title: "In re Four Applications… a/k/a Tower-Dump Warrants — order affirming denial",
         url: "https://www.courtlistener.com/docket/69660910/41/united-states-v-sealed/",
         summary:
           "Chief Judge Carlton W. Reeves affirmed a magistrate’s denial of four FBI tower-dump warrant applications in a Jackson, Mississippi gang-violence investigation. Tower dumps — records of every cellphone that connected to specified towers near crime scenes so police can later identify unknown suspects — are per se unconstitutional under the Fourth Amendment as general warrants. Builds on United States v. Smith (5th Cir. 2024) holding geofence warrants categorically unconstitutional.",
@@ -171,8 +170,7 @@ export const MEDIA_SECTIONS = [
         url: "https://www.eff.org/issues/automated-license-plate-readers-alpr",
         summary:
           "Civil-liberties analysis of ALPR networks, including large-scale Flock search audits tied to protests, reproductive care, and discriminatory targeting.",
-        whyItMatters:
-          "Independent corroboration that query abuse is systemic, not anecdotal.",
+        whyItMatters: "Independent corroboration that query abuse is systemic, not anecdotal.",
       },
       {
         outlet: "Wednesday Journal (Oak Park)",
@@ -187,8 +185,7 @@ export const MEDIA_SECTIONS = [
       {
         outlet: "Haaretz",
         date: "December 2022",
-        title:
-          "This ‘Dystopian’ Cyber Firm Could Have Saved Mossad Assassins From Exposure (Toka)",
+        title: "This ‘Dystopian’ Cyber Firm Could Have Saved Mossad Assassins From Exposure (Toka)",
         url: "https://www.haaretz.com/israel-news/security-aviation/2022-12-26/ty-article-magazine/.premium/this-dystopian-cyber-firm-could-have-saved-mossad-assassins-from-exposure/00000185-0bc6-d26d-a1b7-dbd739100000",
         summary:
           "Internal documents: Toka sells tech that can alter live and archived camera feeds without forensic traces. Andreessen Horowitz has funded both Toka and Flock.",
