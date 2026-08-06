@@ -35,7 +35,7 @@ Discoverability / bot control / content:
 - `/robots.txt` — AI bot rules + Content Signals + Sitemap
 - `/sitemap.xml`
 - `/llms.txt`, `/llms-full.txt`, `/AGENTS.md`
-- Markdown negotiation via Worker (`Accept: text/markdown` → `/index.md`, `/terms.md`, `/public-defenders.md`)
+- Markdown negotiation via Worker (`Accept: text/markdown` → `/index.md`, `/media.md`, `/terms.md`, `/public-defenders.md`)
 - Homepage `Link` headers (api-catalog, service-desc, agent-card, llms.txt, auth.md, oauth-as, …)
 - Correct `Content-Type` overrides for well-known JSON / linkset / markdown
 
