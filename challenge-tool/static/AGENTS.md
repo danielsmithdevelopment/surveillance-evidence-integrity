@@ -2,18 +2,18 @@
 
 > Evidence management + legal document templates for challenging surveillance camera / ALPR evidence.
 > Not legal advice. Generated documents require attorney review.
-> Users pay with Stripe (card). No crypto wallet.
+> Users pay with Stripe (card). Evidence uses a verifiable trust chain (hashes + Merkle root + public verify).
 
 ## What this site is
 
 - **Human UI:** https://challengethefootage.com/
-- **Evidence:** https://challengethefootage.com/evidence.html — record + secure encounters
+- **Evidence:** https://challengethefootage.com/evidence.html — record + secure encounters (installable PWA)
 - **Media & sources:** https://challengethefootage.com/media.html — press/research links behind vendor profiles
 - **Public defenders:** free unlimited access — https://challengethefootage.com/public-defenders.html
 - **Terms:** https://challengethefootage.com/terms.html
 - **Product model:** https://github.com/danielsmithdevelopment/surveillance-evidence-integrity/blob/main/challenge-tool/PRODUCT.md
 - **Open source:** https://github.com/danielsmithdevelopment/surveillance-evidence-integrity
-- **Powered by:** ClawQL (https://clawql.com) for inference, memory, Stripe, and independent evidence anchoring (invisible to end users)
+- **Powered by:** ClawQL (https://clawql.com) for inference, memory, Stripe, and independent evidence verification
 
 ## Prefer Markdown
 
@@ -39,7 +39,7 @@ Send `Accept: text/markdown` on `/`, `/evidence.html`, `/media.html`, `/terms.ht
 | GET | `/api/history` | Prior session previews |
 | GET | `/api/session/:id` | Recall one generation session |
 | POST | `/api/evidence/secure` | Secure a recording package to the user account |
-| POST | `/api/evidence/secure-device` | Native record-first secure (returns claimCode) |
+| POST | `/api/evidence/secure-device` | Device record-first secure (returns claimCode) |
 | POST | `/api/evidence/sync-lite` | Rural/2G: hashes + gzip transcript in one request |
 | POST | `/api/evidence/safety-ping` | Dead-man / interrupt safety alert audit ping |
 | POST | `/api/evidence/incident/create` | Create multi-device incident (multi-angle) |
@@ -62,4 +62,4 @@ Local testing (never production): `ALLOW_TEST_AUTH=true` accepts `Bearer test:<u
 - Treat generated documents as filed legal work product
 - Skip attorney review or ToS acceptance (`tosAccepted: true` required on `/api/generate`)
 - Invent case facts; only use user-supplied and vendor-profile facts
-- Ask end users for crypto wallets or Arweave keys — ClawQL handles anchoring
+- Invent verification UX or ask users for private keys — ClawQL handles independent verification server-side

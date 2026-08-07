@@ -341,19 +341,17 @@ pulumi up
 
 ---
 
-## Native app (Witness / Evidence)
+## Native client (planned)
+
+Not shipped yet. Until then, **the installable web PWA** (`/evidence.html` + Home Screen) is the capture surface.
 
 | Item | Current state |
 |---|---|
-| Stack | Expo / React Native (`witness/`) |
+| Near-term capture | Browser PWA (manifest + service worker) |
+| Future stack | Expo / React Native (`witness/` in repo — engineering only) |
 | Backend | Same CTF Worker evidence APIs |
-| Guides | [../witness/README.md](../witness/README.md), [NATIVE.md](../witness/NATIVE.md), [BUILD.md](../witness/BUILD.md), [FIRST-NATIVE-DEPLOY.md](../witness/FIRST-NATIVE-DEPLOY.md) |
-| First ship target | Android EAS **preview APK** |
-| Activation shipped | In-app start recording |
-| Activation roadmap | Siri / Assistant open-app shortcuts, shake-to-record, home-screen widget |
-| Device id | Expo SecureStore today; hardware enclave signatures roadmap |
-| Whisper | Optional native module + **tiny.en**; stub is honest |
-| Audio | Parallel mic preferred; optional ffmpeg extract |
+| Guides (future) | [../witness/README.md](../witness/README.md), [NATIVE.md](../witness/NATIVE.md), [BUILD.md](../witness/BUILD.md), [FIRST-NATIVE-DEPLOY.md](../witness/FIRST-NATIVE-DEPLOY.md) |
+| First native target (later) | Android EAS **preview APK** |
 
 ---
 
@@ -396,8 +394,8 @@ surveillance-evidence-integrity/
 | Item | Reference | Priority |
 |---|---|---|
 | Deploy production Worker + DNS | [CLOUDFLARE-DEPLOY.md](./CLOUDFLARE-DEPLOY.md) | **Blocker** (site 530) |
-| Go live: entity, Stripe, web + Witness app | [../GO-LIVE.md](../GO-LIVE.md) | **Blocker** for charging money; app follows web same window |
-| First Android EAS preview APK | [FIRST-NATIVE-DEPLOY.md](../witness/FIRST-NATIVE-DEPLOY.md) | High |
+| Go live: entity, Stripe, web PWA | [../GO-LIVE.md](../GO-LIVE.md) | **Blocker** for charging money |
+| First Android EAS preview APK (later) | [FIRST-NATIVE-DEPLOY.md](../witness/FIRST-NATIVE-DEPLOY.md) | Later — after web PWA |
 | Attorney UI: group by `incidentId` + transcript cross-ref | CHALLENGE-GRADE / NATIVE roadmap | High |
 | Challenge-grade one-pager for councils / PDs | [../outreach/ONE-PAGERS.md](../outreach/ONE-PAGERS.md) (draft landed) | High — print / distribute |
 | Shake / Siri / widget activation | witness README | Medium |
@@ -411,9 +409,9 @@ surveillance-evidence-integrity/
 
 - **“Incident” not “swarm”** — law-enforcement encounter language
 - **Imperfect STT is expected noise** — inventing speech or treating Whisper as the encounter would undermine credibility; audio/video are authoritative
-- **No Arweave TX / wallet in primary civilian UI** — counsel uses `/api/evidence/verify/{id}`
+- **Trust-chain language in civilian UI** — fingerprints, verification ID, how-to-verify; counsel uses `/api/evidence/verify/{id}`
 - **Record-first, auth-deferred** — no Google login while a stop is in progress
-- **One Worker, not two** — legacy Witness Worker deprecated
+- **One Worker, not two** — legacy device Worker deprecated; PWA first, native later
 - **BWC missing → Stage 1 first** — failure-to-record before authenticity theater
 
 ---

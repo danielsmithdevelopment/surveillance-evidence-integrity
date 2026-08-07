@@ -1,6 +1,5 @@
 /**
- * Explains the evidence trust chain without wallet / chain-product language.
- * One purpose: show how capture → integrity package → verification improves quality.
+ * Explains the evidence trust chain and how it improves authenticity / evidence quality.
  */
 export function TrustChainSection({ compact = false }) {
   const steps = [

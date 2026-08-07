@@ -17,6 +17,8 @@ import {
   getFootageCategory,
 } from "../footage-modes.js";
 
+import { loadGoogleIdentity } from "./googleIdentity.js";
+
 const TOS_KEY = "surv_tos_v1";
 const API = typeof window !== "undefined" ? window.CTF_API_BASE || "" : "";
 
@@ -99,7 +101,7 @@ function TosModal({ onAccept }) {
 
   return (
     <div
-      className="fixed inset-0 z-50 grid place-items-center bg-ink/70 px-4 animate-fade"
+      className="fixed inset-0 z-50 grid place-items-center bg-ink/70 px-4"
       role="presentation"
     >
       <div
@@ -107,7 +109,7 @@ function TosModal({ onAccept }) {
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="w-full max-w-lg rounded-2xl border border-line bg-white p-6 shadow-[0_24px_80px_rgba(18,26,33,0.18)] animate-rise sm:p-8"
+        className="w-full max-w-lg rounded-2xl border border-line bg-white p-6 shadow-[0_24px_80px_rgba(18,26,33,0.18)] sm:p-8"
       >
         <p className="text-[0.7rem] font-bold uppercase tracking-[0.14em] text-teal">
           Before you generate
@@ -158,11 +160,9 @@ function TosModal({ onAccept }) {
         <button
           type="button"
           className={`${btnPrimary} mt-5 w-full`}
+          disabled={!checked}
           onClick={() => {
-            if (!checked) {
-              window.alert("Please accept the Terms of Service to continue.");
-              return;
-            }
+            if (!checked) return;
             localStorage.setItem(TOS_KEY, new Date().toISOString());
             onAccept();
           }}
@@ -179,18 +179,25 @@ function SignIn({ onCredential, allowTestAuth }) {
 
   useEffect(() => {
     const clientId = window.GOOGLE_CLIENT_ID;
-    if (!clientId || !window.google?.accounts?.id || !slot.current) return;
-    window.google.accounts.id.initialize({
-      client_id: clientId,
-      callback: (resp) => onCredential(resp.credential),
+    if (!clientId || !slot.current) return;
+    let cancelled = false;
+    loadGoogleIdentity().then((google) => {
+      if (cancelled || !google?.accounts?.id || !slot.current) return;
+      google.accounts.id.initialize({
+        client_id: clientId,
+        callback: (resp) => onCredential(resp.credential),
+      });
+      google.accounts.id.renderButton(slot.current, {
+        theme: "outline",
+        size: "large",
+        shape: "pill",
+        text: "signin_with",
+        width: 260,
+      });
     });
-    window.google.accounts.id.renderButton(slot.current, {
-      theme: "outline",
-      size: "large",
-      shape: "pill",
-      text: "signin_with",
-      width: 260,
-    });
+    return () => {
+      cancelled = true;
+    };
   }, [onCredential]);
 
   if (!window.GOOGLE_CLIENT_ID) {

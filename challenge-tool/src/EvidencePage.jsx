@@ -10,6 +10,7 @@ import {
   inputClass,
 } from "./Shell.jsx";
 import { TrustChainSection } from "./TrustChain.jsx";
+import { loadGoogleIdentity } from "./googleIdentity.js";
 
 const API = typeof window !== "undefined" ? window.CTF_API_BASE || "" : "";
 const ALL_PARTY = new Set(["CA", "CT", "FL", "IL", "MD", "MA", "MI", "MT", "NH", "PA", "WA"]);
@@ -51,25 +52,32 @@ function DemoSignIn({ onCredential, allowTestAuth }) {
 
   useEffect(() => {
     const clientId = window.GOOGLE_CLIENT_ID;
-    if (!clientId || !window.google?.accounts?.id || !slot.current) return;
-    window.google.accounts.id.initialize({
-      client_id: clientId,
-      callback: (resp) => {
-        try {
-          const payload = JSON.parse(atob(resp.credential.split(".")[1]));
-          onCredential(resp.credential, payload.email || null);
-        } catch {
-          onCredential(resp.credential, null);
-        }
-      },
+    if (!clientId || !slot.current) return;
+    let cancelled = false;
+    loadGoogleIdentity().then((google) => {
+      if (cancelled || !google?.accounts?.id || !slot.current) return;
+      google.accounts.id.initialize({
+        client_id: clientId,
+        callback: (resp) => {
+          try {
+            const payload = JSON.parse(atob(resp.credential.split(".")[1]));
+            onCredential(resp.credential, payload.email || null);
+          } catch {
+            onCredential(resp.credential, null);
+          }
+        },
+      });
+      google.accounts.id.renderButton(slot.current, {
+        theme: "outline",
+        size: "large",
+        shape: "pill",
+        text: "signin_with",
+        width: 260,
+      });
     });
-    window.google.accounts.id.renderButton(slot.current, {
-      theme: "outline",
-      size: "large",
-      shape: "pill",
-      text: "signin_with",
-      width: 260,
-    });
+    return () => {
+      cancelled = true;
+    };
   }, [onCredential]);
 
   if (window.GOOGLE_CLIENT_ID) {
@@ -406,7 +414,7 @@ export default function EvidencePage() {
             </div>
 
             {error && (
-              <p className="mt-3 text-sm text-red-700" role="alert">
+              <p className="mt-3 text-sm text-danger" role="alert">
                 {error}
               </p>
             )}
