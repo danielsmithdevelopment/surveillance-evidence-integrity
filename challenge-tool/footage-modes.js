@@ -226,6 +226,7 @@ export function resolveFootageProfile(footageCategory, vendorKey, vendorProfile,
         errorRateFacts: [...(vendorProfile.errorRateFacts || [])],
         accessAbuseFacts: [...(vendorProfile.accessAbuseFacts || [])],
         civilFacts: [...(vendorProfile.civilFacts || [])],
+        droneFacts: [...(vendorProfile.droneFacts || [])],
         sources: [...(vendorProfile.sources || [])],
       }
     : null;
