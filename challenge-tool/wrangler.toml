@@ -18,6 +18,8 @@ routes = [
 directory = "./static"
 binding = "ASSETS"
 run_worker_first = true
+# Keep /evidence.html etc. as exact paths (no auto-redirect to /evidence).
+html_handling = "none"
 
 # BEGIN PULUMI-MANAGED — do not edit by hand; npm run sync from infra/
 [[kv_namespaces]]
