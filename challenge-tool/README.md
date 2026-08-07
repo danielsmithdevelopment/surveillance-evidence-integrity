@@ -1,9 +1,9 @@
 # challengethefootage.com
 
-One product for **evidence + legal document templates**.
+One product for **evidence + legal document templates**, installable as a Progressive Web App.
 
-1. Record a police encounter (`/evidence.html` or native Evidence app)
-2. Secure evidence to the user’s account (ClawQL anchors independently — **no crypto wallet**)
+1. Record a police encounter in the browser (`/evidence.html`) — Add to Home Screen for a near-native app
+2. Secure a **trust chain** (content fingerprints → Merkle root → public verify) to the user’s account
 3. Optional **multi-device incident** — several phones, one `incidentId`, coordinated start
 4. Generate FRE 901 / 702 / Fourth Amendment / § 1983 templates for **fixed/ALPR, body-worn** (incl. failure-to-record), **or cell phone** footage
 5. Pay with **Stripe** (card) when past the free generation; public defenders free

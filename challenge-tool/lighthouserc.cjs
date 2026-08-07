@@ -2,7 +2,7 @@ module.exports = {
   ci: {
     collect: {
       staticDistDir: "./static",
-      url: ["/", "/terms.html", "/public-defenders.html"],
+      url: ["/", "/evidence.html", "/terms.html", "/public-defenders.html", "/media.html"],
       numberOfRuns: 1,
       chromePath: process.env.CHROME_PATH || undefined,
       chromeFlags: [
@@ -30,7 +30,7 @@ module.exports = {
       assertions: {
         "categories:accessibility": ["error", { minScore: 1 }],
         "categories:best-practices": ["error", { minScore: 0.9 }],
-        "categories:seo": ["error", { minScore: 0.9 }],
+        "categories:seo": ["error", { minScore: 1 }],
         "categories:performance": ["warn", { minScore: 0.85 }],
         "largest-contentful-paint": ["warn", { maxNumericValue: 4000 }],
         "cumulative-layout-shift": ["error", { maxNumericValue: 0.1 }],

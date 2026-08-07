@@ -7,7 +7,7 @@
 
 Canonical challenge operator guide: [FOOTAGE-CHALLENGE.md](./FOOTAGE-CHALLENGE.md).  
 Production deploy: [CLOUDFLARE-DEPLOY.md](./CLOUDFLARE-DEPLOY.md).  
-Go-live (entity, Stripe, ClawQL, web + Witness app): [../GO-LIVE.md](../GO-LIVE.md).  
+Go-live (entity, Stripe, ClawQL, web PWA): [../GO-LIVE.md](../GO-LIVE.md).  
 Challenge-grade integrity thesis: [CHALLENGE-GRADE.md](./CHALLENGE-GRADE.md).
 
 ---
@@ -20,25 +20,25 @@ Challenge the Footage is a **unified evidence product** with three capture class
 [Evidence capture]
    Fixed ALPR / surveillance (vendor-sourced facts → challenge docs)
    Body-worn camera (officer-sourced; may be missing / partial / recorded)
-   Cellphone / web recording (civilian-sourced via /evidence.html or Witness native)
+   Cellphone / web recording (civilian-sourced via /evidence.html PWA)
          |
          v
-[Integrity pipeline]
-   SHA-256 hashes → Merkle root → ClawQL anchor (when online) → public verify endpoint
+[Integrity pipeline / trust chain]
+   SHA-256 fingerprints → Merkle root → independent verification (when online) → public verify endpoint
          |
          v
 [Document generation]
    Four FRE vectors × three footage categories (+ BWC recording-status ratchet)
-   challengethefootage.com (web) + future attorney UI
+   challengethefootage.com (installable PWA) + future attorney UI
 ```
 
 **What it is not:**
 
-- A crypto product (no wallet UX; no Arweave TX in primary civilian UI)
-- A surveillance company (ClawQL / R2 / Arweave are invisible infrastructure)
-- Three separate apps (legacy `witness/worker` is deprecated; everything runs through the challenge-tool Worker)
+- A wallet or token product — civilian UI talks about the **trust chain** and evidence quality, not chains or keys
+- A surveillance company (ClawQL / R2 are invisible infrastructure)
+- A shipped native store app yet — capture today is the browser / Home Screen PWA; a dedicated native client may come later
 
-**One-liner for users:** Record when you do not feel safe, secure evidence on weak links, generate attorney-review templates, pay with a normal card.
+**One-liner for users:** Record when you do not feel safe, seal a verifiable trust chain, generate attorney-review templates, pay with a normal card.
 
 ---
 
@@ -87,7 +87,7 @@ Deploy creates **one** KV namespace (`RATE_LIMIT_KV`) and optionally R2 (`ctf-ev
 ### Authentication
 
 - **Google Identity Services** — primary web auth; Worker verifies ID token; injects `GOOGLE_CLIENT_ID` into HTML at the edge
-- **Record-first** — Witness does not require Google mid-encounter; claim on the website afterward
+- **Record-first** — Capture does not require Google mid-encounter; claim on the website afterward
 - **Local demo only** — `ALLOW_TEST_AUTH=true` accepts `Bearer test:<userId>:<email>` (**never in production**)
 - **PD whitelist** — KV key `pd_whitelist:{email}` = `true` (manual via wrangler)
 
@@ -98,13 +98,13 @@ Deploy creates **one** KV namespace (`RATE_LIMIT_KV`) and optionally R2 (`ctf-ev
 | User-facing | What actually happens |
 |---|---|
 | Sign in with Google | Google ID token → Worker |
-| Record on `/evidence.html` or native app | Capture → hashes → upload / sync-lite |
+| Record on `/evidence.html` (PWA) | Capture → fingerprints → upload / sync-lite |
 | Situation presets + emergency contacts | Check-in timer + SMS drafts + `safety-ping` |
-| “Evidence secured” / interrupted recovery | Hashes + optional ClawQL anchor; no wallet UX |
+| “Evidence secured” / interrupted recovery | Trust chain (hashes + Merkle) + optional independent verification |
 | Generate docs (category + BWC status) | Mode-aware FRE 901 / 702 / 4th Am / §1983 |
 | Public defender access | Email whitelist; unlimited generations |
 
-Users are **not** expected to understand ClawQL, Arweave, Merkle trees, or R2.
+Users are **not** expected to understand ClawQL, Merkle trees, or object storage internals — the civilian UI explains the **trust chain** in plain language.
 
 ### Product surface (website)
 
@@ -222,7 +222,7 @@ No auth. Typical fields:
 - `howToVerify` — string[] checklist (Merkle composition, re-hash files, optional external record, STT honesty)
 - Incident / interrupt / mediaPending flags when present
 
-Counsel-facing surface. Do **not** put wallet prompts or raw chain UX in the civilian primary UI.
+Counsel-facing surface. Prefer trust-chain language (fingerprints, verification ID, how-to-verify) in the civilian primary UI.
 
 ---
 
@@ -266,7 +266,7 @@ Server-side in Worker / `footage-modes.js` — FOIA/IJ/COPA-style facts, not bro
 
 ### Cellphone path
 
-Deep-link `/?witnessSession={sessionId}` pre-fills case facts with the session id. Counsel pulls hashes / `verificationRef` from the **verify** endpoint — the generator does not require surfacing Arweave TX IDs in the civilian form.
+Deep-link `/?evidenceSession={sessionId}` (legacy `?witnessSession=` still accepted) pre-fills case facts with the session id. Counsel pulls hashes / `verificationRef` from the **verify** endpoint — the generator does not require surfacing raw infrastructure IDs in the civilian form.
 
 ### Offline vs gateway
 

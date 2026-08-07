@@ -9,6 +9,7 @@ import {
   btnSecondary,
   inputClass,
 } from "./Shell.jsx";
+import { TrustChainSection } from "./TrustChain.jsx";
 import { registerWebMcpTools } from "./webmcp.js";
 import {
   BODY_CAM_RECORDING_STATUSES,
@@ -249,18 +250,19 @@ export default function App() {
   const [sessionId, setSessionId] = useState(null);
   const [docs, setDocs] = useState(null);
   const [tab, setTab] = useState("motion");
-  const [witnessSession, setWitnessSession] = useState(null);
+  const [evidenceSession, setEvidenceSession] = useState(null);
   const formRef = useRef(null);
   const panelId = useId();
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const ws = params.get("witnessSession");
-    if (ws) {
-      setWitnessSession(ws);
+    const sessionId = params.get("evidenceSession") || params.get("witnessSession");
+    if (sessionId) {
+      setEvidenceSession(sessionId);
       setForm((f) => ({
         ...f,
-        additionalFacts: `${f.additionalFacts || ""}\n\nWitness recording session: ${ws}\n`.trim(),
+        additionalFacts:
+          `${f.additionalFacts || ""}\n\nEvidence recording session: ${sessionId}\n`.trim(),
       }));
     }
   }, []);
@@ -400,8 +402,8 @@ export default function App() {
               <span className="italic text-teal-deep">the Footage</span>
             </h1>
             <p className="mt-6 max-w-md text-lg leading-relaxed text-ink-muted sm:text-xl">
-              Record encounters, secure evidence, and generate challenge documents — one account,
-              pay by card.
+              Secure a verifiable trust chain for what you capture, then generate attorney-review
+              challenge documents — one account.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-4">
               {!token ? (
@@ -469,18 +471,22 @@ export default function App() {
         tabIndex={-1}
         className="relative z-10 mx-auto w-full max-w-6xl flex-1 px-5 pb-16 outline-none sm:px-8"
       >
-        {witnessSession && (
+        {evidenceSession && (
           <div
             className="mb-6 rounded-xl border border-teal/25 bg-teal-soft/70 px-4 py-3 text-sm text-ink animate-fade"
             role="status"
           >
-            Witness evidence linked: <code className="font-mono">{witnessSession}</code>
+            Evidence session linked: <code className="font-mono">{evidenceSession}</code>
             {" · "}
             <a className="font-medium text-teal-deep underline" href="/evidence.html">
               Evidence library
             </a>
           </div>
         )}
+
+        <div className="mb-8">
+          <TrustChainSection compact />
+        </div>
 
         <section
           ref={formRef}
@@ -585,7 +591,7 @@ export default function App() {
                     onChange={(e) => setCustomVendorName(e.target.value)}
                     placeholder={
                       vendor === "cellphone"
-                        ? "e.g. witness iPhone, officer personal phone"
+                        ? "e.g. bystander's iPhone, officer personal phone"
                         : "Vendor / source legal name"
                     }
                     autoComplete="organization"

@@ -270,7 +270,7 @@
       "post": {
         "operationId": "secureEvidence",
         "summary": "Secure a recording package to the signed-in account",
-        "description": "Stores hashes and Merkle root. ClawQL may independently anchor verification; end users are not asked for a crypto wallet.",
+        "description": "Stores content fingerprints (SHA-256) and a Merkle root for the recording package. ClawQL may independently verify the package; the public verify endpoint exposes hashes and a how-to-verify checklist.",
         "requestBody": {
           "required": true,
           "content": {
@@ -349,7 +349,7 @@
     "/api/evidence/secure-device": {
       "post": {
         "operationId": "secureEvidenceDevice",
-        "summary": "Secure evidence from the native app without Google (record-first)",
+        "summary": "Secure evidence from a device client without Google (record-first)",
         "security": [],
         "description": "Returns sessionId + one-time claimCode. User claims on the website after sign-in.",
         "requestBody": {

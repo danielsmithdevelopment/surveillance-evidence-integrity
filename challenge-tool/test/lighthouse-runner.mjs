@@ -14,7 +14,13 @@ import lighthouse from "lighthouse";
 
 const root = join(fileURLToPath(new URL(".", import.meta.url)), "../static");
 const outDir = join(fileURLToPath(new URL(".", import.meta.url)), "../.lighthouseci");
-const urls = ["/", "/terms.html", "/public-defenders.html", "/media.html"];
+const urls = ["/", "/evidence.html", "/terms.html", "/public-defenders.html", "/media.html"];
+const MIME_EXTRA = {
+  ".png": "image/png",
+  ".webmanifest": "application/manifest+json",
+  ".md": "text/markdown; charset=utf-8",
+  ".txt": "text/plain; charset=utf-8",
+};
 const debugPort = 9333;
 
 const MIME = {
@@ -31,7 +37,7 @@ function assertScores(lhr, path) {
   const checks = [
     ["accessibility", 1],
     ["best-practices", 0.9],
-    ["seo", 0.9],
+    ["seo", 1],
   ];
   const failures = [];
   for (const [id, min] of checks) {
@@ -61,7 +67,9 @@ function startStaticServer() {
       res.end("Not found");
       return;
     }
-    res.writeHead(200, { "Content-Type": MIME[extname(filePath)] || "application/octet-stream" });
+    const type =
+      MIME[extname(filePath)] || MIME_EXTRA[extname(filePath)] || "application/octet-stream";
+    res.writeHead(200, { "Content-Type": type });
     createReadStream(filePath).pipe(res);
   });
   return new Promise((resolve) => {

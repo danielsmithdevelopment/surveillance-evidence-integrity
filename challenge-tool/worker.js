@@ -85,6 +85,8 @@ const CONTENT_TYPE_OVERRIDES = {
   "/llms-full.txt": "text/plain; charset=utf-8",
   "/auth.md": "text/markdown; charset=utf-8",
   "/AGENTS.md": "text/markdown; charset=utf-8",
+  "/site.webmanifest": "application/manifest+json; charset=utf-8",
+  "/sw.js": "application/javascript; charset=utf-8",
 };
 
 function wantsMarkdown(request) {
