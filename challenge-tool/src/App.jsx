@@ -9,12 +9,15 @@ import {
   btnSecondary,
   inputClass,
 } from "./Shell.jsx";
+import { TrustChainSection } from "./TrustChain.jsx";
 import { registerWebMcpTools } from "./webmcp.js";
 import {
   BODY_CAM_RECORDING_STATUSES,
   FOOTAGE_CATEGORIES,
   getFootageCategory,
 } from "../footage-modes.js";
+
+import { loadGoogleIdentity } from "./googleIdentity.js";
 
 const TOS_KEY = "surv_tos_v1";
 const API = typeof window !== "undefined" ? window.CTF_API_BASE || "" : "";
@@ -97,16 +100,13 @@ function TosModal({ onAccept }) {
   }, []);
 
   return (
-    <div
-      className="fixed inset-0 z-50 grid place-items-center bg-ink/70 px-4 animate-fade"
-      role="presentation"
-    >
+    <div className="fixed inset-0 z-50 grid place-items-center bg-ink/70 px-4" role="presentation">
       <div
         ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="w-full max-w-lg rounded-2xl border border-line bg-white p-6 shadow-[0_24px_80px_rgba(18,26,33,0.18)] animate-rise sm:p-8"
+        className="w-full max-w-lg rounded-2xl border border-line bg-white p-6 shadow-[0_24px_80px_rgba(18,26,33,0.18)] sm:p-8"
       >
         <p className="text-[0.7rem] font-bold uppercase tracking-[0.14em] text-teal">
           Before you generate
@@ -157,11 +157,9 @@ function TosModal({ onAccept }) {
         <button
           type="button"
           className={`${btnPrimary} mt-5 w-full`}
+          disabled={!checked}
           onClick={() => {
-            if (!checked) {
-              window.alert("Please accept the Terms of Service to continue.");
-              return;
-            }
+            if (!checked) return;
             localStorage.setItem(TOS_KEY, new Date().toISOString());
             onAccept();
           }}
@@ -178,18 +176,25 @@ function SignIn({ onCredential, allowTestAuth }) {
 
   useEffect(() => {
     const clientId = window.GOOGLE_CLIENT_ID;
-    if (!clientId || !window.google?.accounts?.id || !slot.current) return;
-    window.google.accounts.id.initialize({
-      client_id: clientId,
-      callback: (resp) => onCredential(resp.credential),
+    if (!clientId || !slot.current) return;
+    let cancelled = false;
+    loadGoogleIdentity().then((google) => {
+      if (cancelled || !google?.accounts?.id || !slot.current) return;
+      google.accounts.id.initialize({
+        client_id: clientId,
+        callback: (resp) => onCredential(resp.credential),
+      });
+      google.accounts.id.renderButton(slot.current, {
+        theme: "outline",
+        size: "large",
+        shape: "pill",
+        text: "signin_with",
+        width: 260,
+      });
     });
-    window.google.accounts.id.renderButton(slot.current, {
-      theme: "outline",
-      size: "large",
-      shape: "pill",
-      text: "signin_with",
-      width: 260,
-    });
+    return () => {
+      cancelled = true;
+    };
   }, [onCredential]);
 
   if (!window.GOOGLE_CLIENT_ID) {
@@ -249,18 +254,19 @@ export default function App() {
   const [sessionId, setSessionId] = useState(null);
   const [docs, setDocs] = useState(null);
   const [tab, setTab] = useState("motion");
-  const [witnessSession, setWitnessSession] = useState(null);
+  const [evidenceSession, setEvidenceSession] = useState(null);
   const formRef = useRef(null);
   const panelId = useId();
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const ws = params.get("witnessSession");
-    if (ws) {
-      setWitnessSession(ws);
+    const sessionId = params.get("evidenceSession") || params.get("witnessSession");
+    if (sessionId) {
+      setEvidenceSession(sessionId);
       setForm((f) => ({
         ...f,
-        additionalFacts: `${f.additionalFacts || ""}\n\nWitness recording session: ${ws}\n`.trim(),
+        additionalFacts:
+          `${f.additionalFacts || ""}\n\nEvidence recording session: ${sessionId}\n`.trim(),
       }));
     }
   }, []);
@@ -400,8 +406,8 @@ export default function App() {
               <span className="italic text-teal-deep">the Footage</span>
             </h1>
             <p className="mt-6 max-w-md text-lg leading-relaxed text-ink-muted sm:text-xl">
-              Record encounters, secure evidence, and generate challenge documents — one account,
-              pay by card.
+              Secure a verifiable trust chain for what you capture, then generate attorney-review
+              challenge documents — one account.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-4">
               {!token ? (
@@ -452,8 +458,8 @@ export default function App() {
                 <p className="text-teal">VECTORS</p>
                 <p className="mt-3 text-ink">01 FRE 901 · chain of custody</p>
                 <p className="text-ink">02 FRE 702 · 0.1% floor</p>
-                <p className="text-ink">03 4th Amendment · case numbers</p>
-                <p className="text-ink">04 § 1983 · wrongful stop</p>
+                <p className="text-ink">03 4th Am · case numbers / MYOC</p>
+                <p className="text-ink">04 § 1983 · stop + 1A retaliation</p>
               </div>
               <div>
                 <p>Flock · Axon · Motorola</p>
@@ -469,18 +475,22 @@ export default function App() {
         tabIndex={-1}
         className="relative z-10 mx-auto w-full max-w-6xl flex-1 px-5 pb-16 outline-none sm:px-8"
       >
-        {witnessSession && (
+        {evidenceSession && (
           <div
             className="mb-6 rounded-xl border border-teal/25 bg-teal-soft/70 px-4 py-3 text-sm text-ink animate-fade"
             role="status"
           >
-            Witness evidence linked: <code className="font-mono">{witnessSession}</code>
+            Evidence session linked: <code className="font-mono">{evidenceSession}</code>
             {" · "}
             <a className="font-medium text-teal-deep underline" href="/evidence.html">
               Evidence library
             </a>
           </div>
         )}
+
+        <div className="mb-8">
+          <TrustChainSection compact />
+        </div>
 
         <section
           ref={formRef}
@@ -585,7 +595,7 @@ export default function App() {
                     onChange={(e) => setCustomVendorName(e.target.value)}
                     placeholder={
                       vendor === "cellphone"
-                        ? "e.g. witness iPhone, officer personal phone"
+                        ? "e.g. bystander's iPhone, officer personal phone"
                         : "Vendor / source legal name"
                     }
                     autoComplete="organization"

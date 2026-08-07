@@ -1,11 +1,13 @@
 /**
  * Surveillance Evidence Challenge Tool — Cloudflare Worker
  *
- * Four attack vectors:
+ * Six attack vectors (four generated document types; Vectors 5–6 enrich civil / suppression):
  *   1. Authentication (FRE 901) — no Merkle chain, no hash at capture
  *   2. Accuracy (FRE 702 / Daubert) — ~10% documented error rate
- *   3. Access abuse — stalking, unauthorized queries, no case number
- *   4. Civil damages — Section 1983 demand letter for wrongful stops/surveillance
+ *   3. Access abuse + Fourth Amendment — stalking, tower-dump analogy, MYOC concealment
+ *   4. Civil damages — Section 1983 / Fourth Amendment demand letter
+ *   5. First Amendment retaliation — Lenexa MYOC pattern, Nieves exception (folds into civil)
+ *   6. Drone surveillance — Kyllo / Carpenter / Jones curtilage (folds into suppression / civil)
  *
  * Routes:
  *   POST /api/checkout
@@ -85,6 +87,8 @@ const CONTENT_TYPE_OVERRIDES = {
   "/llms-full.txt": "text/plain; charset=utf-8",
   "/auth.md": "text/markdown; charset=utf-8",
   "/AGENTS.md": "text/markdown; charset=utf-8",
+  "/site.webmanifest": "application/manifest+json; charset=utf-8",
+  "/sw.js": "application/javascript; charset=utf-8",
 };
 
 function wantsMarkdown(request) {
@@ -199,11 +203,15 @@ const VENDORS = {
       "404 Media reported that FBI and Department of Justice guidance shared with police in multiple states advised officers to be 'as vague as permissible' about why they were using Flock, because Flock searches can be obtained via public records requests (referenced in 404 Media coverage, 2026).",
       "In December 2025, Georgia State Patrol used a Flock camera capture ('CAPTURED ON FLOCK CAMERA 31 MM 1 HOLDING PHONE IN LEFT HAND') as the basis for a traffic citation for holding a wireless device — despite many jurisdictions publicly claiming Flock cameras are not used for traffic enforcement or minor code violations (404 Media, August 2026; ticket later dropped).",
       "On August 5, 2026, U.S. District Judge Carlton W. Reeves (S.D. Miss.) affirmed denial of four FBI 'tower dump' warrant applications, holding tower dumps — collecting location data for every device that connected to specified cell towers near crime scenes so police can later sift for unknown suspects — are per se unconstitutional under the Fourth Amendment as general warrants. In re Four Applications for Search Warrants Seeking Information Associated with Particular Cellular Towers a/k/a Tower-Dump Warrants, No. 3:25-cr-00038 (S.D. Miss. Aug. 5, 2026) (order affirming magistrate denial), building on United States v. Smith, 110 F.4th 817 (5th Cir. 2024) (geofence warrants per se unconstitutional). ALPR networks like Flock passively collect vehicle location data on every vehicle that passes a camera and allow retroactive multi-hit sifting to build suspect profiles — a structurally analogous dragnet. Counsel in circuits following Carpenter / Smith should argue that warrantless ALPR queries used to reconstruct travel patterns require particularized probable cause under Carpenter v. United States, 585 U.S. 296 (2018).",
+      "In Savannah, Georgia, six Savannah Police Department employees — four officers and two civilians — were placed on administrative leave in August 2026 after an internal audit found 34 unjustified searches among 127 flagged by SPD's audit-assist tool, including queries on personal acquaintances and family members; one officer allegedly gave an unauthorized outside agency access to the system (WTOC, August 3, 2026).",
+      "In Mooresville, North Carolina, at least 10 officers were under investigation for Flock violations as of August 2026 (Union-Bulletin reporting, August 2026).",
+      "First Amendment retaliation via ALPR is vendor-agnostic: Lenexa, Kansas tracked a columnist with Axon/Genetec/Leonardo cameras and a written 'MYOC' (make your own case) BOLO — not a Flock deployment. Any ALPR network that enables retroactive plate queries without mandatory documented justification can be used for retaliatory surveillance (KCUR, February–June 2026).",
     ],
     authFacts: [
       "Flock Safety's audit logs obtained via FOIA do not contain cryptographic hash values for footage segments and show no evidence of Merkle chaining or external immutable anchoring.",
       "Andreessen Horowitz (a16z) has funded both Flock Safety and Toka, an Israeli cyber firm co-founded by former Prime Minister Ehud Barak and former IDF cyber chief Yaron Rosen. Haaretz reported in 2022 based on internal documents that Toka sells technology capable of altering both live and archived camera feeds without leaving forensic traces.",
       "FBI and Homeland Security have accessed local Flock networks without clear awareness or approval from contracting localities.",
+      "Wapello County, Iowa policy instructs officers not to mention ALPR usage in reports or complaints 'unless absolutely necessary,' making the ALPR basis for a stop structurally hidden from defendants, defense counsel, and courts — directly implicating Franks v. Delaware where material information is omitted from probable cause affidavits at the direction of departmental policy.",
     ],
     civilFacts: [
       "In October 2024, the Institute for Justice filed a federal lawsuit against the city of Norfolk, Virginia — the first civil ALPR lawsuit to survive a government motion to dismiss.",
@@ -211,6 +219,14 @@ const VENDORS = {
       "Section 1983 provides a federal cause of action for deprivation of constitutional rights under color of state law. Wrongful stops and detentions based on ALPR misidentification implicate the Fourth Amendment right to be free from unreasonable seizures.",
       "Wrongful arrest settlements involving short detention without physical injury typically range from $10,000 to $75,000. Cases involving prolonged detention, lost employment, physical injury, or emotional trauma frequently reach $100,000 to $500,000 or more.",
       "Colorado and New Mexico have fully or partially abolished qualified immunity for state law claims as of 2026, and California and Washington have active legislation under consideration — eliminating the primary defense available to officers in those jurisdictions.",
+      "Where ALPR tracking follows protected speech (criticism of police, protest, political leafleting) and is used to engineer pretextual stops — as documented in the Lenexa, Kansas 'MYOC' case on non-Flock systems — a parallel § 1983 First Amendment retaliation theory is available independent of Fourth Amendment claims (Nieves v. Bartlett, 2019).",
+    ],
+    droneFacts: [
+      "Flock Safety is deploying drone surveillance programs beginning September 2026. The Lancaster, New York Police Department announced a three-month drone trial launching in September 2026, with drones responding to crimes, fires, and natural disasters (CNY News, August 5, 2026).",
+      "Low-altitude drone surveillance over residential properties raises Fourth Amendment issues beyond fixed roadside cameras. Under Kyllo v. United States (2001), technology that reveals details of the home or its curtilage that would otherwise be private may require a warrant. A backyard is curtilage under Florida v. Jardines (2013).",
+      "Under Carpenter v. United States (2018), persistent detailed observation of private activity over time is a search requiring a warrant regardless of whether observation occurs from technically public airspace.",
+      "Under United States v. Jones (2012), the physical-intrusion trespass theory may apply to drones hovering at low altitude over curtilage — an area the Supreme Court treats as entitled to Fourth Amendment protection equivalent to the home itself.",
+      "The same officers documented using fixed ALPR cameras for stalking and retaliatory surveillance will have access to drone platforms with richer sensor payloads. Documented personal and retaliatory misuse of fixed cameras applies with greater force to mobile aerial surveillance that can follow individuals and observe intimate spaces.",
     ],
     sources: [
       "haveibeenflocked.com — FOIA-derived audit logs",
@@ -222,6 +238,10 @@ const VENDORS = {
       "404 Media — 'Cops Used Flock to Track a Man Across State Lines…' (Abrams-Phillips / I-41), August 2026",
       "404 Media — 'DO NOT MENTION ALPR USAGE' (Wapello County, Iowa SOP), August 4, 2026",
       "404 Media — 'Police Used Flock to Give a Man a Traffic Ticket' (Georgia State Patrol), August 2026",
+      "WTOC — Savannah SPD unjustified ALPR searches (August 2026)",
+      "Union-Bulletin — Mooresville NC Flock investigation (August 2026)",
+      "CNY News — Lancaster NY Flock drone program (August 2026)",
+      "KCUR — Lenexa, Kansas retaliatory ALPR tracking / MYOC (February–June 2026) — vendor-agnostic pattern",
       "In re Four Applications… a/k/a Tower-Dump Warrants, No. 3:25-cr-00038 (S.D. Miss. Aug. 5, 2026) (Reeves, C.J.) — CourtListener ECF 41",
       "United States v. Smith, 110 F.4th 817 (5th Cir. 2024) — geofence warrants",
       "Carpenter v. United States, 585 U.S. 296 (2018)",
@@ -241,6 +261,7 @@ const VENDORS = {
       "In NYPD § 1983 litigation, the City documented that bulk Evidence.com audit-trail downloads required also downloading every video and that Axon had not resolved technical errors blocking production (S.D.N.Y. letters, Feb. 2022).",
       "A Scottsdale audit of an Axon/Evidence.com deployment found former employees still had access (including admin rights) and videos deleted without required documentation.",
       "Retention and category-based deletion policies can destroy Brady material if preservation holds are late or incomplete.",
+      "In Lenexa, Kansas, police used the city’s ALPR network (Axon, Genetec, and Leonardo — not Flock) to track private citizen Canyen Ashworth’s vehicle approximately 150 times over less than two years after he published a September 30, 2025 Kansas City Star guest column criticizing the Lenexa Police Department. On October 21, 2025, a department-wide BOLO identified him as a suspect in an unrelated “Paper Hanger” poster case, included a photo of his plate, and directed officers to “MYOC” (“make your own case”) — find pretextual reasons to stop him. He was never charged; police later determined he was not the person in the surveillance video. First Amendment experts and the ACLU of Kansas described the timing and tactics as retaliatory (KCUR, February 2, 2026; June 29, 2026).",
     ],
     authFacts: [
       "Axon Evidence does not publicly document cryptographic hashing of footage within camera hardware before dock / network upload, or external immutable anchoring independent of Axon infrastructure (Challenge-grade / clawql-surveillance class).",
@@ -252,6 +273,7 @@ const VENDORS = {
       "Section 1983 provides a federal cause of action where body-worn video is incomplete, missing, or selectively retained in force or detention cases.",
       "Billings, Montana reporting on officers removing/turning off BWCs during a 2023 stop — later prompting review of nearly 180 cases — shows how camera-off conduct becomes both criminal-discovery and civil-exposure fuel.",
       "Wrongful arrest settlements involving short detention without physical injury typically range from $10,000 to $75,000; prolonged detention or physical injury frequently reach $100,000 to $500,000 or more.",
+      "The Lenexa “MYOC” BOLO is documented evidence of First Amendment retaliatory surveillance and pretextual-stop initiation via ALPR. Under Nieves v. Bartlett (2019), where no probable cause exists — Ashworth was not the poster hanger — retaliatory motive is not defeated by a technical legal justification. A § 1983 First Amendment retaliation claim is viable independent of Fourth Amendment arguments. Discovery should seek: ALPR queries against the plaintiff’s plate in the 90 days after public criticism; the complete BOLO; communications directing officers to find stop pretexts; BOLO issuance policy and required suspicion standard; and prior civil-rights complaints involving the same supervisors.",
     ],
     sources: [
       "Axon Evidence platform documentation (public)",
@@ -261,6 +283,9 @@ const VENDORS = {
       "Chicago COPA BWC non-compliance report (2021); CBS 2 'Left in the Dark'",
       "People v. Havens, 2025 CO 72; People v. Tompkins, 2023 IL 127805",
       "MTN News / KPAX — Billings BWC 'hidden consent' reporting",
+      "KCUR — Lenexa, Kansas retaliatory ALPR tracking / MYOC (February 2, 2026; June 29, 2026)",
+      "The Pitch KC — EyesOffKC organizing (August 2026)",
+      "ACLU of Kansas — Lenexa retaliatory surveillance commentary",
       "Challenge the Footage — Challenge-grade / clawql-surveillance integrity bar",
     ],
   },
@@ -301,6 +326,7 @@ const VENDORS = {
     accessAbuseFacts: [
       "Genetec's platform includes audit logging features internal to Genetec infrastructure and not independently verifiable without Genetec cooperation.",
       "The systemic officer abuse pattern documented across ALPR systems applies to any vendor without robust, independently auditable access controls.",
+      "In Lenexa, Kansas, police used an ALPR system that includes Genetec technology (alongside Axon and Leonardo) to track private citizen Canyen Ashworth’s vehicle approximately 150 times over less than two years after he published a Kansas City Star guest column criticizing the Lenexa Police Department. Officers issued a department-wide BOLO directing officers to “MYOC” — make your own case — find pretextual reasons to stop him. He was never charged. The ACLU of Kansas described the tactics as retaliatory (KCUR, February 2, 2026; June 29, 2026).",
     ],
     authFacts: [
       "Genetec does not publicly document cryptographic hashing of footage within camera hardware, Merkle-chained audit logs, or external immutable anchoring.",
@@ -308,11 +334,14 @@ const VENDORS = {
     ],
     civilFacts: [
       "Section 1983 provides a federal cause of action for Fourth Amendment violations arising from wrongful stops based on ALPR misidentification.",
+      "The Lenexa “MYOC” directive constitutes documented evidence of First Amendment retaliatory surveillance. Where officers direct pretextual stops against a person who exercised First Amendment rights and no probable cause exists, a § 1983 First Amendment retaliation claim is viable independent of Fourth Amendment arguments (Nieves v. Bartlett, 2019). Discovery should target post-criticism plate queries, the complete BOLO, pretext-stop directives, and BOLO policy.",
     ],
     sources: [
       "Genetec Security Center documentation (public)",
       "Institute for Justice — ALPR error documentation",
       "DHS SAVER ALPR Market Survey Report, June 2025",
+      "KCUR — Lenexa, Kansas retaliatory ALPR tracking / MYOC (February 2, 2026; June 29, 2026)",
+      "ACLU of Kansas — Lenexa retaliatory surveillance commentary",
     ],
   },
 
@@ -376,7 +405,14 @@ ${profile.accessAbuseFacts.map((f, i) => `${i + 1}. ${f}`).join("\n")}
 
 ### Civil liability and litigation context
 ${profile.civilFacts.map((f, i) => `${i + 1}. ${f}`).join("\n")}
-
+${
+  profile.droneFacts?.length
+    ? `
+### Drone-specific documented facts
+${profile.droneFacts.map((f, i) => `${i + 1}. ${f}`).join("\n")}
+`
+    : ""
+}
 ### Sources
 ${profile.sources.map((s) => `- ${s}`).join("\n")}
 ${
@@ -447,14 +483,30 @@ Additional Fourth Amendment vectors (include when facts fit):
 - **Mission creep / traffic enforcement:** Flock pitched for serious crime / stolen vehicles / missing persons but used for minor traffic citations despite public "not for traffic enforcement" claims — undermines stated purpose limitations and supports overbreadth / pretext arguments.
 
 ### Vector 4 — Civil damages (Section 1983)
-Wrongful stops and detentions based on ALPR misidentification are actionable under § 1983. Settlement ranges commonly $10,000–$75,000 for brief detentions to $100,000–$500,000+ for prolonged harm.`;
+Wrongful stops and detentions based on ALPR misidentification are actionable under § 1983. Settlement ranges commonly $10,000–$75,000 for brief detentions to $100,000–$500,000+ for prolonged harm.
 
-  return `You are a legal and technical expert helping people challenge digital camera evidence — fixed/ALPR surveillance, police body-worn cameras, and cell phone video — and seek civil remedies. You generate four types of documents, each targeting a different vulnerability.
+### Vector 5 — First Amendment retaliation via ALPR surveillance
+ALPR systems have been documented as instruments of First Amendment retaliation. In Lenexa, Kansas, police used a non-Flock ALPR network (Axon, Genetec, Leonardo) to track Canyen Ashworth’s vehicle ~150 times over less than two years after he published a newspaper column criticizing the department, then issued a department-wide BOLO directing officers to “MYOC” — make your own case — find pretextual reasons to stop him. He was never charged and was not the person in the poster-hanger video (KCUR, Feb.–June 2026).
+
+Where a person was tracked via ALPR after exercising First Amendment rights (publishing criticism of police, attending a protest, distributing political material), and where ALPR data was used to engineer pretextual stops, a § 1983 First Amendment retaliation claim is viable independent of Fourth Amendment arguments. Under Nieves v. Bartlett (2019), where no probable cause exists, retaliatory motive is not defeated by a technical legal justification. Written “MYOC”-style directives are rare direct evidence of retaliatory motive.
+
+Discovery for First Amendment retaliation fact patterns: all ALPR queries against the plaintiff’s plate in the 90 days following any public criticism of the department; the complete BOLO or alert identifying the plaintiff; any written or electronic communications directing officers to find pretextual reasons to stop the plaintiff; department policy on when BOLOs may be issued and the required suspicion standard; any prior civil-rights complaints involving the same supervisors.
+
+When generating the civil damages document, determine from the user’s case facts whether Vector 5 applies — if the user was tracked after public criticism of police, political activity, or protest attendance, include the First Amendment retaliation claim as a parallel theory alongside the Fourth Amendment claim.
+
+### Vector 6 — Drone surveillance (Fourth Amendment — curtilage and Kyllo)
+Where the vendor has droneFacts or the case involves drone surveillance, incorporate these arguments into the suppression motion and civil demand. Low-altitude drone surveillance over residential properties raises Fourth Amendment issues beyond fixed roadside cameras.
+
+Under Kyllo v. United States (2001), technology that reveals details of the home or its curtilage that would otherwise be private requires a warrant. A backyard is curtilage under Florida v. Jardines (2013). Under Carpenter v. United States (2018), persistent detailed aerial observation of private residential activity over time is a search requiring a warrant. Under United States v. Jones (2012), the physical-intrusion trespass theory may apply to low-altitude drones hovering over curtilage. The manned-aircraft cases — Florida v. Riley (1989), Dow Chemical Co. v. United States (1986) — addressed navigable airspace altitudes and are not controlling for drones operating at low altitude with high-resolution sensors.
+
+No circuit has directly settled low-altitude residential drone surveillance; preserve the Kyllo / Carpenter / Jones foundation for appellate review.`;
+
+  return `You are a legal and technical expert helping people challenge digital camera evidence — fixed/ALPR surveillance, police body-worn cameras, and cell phone video — and seek civil remedies. You generate four types of documents (FRE 901, FRE 702, Fourth Amendment suppression, § 1983 demand). For fixed/ALPR cases, Vectors 5 (First Amendment retaliation) and 6 (drone / curtilage) enrich the civil and suppression documents when facts fit — they are not separate tabs.
 ${vectorBlock}
 ${profileSection}
 ## Document generation standards
 
-Every document must be precise, authoritative, and immediately usable as an attorney-review starting point. Lead with the strongest factual claims. Cite sources. No throat-clearing. Number argument paragraphs. Write as if a senior civil rights attorney will review and file this.`;
+Every document must be precise, authoritative, and immediately usable as an attorney-review starting point. Lead with the strongest factual claims. Cite sources. No throat-clearing. Number argument paragraphs. Write as if a senior civil rights attorney will review and file this. Emphasize that First Amendment retaliatory ALPR surveillance is vendor-agnostic — Lenexa used Axon/Genetec/Leonardo, not Flock.`;
 }
 
 // ─── Disclaimer ───────────────────────────────────────────────────────────────
@@ -873,7 +925,7 @@ Requirements:
 9. Prayer for relief: exclusion or evidentiary hearing
 10. Signature block placeholder
 Write the complete motion. Number all argument paragraphs.`,
-    access: `Draft a motion to suppress evidence obtained through ${vendorName} surveillance on Fourth Amendment grounds. Cover three prongs when facts support them: (A) unauthorized / undocumented access; (B) pretext travel-pattern stops and concealment of ALPR use; (C) the ALPR network query itself as a warrantless general search under the Carpenter–Smith–Reeves tower-dump line.
+    access: `Draft a motion to suppress evidence obtained through ${vendorName} surveillance on Fourth Amendment grounds. Cover three prongs when facts support them: (A) unauthorized / undocumented access; (B) pretext travel-pattern stops, MYOC-style retaliatory pretextual stops, and concealment of ALPR use; (C) the ALPR network query itself as a warrantless general search under the Carpenter–Smith–Reeves tower-dump line. When droneFacts or aerial surveillance facts apply, add a curtilage / Kyllo prong.
 ${base}
 Additional facts about this specific search (if provided by user): ${ctx.searchFacts || "not specified — draft to address the general pattern and include discovery requests to establish the specific facts"}
 Requirements:
@@ -885,10 +937,12 @@ Requirements:
 6. Structural general-warrant argument: ${vendorName} / ALPR networks passively collect location data on all vehicles and allow retroactive multi-hit sifting to identify suspects — "access to an entire haystack because it may contain a needle." Argue that warrantless ALPR queries used to build suspect / travel-pattern profiles require particularized probable cause; post-collection filtering does not cure overbreadth. Note the ALPR extension of Smith / Reeves is not yet circuit-settled — preserve the argument for appellate review
 7. When relevant: travel-pattern / interstate surveillance as probable-cause padding (e.g. Abrams-Phillips / I-41 Wisconsin–Michigan) — the cleanest fact pattern for the tower-dump analogy
 8. When relevant: departmental SOPs or federal guidance instructing officers to hide or vaguely describe ALPR use (Wapello County "DO NOT MENTION ALPR USAGE" SOP; FBI/DOJ "as vague as permissible" guidance) as evidence of bad faith and Franks materiality
-9. Cryptographic audit-trail failures taint vendor logs
-10. Ten discovery requests including: officer query history; ALPR disclosure / SOP policy on the incident date; whether ALPR was omitted from affidavits; and any warrant, court order, or supervisory authorization obtained before the ALPR queries that led to the stop (or documentation of the legal basis for concluding no warrant was required)
-11. Prayer for suppression
-12. Signature block placeholder
+9. When relevant: Lenexa-style MYOC / First Amendment retaliation — written directives to find a pretext to stop a critic of the department aggravate the Fourth Amendment claim and support parallel § 1983 speech-retaliation theories (Nieves v. Bartlett)
+10. When relevant: low-altitude drone / aerial surveillance over curtilage — Kyllo, Jardines, Carpenter, Jones; distinguish Riley / Dow Chemical manned-aircraft cases
+11. Cryptographic audit-trail failures taint vendor logs
+12. Ten discovery requests including: officer query history; ALPR disclosure / SOP policy on the incident date; whether ALPR was omitted from affidavits; any warrant, court order, or supervisory authorization before the ALPR queries; any BOLO or MYOC-style alert naming the defendant; and (if aerial) flight logs / sensor packages
+13. Prayer for suppression
+14. Signature block placeholder
 Write the complete motion. Number all argument paragraphs.`,
   };
 }
@@ -916,7 +970,7 @@ ${enriched}`;
     gwChat(env, system, prompts.accuracy),
     gwChat(env, system, prompts.access),
 
-    // Vector 4: Civil damages / Section 1983
+    // Vector 4 (+5): Civil damages / Section 1983, with First Amendment retaliation when facts fit
     gwChat(
       env,
       system,
@@ -929,18 +983,20 @@ Requirements:
 3. Legal basis:
    - Fourth Amendment violation: unreasonable seizure without probable cause or based on AI system output that does not meet reliability standards
    - 42 U.S.C. § 1983: deprivation of constitutional rights under color of state law
+   - First Amendment retaliation (include when facts fit): if the client was tracked via ALPR after criticizing police, attending a protest, or distributing political material, plead a parallel § 1983 First Amendment retaliation theory. Cite the Lenexa, Kansas MYOC pattern (KCUR 2026) as the documented template — written directives to find a pretext to stop a critic; Nieves v. Bartlett (2019) where no probable cause exists. Emphasize the pattern is vendor-agnostic (Lenexa used Axon/Genetec/Leonardo, not Flock).
    - State tort claims as applicable: false arrest, false imprisonment, intentional infliction of emotional distress
 4. Damages section:
    - Compensatory: detention time (calculated at an hourly rate), lost wages, medical expenses if any, property damage if any
-   - Non-economic: emotional distress, humiliation, reputational harm, ongoing anxiety
+   - Non-economic: emotional distress, humiliation, reputational harm, ongoing anxiety, chilled speech where First Amendment applies
    - Punitive: where officer conduct was reckless or malicious
    - Attorney's fees under 42 U.S.C. § 1988
    - Reference settlement ranges: $10,000–$75,000 for brief detentions; $100,000–$500,000+ for prolonged detention, physical harm, or egregious conduct
 5. Reference to applicable qualified immunity landscape: note states where qualified immunity has been abolished or limited (Colorado, New Mexico) and states with active reform legislation (California, Washington)
-6. Demand: specific dollar amount or demand for meaningful settlement negotiation; preservation of all records including the specific ${vendorName} query, audit logs, officer query history, and camera footage; response deadline of 30 days
-7. Notice that failure to respond will result in filing of a Section 1983 complaint in federal district court
-8. Closing and signature block placeholder
-9. CC line: local ACLU, Institute for Justice, relevant civil rights organizations
+6. Demand: specific dollar amount or demand for meaningful settlement negotiation; preservation of all records including the specific ${vendorName} query, audit logs, officer query history, BOLOs / MYOC-style alerts, and camera footage; response deadline of 30 days
+7. First Amendment discovery (when Vector 5 applies): ALPR queries against the client's plate in the 90 days after public criticism; complete BOLO; communications directing officers to find stop pretexts; BOLO policy; prior civil-rights complaints involving the same supervisors
+8. Notice that failure to respond will result in filing of a Section 1983 complaint in federal district court
+9. Closing and signature block placeholder
+10. CC line: local ACLU, Institute for Justice, relevant civil rights organizations (include ACLU of Kansas when Lenexa-pattern facts apply)
 Write the complete demand letter in formal legal correspondence format.`
     ),
   ]);

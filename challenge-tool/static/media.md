@@ -6,6 +6,17 @@ title: Media & Sources — Challenge the Footage
 
 Press and research behind Challenge the Footage vendor profiles and document templates.
 
+## First Amendment retaliation — Lenexa MYOC
+
+### [Lenexa police investigated author of column criticizing the department (KCUR, Feb. 2, 2026)](https://www.kcur.org/politics-elections-and-government/2026-02-02/lenexa-police-investigated-column-writer-critical-failure-warn-ice-raid-councilwoman-investigation)
+ALPR tracking of Canyen Ashworth after a critical column; department-wide “MYOC” (make your own case) BOLO. **Why it matters:** written retaliatory-motive evidence; § 1983 First Amendment vector; vendor-agnostic (Axon/Genetec/Leonardo).
+
+### [Missouri and Kansas ALPRs / Lenexa follow-up (KCUR, June 29, 2026)](https://www.kcur.org/news/2026-06-29/automated-license-plate-readers-alpr-kansas-city-lenexa-weston-police)
+~150 plate captures; confirms Lenexa stack is not Flock. **Why it matters:** First Amendment retaliation is an ALPR problem, not a Flock-only problem.
+
+### [EyesOffKC organizes against Flock (The Pitch KC, Aug. 2026)](https://www.thepitchkc.com/eyesoffkc-organizes-against-flock-surveillance-for-upcoming-national-week-of-action/)
+Local organizers cite Lenexa speech retaliation ahead of National Week of Action.
+
 ## Court rulings — bulk location dragnets
 
 ### [In re Four Applications… a/k/a Tower-Dump Warrants (S.D. Miss. Aug. 5, 2026)](https://www.courtlistener.com/docket/69660910/41/united-states-v-sealed/)

@@ -1,37 +1,32 @@
-User-Agent: *
-Content-Signal: ai-train=no, search=yes, ai-input=yes
+# Challenge the Footage — crawler policy
+# Prefer https://challengethefootage.com/llms.txt for agent guidance.
+# AI training preferences: do not use site content for model training.
+
+User-agent: *
 Allow: /
 
-User-Agent: GPTBot
-Content-Signal: ai-train=no, search=yes, ai-input=yes
+User-agent: GPTBot
 Allow: /
 
-User-Agent: ChatGPT-User
-Content-Signal: ai-train=no, search=yes, ai-input=yes
+User-agent: ChatGPT-User
 Allow: /
 
-User-Agent: Google-Extended
-Content-Signal: ai-train=no, search=yes, ai-input=yes
+User-agent: Google-Extended
 Allow: /
 
-User-Agent: ClaudeBot
-Content-Signal: ai-train=no, search=yes, ai-input=yes
+User-agent: ClaudeBot
 Allow: /
 
-User-Agent: Claude-Web
-Content-Signal: ai-train=no, search=yes, ai-input=yes
+User-agent: Claude-Web
 Allow: /
 
-User-Agent: anthropic-ai
-Content-Signal: ai-train=no, search=yes, ai-input=yes
+User-agent: anthropic-ai
 Allow: /
 
-User-Agent: PerplexityBot
-Content-Signal: ai-train=no, search=yes, ai-input=yes
+User-agent: PerplexityBot
 Allow: /
 
-User-Agent: Applebot-Extended
-Content-Signal: ai-train=no, search=yes, ai-input=yes
+User-agent: Applebot-Extended
 Allow: /
 
 Sitemap: https://challengethefootage.com/sitemap.xml

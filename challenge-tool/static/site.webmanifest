@@ -1,0 +1,53 @@
+{
+  "name": "Challenge the Footage",
+  "short_name": "CTF Evidence",
+  "description": "Record encounters, secure a verifiable trust chain, and generate attorney-review challenge documents for surveillance footage.",
+  "id": "/",
+  "start_url": "/evidence.html?source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui", "browser"],
+  "orientation": "portrait-primary",
+  "background_color": "#f3f6f8",
+  "theme_color": "#074845",
+  "lang": "en",
+  "dir": "ltr",
+  "categories": ["productivity", "utilities", "government"],
+  "prefer_related_applications": false,
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Record evidence",
+      "short_name": "Record",
+      "description": "Open the in-browser evidence recorder",
+      "url": "/evidence.html?source=pwa-record",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Prepare documents",
+      "short_name": "Documents",
+      "description": "Generate FRE 901 / 702 / Fourth Amendment / §1983 templates",
+      "url": "/?source=pwa-docs",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}

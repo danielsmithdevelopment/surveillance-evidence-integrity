@@ -1,13 +1,13 @@
 # Challenge the Footage
 
-> One account for evidence + legal document templates. Free first generation / $9 packs via Stripe. Public defenders free. Not legal advice. No crypto wallet required.
+> One account for evidence + legal document templates. Free first generation / $9 packs via Stripe. Public defenders free. Not legal advice. Browser PWA with a verifiable trust chain.
 
 This file helps AI agents find canonical entry points. Prefer `Accept: text/markdown` on HTML routes for machine-readable content.
 
 ## Primary pages
 
 - [Home / generator](https://challengethefootage.com/): Case details form + four document types
-- [Evidence](https://challengethefootage.com/evidence.html): Record encounters + evidence library
+- [Evidence](https://challengethefootage.com/evidence.html): Record encounters, build the trust chain, evidence library (installable PWA)
 - [Media & sources](https://challengethefootage.com/media.html): Press/research behind vendor profiles (404 Media Flock series, FOIA, IJ, EFF)
 - [Public defenders](https://challengethefootage.com/public-defenders.html): Free unlimited access program
 - [Terms of Service](https://challengethefootage.com/terms.html): Legal terms
@@ -27,5 +27,4 @@ This file helps AI agents find canonical entry points. Prefer `Accept: text/mark
 ## Related open-source repo
 
 - [surveillance-evidence-integrity](https://github.com/danielsmithdevelopment/surveillance-evidence-integrity): Model contracts, legislation, technical standards
-- [Witness module](https://github.com/danielsmithdevelopment/surveillance-evidence-integrity/tree/main/witness): Optional native capture client for CTF
-- [ClawQL](https://clawql.com): Inference, memory, Stripe, independent evidence anchoring (invisible to end users)
+- [ClawQL](https://clawql.com): Inference, memory, Stripe, independent evidence verification

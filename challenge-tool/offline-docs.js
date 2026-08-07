@@ -500,11 +500,12 @@ III. LEGAL BASIS
 
 1. Fourth Amendment — unreasonable seizure and/or reliance on digital evidence that does not meet authenticity / reliability standards.
 2. 42 U.S.C. § 1983 — deprivation of constitutional rights under color of state law.
-3. Parallel state tort theories as applicable (false arrest, false imprisonment, IIED, spoliation where recognized).
+3. First Amendment retaliation (include when facts fit) — ALPR tracking after protected speech (criticism of police, protest, political leafleting) used to engineer pretextual stops, as documented in the Lenexa, Kansas “MYOC” pattern (Axon/Genetec/Leonardo — vendor-agnostic). Nieves v. Bartlett (2019) where no probable cause exists.
+4. Parallel state tort theories as applicable (false arrest, false imprisonment, IIED, spoliation where recognized).
 
 IV. DAMAGES
 
-Compensatory (detention time, wages, medical, property), non-economic (distress, humiliation, reputational harm), punitive where reckless or malicious, and attorney's fees under 42 U.S.C. § 1988.
+Compensatory (detention time, wages, medical, property), non-economic (distress, humiliation, reputational harm, chilled speech where First Amendment applies), punitive where reckless or malicious, and attorney's fees under 42 U.S.C. § 1988.
 
 Illustrative settlement ranges from public reporting: approximately $10,000–$75,000 for brief detentions; $100,000–$500,000+ for prolonged detention, physical harm, or egregious conduct — subject to attorney valuation of this client's facts.
 
@@ -512,10 +513,11 @@ Qualified-immunity landscape: note jurisdictions that have abolished or limited 
 
 V. DEMAND
 
-1. Preserve all ${vendorName} media, audit / access logs, device images, and related exports for this incident.
+1. Preserve all ${vendorName} media, audit / access logs, device images, BOLOs / MYOC-style alerts, and related exports for this incident.
 2. Produce capture-time integrity proofs (hashes / content credentials / Challenge-grade packages) or admit they do not exist.
-3. Respond within 30 days with a meaningful settlement proposal or detailed factual rebuttal.
-4. Failure to respond will result in filing a § 1983 complaint in federal district court.
+3. Where First Amendment retaliation is alleged: produce ALPR queries against the client's plate in the 90 days after public criticism; the complete BOLO; communications directing officers to find stop pretexts; and BOLO issuance policy.
+4. Respond within 30 days with a meaningful settlement proposal or detailed factual rebuttal.
+5. Failure to respond will result in filing a § 1983 complaint in federal district court.
 
 Sources consulted for template framing:
 ${sources.map((s) => `- ${s}`).join("\n")}

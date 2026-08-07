@@ -9,6 +9,8 @@ import {
   btnSecondary,
   inputClass,
 } from "./Shell.jsx";
+import { TrustChainSection } from "./TrustChain.jsx";
+import { loadGoogleIdentity } from "./googleIdentity.js";
 
 const API = typeof window !== "undefined" ? window.CTF_API_BASE || "" : "";
 const ALL_PARTY = new Set(["CA", "CT", "FL", "IL", "MD", "MA", "MI", "MT", "NH", "PA", "WA"]);
@@ -50,25 +52,32 @@ function DemoSignIn({ onCredential, allowTestAuth }) {
 
   useEffect(() => {
     const clientId = window.GOOGLE_CLIENT_ID;
-    if (!clientId || !window.google?.accounts?.id || !slot.current) return;
-    window.google.accounts.id.initialize({
-      client_id: clientId,
-      callback: (resp) => {
-        try {
-          const payload = JSON.parse(atob(resp.credential.split(".")[1]));
-          onCredential(resp.credential, payload.email || null);
-        } catch {
-          onCredential(resp.credential, null);
-        }
-      },
+    if (!clientId || !slot.current) return;
+    let cancelled = false;
+    loadGoogleIdentity().then((google) => {
+      if (cancelled || !google?.accounts?.id || !slot.current) return;
+      google.accounts.id.initialize({
+        client_id: clientId,
+        callback: (resp) => {
+          try {
+            const payload = JSON.parse(atob(resp.credential.split(".")[1]));
+            onCredential(resp.credential, payload.email || null);
+          } catch {
+            onCredential(resp.credential, null);
+          }
+        },
+      });
+      google.accounts.id.renderButton(slot.current, {
+        theme: "outline",
+        size: "large",
+        shape: "pill",
+        text: "signin_with",
+        width: 260,
+      });
     });
-    window.google.accounts.id.renderButton(slot.current, {
-      theme: "outline",
-      size: "large",
-      shape: "pill",
-      text: "signin_with",
-      width: 260,
-    });
+    return () => {
+      cancelled = true;
+    };
   }, [onCredential]);
 
   if (window.GOOGLE_CLIENT_ID) {
@@ -145,7 +154,7 @@ export default function EvidencePage() {
   useEffect(() => {
     if (!token || !claimInfo) return;
     let cancelled = false;
-    setClaimStatus("Linking native evidence to your account…");
+    setClaimStatus("Linking evidence to your account…");
     api("/api/evidence/claim", {
       method: "POST",
       token,
@@ -156,7 +165,7 @@ export default function EvidencePage() {
         setClaimStatus(
           d.alreadyClaimed
             ? "This evidence was already linked to your account."
-            : "Native evidence linked to your account."
+            : "Evidence linked to your account."
         );
         setSession({
           sessionId: d.sessionId,
@@ -235,7 +244,7 @@ export default function EvidencePage() {
 
   async function secureRecording(mimeType) {
     setPhase("securing");
-    setStatus("Securing evidence…");
+    setStatus("Building the trust chain…");
     try {
       const blob = new Blob(chunksRef.current, { type: mimeType || "video/webm" });
       const videoHash = await sha256Blob(blob);
@@ -268,7 +277,7 @@ export default function EvidencePage() {
       });
       setSession(result);
       setPhase("done");
-      setStatus("Evidence secured.");
+      setStatus("Evidence secured — trust chain ready.");
       refreshSessions();
     } catch (e) {
       setError(e.message || String(e));
@@ -291,9 +300,9 @@ export default function EvidencePage() {
             Record the encounter. Keep the proof.
           </h1>
           <p className="animate-rise-delay mt-5 max-w-xl text-lg text-ink-muted">
-            Capture video on your phone in the browser, or use the native Evidence app when you need
-            offline / one-tap capture. Secure it to your account, then prepare documents — paid with
-            a normal card. No crypto wallet.
+            Capture video in the browser, seal it into a verifiable trust chain on your account,
+            then prepare documents. Install this site to your Home Screen for a near-native
+            experience.
           </p>
           <div className="mt-8 flex flex-wrap items-center gap-3">
             {!token ? (
@@ -314,7 +323,7 @@ export default function EvidencePage() {
             <p className="mt-4 text-sm text-ink" role="status">
               {token
                 ? claimStatus || "Linking…"
-                : "Sign in to link the native recording waiting for this account."}
+                : "Sign in to link the recording waiting for this account."}
             </p>
           )}
         </div>
@@ -325,6 +334,10 @@ export default function EvidencePage() {
         tabIndex={-1}
         className="relative z-10 mx-auto w-full max-w-3xl flex-1 px-5 pb-16 outline-none sm:px-8"
       >
+        <div className="mb-8">
+          <TrustChainSection compact />
+        </div>
+
         {!consented && (
           <section
             aria-labelledby="consent-heading"
@@ -371,8 +384,9 @@ export default function EvidencePage() {
               Record
             </h2>
             <p className="mt-1 text-sm text-ink-muted">
-              Uses your phone camera in the browser. Behind the scenes we hash and secure the
-              recording to your account — you only see “secured,” not wallets or chains.
+              Uses your device camera in the browser. When you stop, we build the integrity package
+              (content fingerprints + Merkle root) and save it to your account so counsel can verify
+              later.
             </p>
 
             <div className="mt-5 overflow-hidden rounded-xl bg-ink/95">
@@ -401,7 +415,7 @@ export default function EvidencePage() {
             </div>
 
             {error && (
-              <p className="mt-3 text-sm text-red-700" role="alert">
+              <p className="mt-3 text-sm text-danger" role="alert">
                 {error}
               </p>
             )}
@@ -442,11 +456,11 @@ export default function EvidencePage() {
                   Verification ID <code className="font-mono text-ink">{session.sessionId}</code>
                   {session.status === "anchored"
                     ? " · independently verifiable"
-                    : " · secured on our systems (independent anchor pending)"}
+                    : " · integrity package on file (independent verification pending)"}
                 </p>
                 <a
                   className={`${btnPrimary} mt-4`}
-                  href={`/?witnessSession=${encodeURIComponent(session.sessionId)}`}
+                  href={`/?evidenceSession=${encodeURIComponent(session.sessionId)}`}
                 >
                   Use this evidence in documents
                 </a>
@@ -477,7 +491,7 @@ export default function EvidencePage() {
                   </div>
                   <a
                     className="text-sm font-semibold text-teal-deep underline underline-offset-2"
-                    href={`/?witnessSession=${encodeURIComponent(s.sessionId)}`}
+                    href={`/?evidenceSession=${encodeURIComponent(s.sessionId)}`}
                   >
                     Prepare docs
                   </a>

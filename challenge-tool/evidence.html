@@ -2,26 +2,112 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>Evidence — Challenge the Footage</title>
     <meta
       name="description"
-      content="Record a police encounter, secure evidence for verification, then prepare challenge documents — all on Challenge the Footage. Pay with card. No crypto wallet."
+      content="Record a police encounter in your browser, secure a verifiable trust chain to your account, then prepare challenge documents on Challenge the Footage."
     />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="canonical" href="https://challengethefootage.com/evidence.html" />
+    <meta name="robots" content="index,follow,max-image-preview:large" />
+    <meta name="theme-color" content="#074845" />
+    <meta name="color-scheme" content="light" />
+    <meta name="application-name" content="Challenge the Footage" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="CTF Evidence" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <link rel="preload" href="/fonts/outfit-latin.woff2" as="font" type="font/woff2" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Outfit:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap"
-      rel="stylesheet"
+      rel="preload"
+      href="/fonts/instrument-serif-latin.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
     />
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <link rel="manifest" href="/site.webmanifest" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/icons/icon-16.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-180.png" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Challenge the Footage" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:url" content="https://challengethefootage.com/evidence.html" />
+    <meta property="og:title" content="Evidence — Challenge the Footage" />
+    <meta
+      property="og:description"
+      content="Record in the browser, secure integrity fingerprints to your account, and link sessions into challenge documents."
+    />
+    <meta property="og:image" content="https://challengethefootage.com/og.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Challenge the Footage brand mark on a teal field" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Evidence — Challenge the Footage" />
+    <meta
+      name="twitter:description"
+      content="Browser recording with a verifiable trust chain — then prepare attorney-review documents."
+    />
+    <meta name="twitter:image" content="https://challengethefootage.com/og.png" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebPage",
+        "name": "Evidence — Challenge the Footage",
+        "url": "https://challengethefootage.com/evidence.html",
+        "description": "Record a police encounter in your browser and secure a verifiable trust chain to your account.",
+        "isPartOf": { "@id": "https://challengethefootage.com/#website" },
+        "about": {
+          "@type": "Thing",
+          "name": "Evidence trust chain"
+        }
+      }
+    </script>
     <script>
       window.GOOGLE_CLIENT_ID = window.GOOGLE_CLIENT_ID || "";
       window.CTF_API_BASE = window.CTF_API_BASE || "";
     </script>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div
+        style="
+          min-height: 100vh;
+          margin: 0;
+          padding: 1.5rem 1.25rem;
+          font-family: Outfit, ui-sans-serif, system-ui, sans-serif;
+          color: #121a21;
+          background: #f3f6f8;
+        "
+      >
+        <p
+          style="
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: #0a5f5b;
+            margin: 0;
+          "
+        >
+          Evidence
+        </p>
+        <h1
+          style="
+            font-family: &quot;Instrument Serif&quot;, Georgia, serif;
+            font-size: clamp(2.4rem, 6vw, 3.6rem);
+            line-height: 1.05;
+            margin: 0.75rem 0 0;
+            font-weight: 400;
+          "
+        >
+          Record the encounter. Keep the proof.
+        </h1>
+        <p style="max-width: 36rem; margin-top: 1.25rem; color: #3d4d5a; font-size: 1.125rem">
+          Capture video in the browser and seal it into a verifiable trust chain on your account.
+        </p>
+      </div>
+    </div>
     <script type="module" src="/src/evidence-main.jsx"></script>
   </body>
 </html>
