@@ -3,7 +3,7 @@
   "short_name": "CTF Evidence",
   "description": "Record encounters, secure a verifiable trust chain, and generate attorney-review challenge documents for surveillance footage.",
   "id": "/",
-  "start_url": "/evidence.html?source=pwa",
+  "start_url": "/evidence?source=pwa",
   "scope": "/",
   "display": "standalone",
   "display_override": ["standalone", "minimal-ui", "browser"],
@@ -39,7 +39,7 @@
       "name": "Record evidence",
       "short_name": "Record",
       "description": "Open the in-browser evidence recorder",
-      "url": "/evidence.html?source=pwa-record",
+      "url": "/evidence?source=pwa-record",
       "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
     },
     {

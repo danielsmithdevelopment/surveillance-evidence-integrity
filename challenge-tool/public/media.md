@@ -55,4 +55,4 @@ Georgia State Patrol Flock-based phone citation despite “not for traffic” cl
 - [MTN News — Billings hidden consent / camera-off](https://www.ktvq.com/news/crime-watch/hidden-consent-billings-police-body-cam-video-exposes-deceptive-tactic)
 
 [← Back to the generator](https://challengethefootage.com/)
-· [Full HTML page](https://challengethefootage.com/media.html)
+· [Full HTML page](https://challengethefootage.com/media)

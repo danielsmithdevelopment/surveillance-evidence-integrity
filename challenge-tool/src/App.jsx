@@ -133,7 +133,7 @@ function TosModal({ onAccept }) {
             Full terms:{" "}
             <a
               className="font-medium text-teal-deep underline"
-              href="/terms.html"
+              href="/terms"
               target="_blank"
               rel="noreferrer"
             >
@@ -482,7 +482,7 @@ export default function App() {
           >
             Evidence session linked: <code className="font-mono">{evidenceSession}</code>
             {" · "}
-            <a className="font-medium text-teal-deep underline" href="/evidence.html">
+            <a className="font-medium text-teal-deep underline" href="/evidence">
               Evidence library
             </a>
           </div>
@@ -505,7 +505,7 @@ export default function App() {
               Free first generation · $9 after ·{" "}
               <a
                 className="font-medium text-teal-deep underline underline-offset-2 hover:text-teal"
-                href="/public-defenders.html"
+                href="/public-defenders"
               >
                 public defenders free
               </a>

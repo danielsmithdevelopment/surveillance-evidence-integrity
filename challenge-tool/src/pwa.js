@@ -1,12 +1,29 @@
 const SW_PATH = "/sw.js";
 
-/** Register the service worker once per page load (idempotent). */
+/**
+ * Prior service workers blanked iOS navigations (Media / Evidence).
+ * Register the kill-switch SW once so old controllers update, self-unregister,
+ * and clear caches — then do not keep a controlling worker around.
+ */
 export function registerServiceWorker() {
   if (typeof window === "undefined" || !("serviceWorker" in navigator)) return;
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register(SW_PATH).catch(() => {
-      /* Offline / unsupported — ignore */
-    });
+    navigator.serviceWorker
+      .getRegistrations()
+      .then((regs) => Promise.all(regs.map((reg) => reg.unregister())))
+      .catch(() => {})
+      .finally(() => {
+        // Register kill-switch so any still-controlling worker swaps to a no-op
+        // that unregisters + reloads clients.
+        navigator.serviceWorker.register(SW_PATH).catch(() => {});
+      });
+
+    if ("caches" in window) {
+      caches
+        .keys()
+        .then((keys) => Promise.all(keys.map((key) => caches.delete(key))))
+        .catch(() => {});
+    }
   });
 }
 

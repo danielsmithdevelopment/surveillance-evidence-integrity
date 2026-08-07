@@ -111,7 +111,7 @@ export function SiteNav() {
       <ul className="m-0 flex list-none flex-wrap items-center justify-end gap-x-4 gap-y-2 p-0 text-sm font-medium text-ink sm:gap-5">
         <li>
           <a
-            href="/evidence.html"
+            href="/evidence"
             className="text-ink-muted transition hover:text-teal focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-teal"
           >
             Evidence
@@ -119,7 +119,7 @@ export function SiteNav() {
         </li>
         <li>
           <a
-            href="/media.html"
+            href="/media"
             className="text-ink-muted transition hover:text-teal focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-teal"
           >
             Media
@@ -127,7 +127,7 @@ export function SiteNav() {
         </li>
         <li>
           <a
-            href="/public-defenders.html"
+            href="/public-defenders"
             className="text-ink-muted transition hover:text-teal focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-teal"
           >
             Public defenders
@@ -135,7 +135,7 @@ export function SiteNav() {
         </li>
         <li className="hidden sm:list-item">
           <a
-            href="/terms.html"
+            href="/terms"
             className="text-ink-muted transition hover:text-teal focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-teal"
           >
             Terms
@@ -180,14 +180,14 @@ export function SiteFooter() {
         {" · "}
         <a
           className="font-medium text-teal-deep underline underline-offset-2 hover:text-teal focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal"
-          href="/media.html"
+          href="/media"
         >
           Media
         </a>
         {" · "}
         <a
           className="font-medium text-teal-deep underline underline-offset-2 hover:text-teal focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal"
-          href="/evidence.html"
+          href="/evidence"
         >
           Evidence
         </a>

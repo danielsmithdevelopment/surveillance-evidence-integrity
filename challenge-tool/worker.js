@@ -111,6 +111,20 @@ function markdownAssetPath(pathname) {
   return null;
 }
 
+/** Browser-facing .html → clean path (files still live as *.html in Assets). */
+function htmlExtensionRedirect(pathname) {
+  if (pathname === "/index.html") return "/";
+  if (
+    pathname === "/evidence.html" ||
+    pathname === "/media.html" ||
+    pathname === "/terms.html" ||
+    pathname === "/public-defenders.html"
+  ) {
+    return pathname.replace(/\.html$/i, "");
+  }
+  return null;
+}
+
 /** Map clean URL paths to static HTML files when Assets HTML handling is off. */
 function htmlAssetPath(pathname) {
   if (pathname === "/" || pathname === "") return "/index.html";
@@ -232,11 +246,24 @@ async function serveAssets(request, env) {
     headers.set("Cache-Control", "public, max-age=0, must-revalidate");
     headers.set("CDN-Cache-Control", "no-store");
   }
+  if (path === "/sw.js" && response.status === 200) {
+    headers.set("Cache-Control", "public, max-age=0, must-revalidate");
+    headers.set("CDN-Cache-Control", "no-store");
+    headers.set("Service-Worker-Allowed", "/");
+  }
 
-  // Inject public GIS client id so Sign-In works without baking secrets into static/.
-  if (response.status === 200 && isHtml && env.GOOGLE_CLIENT_ID) {
-    const clientId = String(env.GOOGLE_CLIENT_ID).replace(/</g, "\\u003c");
-    const inject = `<script>window.GOOGLE_CLIENT_ID=${JSON.stringify(clientId)};</script>`;
+  // Inject head bootstrapping for HTML shells.
+  if (response.status === 200 && isHtml) {
+    const parts = [];
+    // Tear down any leftover SW that blanked iOS navigations.
+    parts.push(
+      `<script>(function(){try{if(!("serviceWorker"in navigator))return;navigator.serviceWorker.getRegistrations().then(function(r){r.forEach(function(x){x.unregister();});});if(window.caches)caches.keys().then(function(k){k.forEach(function(n){caches.delete(n);});});}catch(e){}})();</script>`
+    );
+    if (env.GOOGLE_CLIENT_ID) {
+      const clientId = String(env.GOOGLE_CLIENT_ID).replace(/</g, "\\u003c");
+      parts.push(`<script>window.GOOGLE_CLIENT_ID=${JSON.stringify(clientId)};</script>`);
+    }
+    const inject = parts.join("");
     return new HTMLRewriter()
       .on("head", {
         element(el) {
@@ -700,6 +727,22 @@ export default {
       }
       if (url.pathname.startsWith("/api/evidence/verify/") && request.method === "GET") {
         return handleEvidenceVerify(request, env, url.pathname.split("/api/evidence/verify/")[1]);
+      }
+      // Prefer clean URLs in the address bar (/media not /media.html).
+      if ((request.method === "GET" || request.method === "HEAD") && !wantsMarkdown(request)) {
+        const clean = htmlExtensionRedirect(url.pathname);
+        if (clean !== null) {
+          const dest = new URL(request.url);
+          dest.pathname = clean;
+          return new Response(null, {
+            status: 301,
+            headers: {
+              Location: dest.toString(),
+              "Cache-Control": "public, max-age=0, must-revalidate",
+              "CDN-Cache-Control": "no-store",
+            },
+          });
+        }
       }
       // Static assets (Pages / Workers assets binding) + agent-ready headers
       if (env.ASSETS) {
@@ -1418,7 +1461,7 @@ async function handleEvidenceSecureDevice(request, env) {
     securedAt: record.securedAt,
     verificationId: record.sessionId,
     claimCode,
-    claimUrl: `https://challengethefootage.com/evidence.html?claim=${encodeURIComponent(sessionId)}&code=${encodeURIComponent(claimCode)}`,
+    claimUrl: `https://challengethefootage.com/evidence?claim=${encodeURIComponent(sessionId)}&code=${encodeURIComponent(claimCode)}`,
   });
 }
 
@@ -1528,7 +1571,7 @@ async function handleEvidenceSyncLite(request, env) {
     securedAt: record.securedAt,
     verificationId: record.sessionId,
     claimCode,
-    claimUrl: `https://challengethefootage.com/evidence.html?claim=${encodeURIComponent(sessionId)}&code=${encodeURIComponent(claimCode)}`,
+    claimUrl: `https://challengethefootage.com/evidence?claim=${encodeURIComponent(sessionId)}&code=${encodeURIComponent(claimCode)}`,
     transcriptStored: true,
     mediaPending: true,
     interrupted: !!record.interrupted,
@@ -1629,7 +1672,7 @@ async function handleIncidentCreate(request, env) {
   }
   return json({
     ...publicIncidentView(incident),
-    joinUrl: `https://challengethefootage.com/evidence.html?incident=${encodeURIComponent(incidentId)}`,
+    joinUrl: `https://challengethefootage.com/evidence?incident=${encodeURIComponent(incidentId)}`,
   });
 }
 
