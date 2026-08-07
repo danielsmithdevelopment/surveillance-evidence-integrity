@@ -111,38 +111,130 @@ function markdownAssetPath(pathname) {
   return null;
 }
 
+/** Map clean URL paths to static HTML files when Assets HTML handling is off. */
+function htmlAssetPath(pathname) {
+  if (pathname === "/" || pathname === "") return "/index.html";
+  if (pathname === "/evidence") return "/evidence.html";
+  if (pathname === "/media") return "/media.html";
+  if (pathname === "/terms") return "/terms.html";
+  if (pathname === "/public-defenders") return "/public-defenders.html";
+  return null;
+}
+
+function isRedirectStatus(status) {
+  return status === 301 || status === 302 || status === 307 || status === 308;
+}
+
+/** Fresh GET to Assets — do not forward the browser Request (URL/redirect quirks). */
+async function fetchAssetPath(env, origin, pathname) {
+  return env.ASSETS.fetch(new Request(new URL(pathname, origin).toString(), { method: "GET" }));
+}
+
+/**
+ * Resolve an asset to a 200 response.
+ * Critical: when Assets 307s /index.html → /, follow Location AS-IS.
+ * Remapping / → /index.html again creates a redirect loop (blank iOS Safari).
+ */
+async function fetchAssetOk(env, origin, pathname) {
+  const seen = new Set();
+  let path = pathname || "/";
+  for (let i = 0; i < 4; i++) {
+    if (seen.has(path)) break;
+    seen.add(path);
+    const response = await fetchAssetPath(env, origin, path);
+    if (response.status === 200) return { response, path };
+    if (!isRedirectStatus(response.status)) {
+      return { response, path };
+    }
+    const loc = response.headers.get("Location");
+    if (!loc) return { response, path };
+    path = new URL(loc, origin).pathname || "/";
+  }
+  return { response: await fetchAssetPath(env, origin, pathname), path: pathname };
+}
+
 async function serveAssets(request, env) {
   const url = new URL(request.url);
-  let assetRequest = request;
+  const pathname = url.pathname || "/";
 
   if (request.method === "GET" && wantsMarkdown(request)) {
-    const mdPath = markdownAssetPath(url.pathname);
+    const mdPath = markdownAssetPath(pathname);
     if (mdPath) {
-      const mdUrl = new URL(mdPath, url.origin);
-      assetRequest = new Request(mdUrl, request);
+      const mdResponse = await fetchAssetPath(env, url.origin, mdPath);
+      if (mdResponse.status === 200) {
+        const headers = new Headers(mdResponse.headers);
+        headers.set("Link", AGENT_LINK_HEADER);
+        headers.set("Vary", mergeVary(headers.get("Vary"), "Accept"));
+        headers.set("Content-Type", "text/markdown; charset=utf-8");
+        return new Response(mdResponse.body, {
+          status: 200,
+          statusText: mdResponse.statusText,
+          headers,
+        });
+      }
     }
   }
 
-  let response = await env.ASSETS.fetch(assetRequest);
-  // Fallback: if markdown missing, serve HTML as usual
-  if (response.status === 404 && assetRequest.url !== request.url) {
-    response = await env.ASSETS.fetch(request);
+  // Try file path (html_handling=none) then canonical pretty path (default HTML handling).
+  const mapped = htmlAssetPath(pathname);
+  const candidates = [];
+  if (mapped) {
+    candidates.push(mapped, pathname === "" ? "/" : pathname);
+  } else if (pathname.endsWith(".html")) {
+    candidates.push(pathname, pathname.replace(/\.html$/i, "") || "/");
+  } else {
+    candidates.push(pathname);
+    if (pathname !== "/" && !pathname.endsWith("/")) candidates.push(`${pathname}.html`);
+  }
+  // Always end with known shells so `/` cannot stay broken.
+  for (const fallback of ["/index.html", "/"]) {
+    if (!candidates.includes(fallback)) candidates.push(fallback);
+  }
+
+  let response = null;
+  let assetPath = pathname;
+  for (const candidate of candidates) {
+    const result = await fetchAssetOk(env, url.origin, candidate);
+    response = result.response;
+    assetPath = result.path;
+    if (response.status === 200) break;
+  }
+
+  // Never hand Asset redirects to browsers (empty body + Location → blank mobile page).
+  if (!response || isRedirectStatus(response.status)) {
+    const headers = new Headers({
+      "Content-Type": "text/html; charset=utf-8",
+      Link: AGENT_LINK_HEADER,
+      Vary: "Accept",
+    });
+    return new Response(
+      '<!doctype html><html lang="en"><head><meta charset="utf-8"/><title>Challenge the Footage</title></head><body><p>Loading failed. <a href="/">Retry</a>.</p></body></html>',
+      { status: 503, headers }
+    );
   }
 
   const headers = new Headers(response.headers);
   headers.set("Link", AGENT_LINK_HEADER);
   headers.set("Vary", mergeVary(headers.get("Vary"), "Accept"));
+  headers.delete("Location");
 
-  const path = new URL(assetRequest.url).pathname;
+  const path = assetPath;
   if (CONTENT_TYPE_OVERRIDES[path]) {
     headers.set("Content-Type", CONTENT_TYPE_OVERRIDES[path]);
-  } else if (path.endsWith(".md") || wantsMarkdown(request)) {
+  } else if (path.endsWith(".md")) {
     headers.set("Content-Type", "text/markdown; charset=utf-8");
   }
 
   const contentType = headers.get("Content-Type") || "";
+  const isHtml = contentType.includes("text/html") || path.endsWith(".html") || path === "/";
+  // Prevent edge cache from storing redirect/error variants that blank mobile Safari.
+  if (isHtml && response.status === 200) {
+    headers.set("Cache-Control", "public, max-age=0, must-revalidate");
+    headers.set("CDN-Cache-Control", "no-store");
+  }
+
   // Inject public GIS client id so Sign-In works without baking secrets into static/.
-  if (response.status === 200 && contentType.includes("text/html") && env.GOOGLE_CLIENT_ID) {
+  if (response.status === 200 && isHtml && env.GOOGLE_CLIENT_ID) {
     const clientId = String(env.GOOGLE_CLIENT_ID).replace(/</g, "\\u003c");
     const inject = `<script>window.GOOGLE_CLIENT_ID=${JSON.stringify(clientId)};</script>`;
     return new HTMLRewriter()
@@ -153,16 +245,18 @@ async function serveAssets(request, env) {
       })
       .transform(
         new Response(response.body, {
-          status: response.status,
-          statusText: response.statusText,
+          status: 200,
+          statusText: "OK",
           headers,
         })
       );
   }
 
+  // Force 200 for successful HTML shells even if Assets status was odd.
+  const outStatus = response.status === 200 || (isHtml && response.ok) ? 200 : response.status;
   return new Response(response.body, {
-    status: response.status,
-    statusText: response.statusText,
+    status: outStatus,
+    statusText: outStatus === 200 ? "OK" : response.statusText,
     headers,
   });
 }

@@ -519,7 +519,6 @@ export default function App() {
                   id={id}
                   className={inputClass}
                   value={footageCategory}
-                  disabled={!token}
                   onChange={(e) => {
                     const next = e.target.value;
                     setFootageCategory(next);
@@ -548,7 +547,6 @@ export default function App() {
                     id={id}
                     className={inputClass}
                     value={bodyCamRecordingStatus}
-                    disabled={!token}
                     onChange={(e) => setBodyCamRecordingStatus(e.target.value)}
                   >
                     {BODY_CAM_RECORDING_STATUSES.map((s) => (
@@ -573,7 +571,6 @@ export default function App() {
                   className={inputClass}
                   value={vendor}
                   onChange={(e) => setVendor(e.target.value)}
-                  disabled={!token}
                 >
                   {vendorOptions.map((v) => (
                     <option key={v.id} value={v.id}>
