@@ -1,12 +1,8 @@
 /* Challenge the Footage — app-shell service worker */
-const CACHE_VERSION = "ctf-shell-v2";
+const CACHE_VERSION = "ctf-shell-v4";
+// Precache only stable static files. Do not precache "/" / HTML shells —
+// a prior outage cached redirect responses and blanked iOS Safari.
 const PRECACHE = [
-  "/",
-  "/index.html",
-  "/evidence.html",
-  "/media.html",
-  "/terms.html",
-  "/public-defenders.html",
   "/site.webmanifest",
   "/icons/icon-192.png",
   "/icons/icon-512.png",
@@ -73,26 +69,34 @@ self.addEventListener("fetch", (event) => {
   event.respondWith(staleWhileRevalidate(request));
 });
 
+function offlineResponse() {
+  return new Response("Offline — open Challenge the Footage when you have a connection.", {
+    status: 503,
+    headers: { "Content-Type": "text/plain; charset=utf-8" },
+  });
+}
+
 async function networkFirst(request) {
   const cache = await caches.open(CACHE_VERSION);
   try {
     const fresh = await fetch(request);
-    if (fresh && fresh.ok) {
-      cache.put(request, fresh.clone());
+    // Never cache redirects / empty error shells — they blank the app on iOS.
+    if (fresh instanceof Response && fresh.ok) {
+      try {
+        await cache.put(request, fresh.clone());
+      } catch {
+        /* ignore quota / opaque failures */
+      }
+      return fresh;
     }
-    return fresh;
+    const cached = await cache.match(request);
+    if (cached instanceof Response && cached.ok) return cached;
+    if (fresh instanceof Response) return fresh;
+    return offlineResponse();
   } catch {
     const cached = await cache.match(request);
-    if (cached) return cached;
-    const fallback =
-      (await cache.match("/evidence.html")) ||
-      (await cache.match("/index.html")) ||
-      (await cache.match("/"));
-    if (fallback) return fallback;
-    return new Response("Offline — open Challenge the Footage when you have a connection.", {
-      status: 503,
-      headers: { "Content-Type": "text/plain; charset=utf-8" },
-    });
+    if (cached instanceof Response && cached.ok) return cached;
+    return offlineResponse();
   }
 }
 
