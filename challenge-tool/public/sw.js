@@ -1,7 +1,6 @@
 /* Challenge the Footage — app-shell service worker */
-const CACHE_VERSION = "ctf-shell-v4";
-// Precache only stable static files. Do not precache "/" / HTML shells —
-// a prior outage cached redirect responses and blanked iOS Safari.
+const CACHE_VERSION = "ctf-shell-v5";
+// Precache only stable static files. Never precache HTML — bad shells blank iOS Safari.
 const PRECACHE = [
   "/site.webmanifest",
   "/icons/icon-192.png",
@@ -19,6 +18,7 @@ self.addEventListener("install", (event) => {
       .open(CACHE_VERSION)
       .then((cache) => cache.addAll(PRECACHE))
       .then(() => self.skipWaiting())
+      .catch(() => self.skipWaiting())
   );
 });
 
@@ -30,6 +30,7 @@ self.addEventListener("activate", (event) => {
         Promise.all(keys.filter((k) => k !== CACHE_VERSION).map((k) => caches.delete(k)))
       )
       .then(() => self.clients.claim())
+      .catch(() => self.clients.claim())
   );
 });
 
@@ -37,37 +38,16 @@ function isApiRequest(url) {
   return url.pathname.startsWith("/api/");
 }
 
-function isNavigational(request) {
-  return request.mode === "navigate" || (request.headers.get("accept") || "").includes("text/html");
-}
-
-self.addEventListener("fetch", (event) => {
-  const { request } = event;
-  if (request.method !== "GET") return;
-
-  const url = new URL(request.url);
-  if (url.origin !== self.location.origin) return;
-  if (isApiRequest(url)) return;
-
-  if (isNavigational(request)) {
-    event.respondWith(networkFirst(request));
-    return;
-  }
-
-  // Hashed build assets and icons: cache-first after first fetch
-  if (
+function isStaticAsset(url) {
+  return (
     url.pathname.startsWith("/assets/") ||
     url.pathname.startsWith("/icons/") ||
     url.pathname.startsWith("/fonts/") ||
     url.pathname === "/og.png" ||
-    url.pathname === "/site.webmanifest"
-  ) {
-    event.respondWith(cacheFirst(request));
-    return;
-  }
-
-  event.respondWith(staleWhileRevalidate(request));
-});
+    url.pathname === "/site.webmanifest" ||
+    url.pathname === "/sw.js"
+  );
+}
 
 function offlineResponse() {
   return new Response("Offline — open Challenge the Footage when you have a connection.", {
@@ -76,47 +56,54 @@ function offlineResponse() {
   });
 }
 
-async function networkFirst(request) {
-  const cache = await caches.open(CACHE_VERSION);
-  try {
-    const fresh = await fetch(request);
-    // Never cache redirects / empty error shells — they blank the app on iOS.
-    if (fresh instanceof Response && fresh.ok) {
-      try {
-        await cache.put(request, fresh.clone());
-      } catch {
-        /* ignore quota / opaque failures */
-      }
-      return fresh;
-    }
-    const cached = await cache.match(request);
-    if (cached instanceof Response && cached.ok) return cached;
-    if (fresh instanceof Response) return fresh;
-    return offlineResponse();
-  } catch {
-    const cached = await cache.match(request);
-    if (cached instanceof Response && cached.ok) return cached;
-    return offlineResponse();
-  }
+/** respondWith must never receive a rejected promise or non-Response. */
+function safeRespond(event, handler) {
+  event.respondWith(
+    Promise.resolve()
+      .then(handler)
+      .then((response) => {
+        if (response instanceof Response) return response;
+        return offlineResponse();
+      })
+      .catch(() => offlineResponse())
+  );
 }
+
+self.addEventListener("fetch", (event) => {
+  const { request } = event;
+  if (request.method !== "GET") return;
+
+  let url;
+  try {
+    url = new URL(request.url);
+  } catch {
+    return;
+  }
+  if (url.origin !== self.location.origin) return;
+  if (isApiRequest(url)) return;
+
+  // Critical: do not intercept document navigations. iOS Safari shows a blank
+  // white page when a SW FetchEvent for navigate rejects or returns a bad body
+  // (seen on /media.html and other multi-page shells). Let the browser fetch HTML.
+  if (request.mode === "navigate") return;
+
+  // Only cache hashed/static assets — not HTML shells.
+  if (isStaticAsset(url)) {
+    safeRespond(event, () => cacheFirst(request));
+  }
+});
 
 async function cacheFirst(request) {
   const cache = await caches.open(CACHE_VERSION);
   const cached = await cache.match(request);
-  if (cached) return cached;
+  if (cached instanceof Response) return cached;
   const fresh = await fetch(request);
-  if (fresh && fresh.ok) cache.put(request, fresh.clone());
-  return fresh;
-}
-
-async function staleWhileRevalidate(request) {
-  const cache = await caches.open(CACHE_VERSION);
-  const cached = await cache.match(request);
-  const network = fetch(request)
-    .then((fresh) => {
-      if (fresh && fresh.ok) cache.put(request, fresh.clone());
-      return fresh;
-    })
-    .catch(() => cached);
-  return cached || network;
+  if (fresh instanceof Response && fresh.ok) {
+    try {
+      await cache.put(request, fresh.clone());
+    } catch {
+      /* ignore quota / opaque failures */
+    }
+  }
+  return fresh instanceof Response ? fresh : offlineResponse();
 }

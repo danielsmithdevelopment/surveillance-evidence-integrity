@@ -232,6 +232,12 @@ async function serveAssets(request, env) {
     headers.set("Cache-Control", "public, max-age=0, must-revalidate");
     headers.set("CDN-Cache-Control", "no-store");
   }
+  // Service worker must revalidate so clients drop buggy navigate interceptors quickly.
+  if (path === "/sw.js" && response.status === 200) {
+    headers.set("Cache-Control", "public, max-age=0, must-revalidate");
+    headers.set("CDN-Cache-Control", "no-store");
+    headers.set("Service-Worker-Allowed", "/");
+  }
 
   // Inject public GIS client id so Sign-In works without baking secrets into static/.
   if (response.status === 200 && isHtml && env.GOOGLE_CLIENT_ID) {

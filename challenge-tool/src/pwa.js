@@ -4,9 +4,19 @@ const SW_PATH = "/sw.js";
 export function registerServiceWorker() {
   if (typeof window === "undefined" || !("serviceWorker" in navigator)) return;
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register(SW_PATH).catch(() => {
-      /* Offline / unsupported — ignore */
-    });
+    navigator.serviceWorker
+      .register(SW_PATH)
+      .then((reg) => {
+        // Pull updates promptly so iOS drops buggy navigation interceptors.
+        try {
+          reg.update();
+        } catch {
+          /* ignore */
+        }
+      })
+      .catch(() => {
+        /* Offline / unsupported — ignore */
+      });
   });
 }
 
