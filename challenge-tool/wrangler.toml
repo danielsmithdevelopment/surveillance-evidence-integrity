@@ -5,6 +5,12 @@ main = "worker.js"
 compatibility_date = "2025-06-01"
 workers_dev = true
 
+# Custom domain routes (zone is on Cloudflare). Must be top-level, not under [assets].
+routes = [
+  { pattern = "challengethefootage.com/*", zone_name = "challengethefootage.com" },
+  { pattern = "www.challengethefootage.com/*", zone_name = "challengethefootage.com" }
+]
+
 # Serve static assets (index.html, terms, evidence, public-defenders) alongside the Worker.
 # run_worker_first so Link headers, Markdown negotiation, GIS client-id inject, and /api/*
 # always hit worker.js.
@@ -13,23 +19,16 @@ directory = "./static"
 binding = "ASSETS"
 run_worker_first = true
 
-# Optional custom domain — prefer Pulumi WorkersRoute (infra/, enableRoutes=true) after first deploy.
-# routes = [
-#   { pattern = "challengethefootage.com/*", zone_name = "challengethefootage.com" },
-#   { pattern = "www.challengethefootage.com/*", zone_name = "challengethefootage.com" }
-# ]
-
 # BEGIN PULUMI-MANAGED — do not edit by hand; npm run sync from infra/
 [[kv_namespaces]]
 binding = "RATE_LIMIT_KV"
-id = "REPLACE_WITH_RATE_LIMIT_KV_ID"
-preview_id = "REPLACE_WITH_RATE_LIMIT_KV_PREVIEW_ID"
+id = "a34c5bbe69034fc299cc3e3637c95189"
+preview_id = "6a7140f33ddb47a48933653c935091ff"
 
-# R2 disabled until Pulumi sync (or uncomment manually)
-# [[r2_buckets]]
-# binding = "EVIDENCE_BUCKET"
-# bucket_name = "ctf-evidence"
-# preview_bucket_name = "ctf-evidence-preview"
+[[r2_buckets]]
+binding = "EVIDENCE_BUCKET"
+bucket_name = "ctf-evidence"
+preview_bucket_name = "ctf-evidence-preview"
 # END PULUMI-MANAGED
 
 # Secrets (wrangler secret put) — never commit; never set ALLOW_TEST_AUTH in production:
