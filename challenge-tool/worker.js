@@ -208,7 +208,7 @@ async function serveAssets(request, env) {
       Vary: "Accept",
     });
     return new Response(
-      "<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"/><title>Challenge the Footage</title></head><body><p>Loading failed. <a href=\"/\">Retry</a>.</p></body></html>",
+      '<!doctype html><html lang="en"><head><meta charset="utf-8"/><title>Challenge the Footage</title></head><body><p>Loading failed. <a href="/">Retry</a>.</p></body></html>',
       { status: 503, headers }
     );
   }
