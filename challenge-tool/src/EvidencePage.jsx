@@ -300,8 +300,9 @@ export default function EvidencePage() {
             Record the encounter. Keep the proof.
           </h1>
           <p className="animate-rise-delay mt-5 max-w-xl text-lg text-ink-muted">
-            Capture video in the browser, seal it into a verifiable trust chain on your account, then
-            prepare documents. Install this site to your Home Screen for a near-native experience.
+            Capture video in the browser, seal it into a verifiable trust chain on your account,
+            then prepare documents. Install this site to your Home Screen for a near-native
+            experience.
           </p>
           <div className="mt-8 flex flex-wrap items-center gap-3">
             {!token ? (

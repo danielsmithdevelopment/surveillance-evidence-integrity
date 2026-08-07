@@ -100,10 +100,7 @@ function TosModal({ onAccept }) {
   }, []);
 
   return (
-    <div
-      className="fixed inset-0 z-50 grid place-items-center bg-ink/70 px-4"
-      role="presentation"
-    >
+    <div className="fixed inset-0 z-50 grid place-items-center bg-ink/70 px-4" role="presentation">
       <div
         ref={dialogRef}
         role="dialog"
@@ -461,8 +458,8 @@ export default function App() {
                 <p className="text-teal">VECTORS</p>
                 <p className="mt-3 text-ink">01 FRE 901 · chain of custody</p>
                 <p className="text-ink">02 FRE 702 · 0.1% floor</p>
-                <p className="text-ink">03 4th Amendment · case numbers</p>
-                <p className="text-ink">04 § 1983 · wrongful stop</p>
+                <p className="text-ink">03 4th Am · case numbers / MYOC</p>
+                <p className="text-ink">04 § 1983 · stop + 1A retaliation</p>
               </div>
               <div>
                 <p>Flock · Axon · Motorola</p>

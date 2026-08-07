@@ -13,15 +13,16 @@ export function registerServiceWorker() {
 export function isStandaloneDisplay() {
   if (typeof window === "undefined") return false;
   return (
-    window.matchMedia("(display-mode: standalone)").matches ||
-    window.navigator.standalone === true
+    window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true
   );
 }
 
 export function isIosSafari() {
   if (typeof navigator === "undefined") return false;
   const ua = navigator.userAgent || "";
-  const iOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  const iOS =
+    /iPad|iPhone|iPod/.test(ua) ||
+    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
   const webkit = /WebKit/.test(ua);
   const chrome = /CriOS|FxiOS|EdgiOS|OPiOS|Chrome/.test(ua);
   return iOS && webkit && !chrome;

@@ -34,9 +34,9 @@ export function TrustChainSection({ compact = false }) {
         The trust chain
       </h2>
       <p className="mt-2 max-w-2xl text-sm leading-relaxed text-ink-muted sm:text-base">
-        Better evidence quality means a clearer story from recording to courtroom: what was captured,
-        that it was not silently swapped later, and that someone else can re-check the same
-        fingerprints. That is the floor FRE 901 authentication expects — and what most vendor
+        Better evidence quality means a clearer story from recording to courtroom: what was
+        captured, that it was not silently swapped later, and that someone else can re-check the
+        same fingerprints. That is the floor FRE 901 authentication expects — and what most vendor
         systems do not publicly prove.
       </p>
       <ol className="mt-6 grid gap-5 sm:grid-cols-2">

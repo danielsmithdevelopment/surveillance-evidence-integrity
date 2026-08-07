@@ -5,6 +5,47 @@
 
 export const MEDIA_SECTIONS = [
   {
+    id: "first-amendment",
+    title: "First Amendment retaliation — Lenexa MYOC",
+    intro:
+      "The most legally significant ALPR abuse pattern in this collection: written directives to find a pretext to stop a critic of the department. Vendor-agnostic — Lenexa used Axon, Genetec, and Leonardo, not Flock.",
+    stories: [
+      {
+        outlet: "KCUR",
+        date: "February 2, 2026",
+        title:
+          "Lenexa police investigated author of column criticizing the department. He's 'pissed off'",
+        url: "https://www.kcur.org/politics-elections-and-government/2026-02-02/lenexa-police-investigated-column-writer-critical-failure-warn-ice-raid-councilwoman-investigation",
+        summary:
+          "After Canyen Ashworth published a Kansas City Star guest column criticizing Lenexa PD, the department used city ALPRs to track his car, issued a department-wide BOLO, and directed officers to “MYOC” — make your own case — find a reason to stop him. He was never charged and was not the poster-hanger in the surveillance video. ACLU of Kansas and First Amendment experts called the tactics retaliatory.",
+        whyItMatters:
+          "Written MYOC language is rare direct evidence of retaliatory motive. Feeds § 1983 First Amendment retaliation (Vector 5) and aggravates Fourth Amendment suppression / civil demand discovery (BOLOs, post-criticism plate queries, pretext-stop directives).",
+      },
+      {
+        outlet: "KCUR",
+        date: "June 29, 2026",
+        title:
+          "Missouri and Kansas police use cameras to track license plates, but residents resist surveillance",
+        url: "https://www.kcur.org/news/2026-06-29/automated-license-plate-readers-alpr-kansas-city-lenexa-weston-police",
+        summary:
+          "Follow-up confirming Ashworth’s plate was captured ~150 times in less than two years, and that Lenexa’s ALPR stack is Axon, Genetec, and Leonardo — not Flock. Ashworth said the experience “radicalized” him against ALPRs.",
+        whyItMatters:
+          "Locks the vendor-agnostic architecture: First Amendment retaliation is an ALPR problem, not a Flock-only problem. Strengthens Axon and Genetec profiles in the generator.",
+      },
+      {
+        outlet: "The Pitch KC",
+        date: "August 2026",
+        title:
+          "EyesOffKC organizes against Flock surveillance for upcoming National Week of Action",
+        url: "https://www.thepitchkc.com/eyesoffkc-organizes-against-flock-surveillance-for-upcoming-national-week-of-action/",
+        summary:
+          "Local organizers cite the Lenexa tracking of Ashworth after his critical column as proof that ALPR databases enable speech retaliation, while pushing Kansas City to cancel contracts ahead of a National Week of Action.",
+        whyItMatters:
+          "Shows how the Lenexa fact pattern is already framing regional political and legal organizing — useful context for demand letters and public-defender briefing.",
+      },
+    ],
+  },
+  {
     id: "tower-dump",
     title: "Court rulings — bulk location dragnets",
     intro:

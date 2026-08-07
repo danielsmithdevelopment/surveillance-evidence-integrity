@@ -85,8 +85,8 @@ export function InstallAppControl() {
             role="status"
             className="absolute right-0 top-full z-20 mt-2 w-64 rounded-xl border border-line bg-white p-3 text-left text-xs leading-relaxed text-ink shadow-[0_12px_40px_rgba(18,26,33,0.12)]"
           >
-            Tap Share, then <strong>Add to Home Screen</strong> to install Challenge the Footage like
-            an app.
+            Tap Share, then <strong>Add to Home Screen</strong> to install Challenge the Footage
+            like an app.
           </span>
         ) : null}
       </li>
