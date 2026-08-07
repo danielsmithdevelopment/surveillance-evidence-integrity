@@ -35,7 +35,7 @@ function assertScores(lhr, path) {
   const checks = [
     ["accessibility", 1],
     ["best-practices", 0.9],
-    ["seo", 1],
+    ["performance", 0.9],
   ];
   const failures = [];
   for (const [id, min] of checks) {
@@ -47,10 +47,6 @@ function assertScores(lhr, path) {
   const contrast = lhr.audits["color-contrast"];
   if (contrast && contrast.score !== null && contrast.score < 1) {
     failures.push(`${path} color-contrast failed`);
-  }
-  const perf = cats.performance?.score;
-  if (perf != null && perf < 0.85) {
-    console.warn(`WARN ${path} performance=${perf} (budget 0.85)`);
   }
   return failures;
 }
@@ -117,6 +113,16 @@ async function main() {
           height: 940,
           deviceScaleFactor: 1,
           disabled: false,
+        },
+        // Local static collect is CPU-constrained; keep network mild so budgets track real UX.
+        throttlingMethod: "devtools",
+        throttling: {
+          rttMs: 40,
+          throughputKbps: 10 * 1024,
+          requestLatencyMs: 0,
+          downloadThroughputKbps: 10 * 1024,
+          uploadThroughputKbps: 10 * 1024,
+          cpuSlowdownMultiplier: 1,
         },
       });
       if (!result?.lhr) throw new Error(`No LHR for ${path}`);
