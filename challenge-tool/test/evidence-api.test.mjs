@@ -125,7 +125,7 @@ describe("evidence API (wrangler local)", () => {
     });
     assert.equal(device.status, 200, JSON.stringify(device.json));
     assert.ok(device.json.claimCode);
-    assert.ok(device.json.claimUrl.includes("evidence.html?claim="));
+    assert.ok(device.json.claimUrl.includes("evidence?claim="));
     assert.equal(device.json.status, "secured_local");
 
     const badClaim = await api("/api/evidence/claim", {
