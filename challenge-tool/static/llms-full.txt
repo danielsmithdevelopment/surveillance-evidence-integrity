@@ -46,7 +46,7 @@ Canonical docs live in the open-source repo:
 
 ## Evidence capture
 
-Primary UX: [Evidence on Challenge the Footage](https://challengethefootage.com/evidence.html) — in-browser record + trust chain, installable PWA. Deep-link into documents with `?evidenceSession=`.
+Primary UX: [Evidence on Challenge the Footage](https://challengethefootage.com/evidence) — in-browser record + trust chain, installable PWA. Deep-link into documents with `?evidenceSession=`.
 
 ## Contact
 

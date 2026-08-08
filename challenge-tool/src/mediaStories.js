@@ -1,5 +1,5 @@
 /**
- * Curated press & research links used on /media.html.
+ * Curated press & research links used on /media.
  * Keep summaries factual; "whyItMatters" ties each item to CTF challenge vectors.
  */
 

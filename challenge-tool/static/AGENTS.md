@@ -7,17 +7,17 @@
 ## What this site is
 
 - **Human UI:** https://challengethefootage.com/
-- **Evidence:** https://challengethefootage.com/evidence.html — record + secure encounters (installable PWA)
-- **Media & sources:** https://challengethefootage.com/media.html — press/research links behind vendor profiles
-- **Public defenders:** free unlimited access — https://challengethefootage.com/public-defenders.html
-- **Terms:** https://challengethefootage.com/terms.html
+- **Evidence:** https://challengethefootage.com/evidence — record + secure encounters (installable PWA)
+- **Media & sources:** https://challengethefootage.com/media — press/research links behind vendor profiles
+- **Public defenders:** free unlimited access — https://challengethefootage.com/public-defenders
+- **Terms:** https://challengethefootage.com/terms
 - **Product model:** https://github.com/danielsmithdevelopment/surveillance-evidence-integrity/blob/main/challenge-tool/PRODUCT.md
 - **Open source:** https://github.com/danielsmithdevelopment/surveillance-evidence-integrity
 - **Powered by:** ClawQL (https://clawql.com) for inference, memory, Stripe, and independent evidence verification
 
 ## Prefer Markdown
 
-Send `Accept: text/markdown` on `/`, `/evidence.html`, `/media.html`, `/terms.html`, or `/public-defenders.html` for machine-readable content.
+Send `Accept: text/markdown` on `/`, `/evidence`, `/media`, `/terms`, or `/public-defenders` for machine-readable content.
 
 ## Key files for agents
 

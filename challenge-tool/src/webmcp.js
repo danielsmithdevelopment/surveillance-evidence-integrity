@@ -80,9 +80,9 @@ const TOOLS = [
     async execute({ page }) {
       const map = {
         home: "/",
-        media: "/media.html",
-        terms: "/terms.html",
-        "public-defenders": "/public-defenders.html",
+        media: "/media",
+        terms: "/terms",
+        "public-defenders": "/public-defenders",
       };
       const path = map[page] || "/";
       if (typeof window !== "undefined") {

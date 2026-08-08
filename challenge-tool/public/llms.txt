@@ -7,10 +7,10 @@ This file helps AI agents find canonical entry points. Prefer `Accept: text/mark
 ## Primary pages
 
 - [Home / generator](https://challengethefootage.com/): Case details form + four document types
-- [Evidence](https://challengethefootage.com/evidence.html): Record encounters, build the trust chain, evidence library (installable PWA)
-- [Media & sources](https://challengethefootage.com/media.html): Press/research behind vendor profiles (404 Media Flock series, FOIA, IJ, EFF)
-- [Public defenders](https://challengethefootage.com/public-defenders.html): Free unlimited access program
-- [Terms of Service](https://challengethefootage.com/terms.html): Legal terms
+- [Evidence](https://challengethefootage.com/evidence): Record encounters, build the trust chain, evidence library (installable PWA)
+- [Media & sources](https://challengethefootage.com/media): Press/research behind vendor profiles (404 Media Flock series, FOIA, IJ, EFF)
+- [Public defenders](https://challengethefootage.com/public-defenders): Free unlimited access program
+- [Terms of Service](https://challengethefootage.com/terms): Legal terms
 - [Agent instructions](https://challengethefootage.com/AGENTS.md): How agents should use this site
 - [Auth for agents](https://challengethefootage.com/auth.md): Google Sign-In / OAuth notes
 - [Product model](https://github.com/danielsmithdevelopment/surveillance-evidence-integrity/blob/main/challenge-tool/PRODUCT.md): Unified product (evidence + docs + Stripe)
