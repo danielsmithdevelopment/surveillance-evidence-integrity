@@ -28,7 +28,7 @@ Geofence warrants categorically unconstitutional. **Why it matters:** circuit br
 ## Wisconsin — contract control vs. “customer owns the data”
 
 ### [Cudahy gun range removes Flock cameras (TMJ4, Aug. 2026)](https://www.tmj4.com/news/local-news/in-your-community/milwaukee-county/cudahy-gun-range-removes-flock-cameras-over-privacy-concerns)
-Eagle Sports Range asked Flock to remove cameras in Feb. 2026; Flock said the contract required keeping them running. GM Saad Jaber removed them anyway after a viral video. **Why it matters:** public “customer owns the data” claims vs. contractual forced collection; private-operator / state-actor and Second Amendment (gun-range) angles.
+Eagle Sports Range asked Flock to remove cameras in Feb. 2026; Flock said the contract required keeping them running. GM Saad Jaber removed them anyway after a viral video. **Why it matters:** public “customer owns the data” claims vs. contractual forced collection; private-operator / state-actor theories; Bruen / Form 4473-by-movements analysis when plates are collected at firearms-related locations.
 
 ### [Cudahy business removes Flock cameras (FOX6, Aug. 2026)](https://www.fox6now.com/news/cudahy-business-removes-flock-camera-over-growing-privacy-concerns)
 Confirms contract refusal + statewide Wisconsin pushback (220+ LE agencies on Flock).

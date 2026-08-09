@@ -77,7 +77,7 @@ export const MEDIA_SECTIONS = [
     id: "wisconsin-contract",
     title: "Wisconsin — contract control vs. “customer owns the data”",
     intro:
-      "Eagle Sports Range asked Flock to remove cameras; Flock said the contract required keeping them running. The gap between public ownership claims and contractual forced collection is a new authenticity / civil / suppression vector.",
+      "Eagle Sports Range asked Flock to remove cameras; Flock said the contract required keeping them running. The gap between public ownership claims and contractual forced collection is a new authenticity / civil / suppression vector. When plates are collected at firearms-related locations, the same facts also support a Bruen / Form 4473-by-movements analysis (H.R. 9800 as legislative fact).",
     stories: [
       {
         outlet: "TMJ4",
@@ -97,7 +97,7 @@ export const MEDIA_SECTIONS = [
         summary:
           "Confirms Eagle Sports Range took cameras down despite Flock’s contract position. Notes more than 220 Wisconsin law enforcement agencies use Flock, and covers broader southeastern Wisconsin pushback including officer-misuse cases.",
         whyItMatters:
-          "Statewide deployment scale + private-customer forced-operation fact pattern. Also supports Second Amendment–adjacent civil theories when plates are collected at gun ranges without a warrant (Bruen).",
+          "Statewide deployment scale + private-customer forced-operation fact pattern. When plates are collected at firearms-related locations without a warrant, supports Bruen / Form 4473-by-movements analysis in civil and suppression templates.",
       },
     ],
   },
