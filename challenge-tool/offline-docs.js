@@ -528,7 +528,7 @@ _______________________________
 Counsel for Claimant
 [Attorney name — TO BE COMPLETED]
 
-CC: Local ACLU affiliate; Institute for Justice; relevant civil-rights organizations
+CC: Institute for Justice; other organizations counsel may notify based on case facts
 `;
 
   return { motion, accuracy, access, civil };

@@ -177,7 +177,7 @@ Contact **sponsor@challengethefootage.com** for bulk sponsorship arrangements.
 
 ## Press and research
 
-If you are a journalist, researcher, or civil liberties organization working on surveillance accountability, feel free to use the documentation and data in this repository. Attribution appreciated but not required.
+If you are a journalist, researcher, or organization working on surveillance accountability, feel free to use the documentation and data in this repository. Attribution appreciated but not required.
 
 **On the site:** [challengethefootage.com/media.html](https://challengethefootage.com/media.html) — curated links with brief summaries and why each story matters for FRE 901 / 702 / Fourth Amendment / § 1983 work (including the August 2026 404 Media Flock series).
 

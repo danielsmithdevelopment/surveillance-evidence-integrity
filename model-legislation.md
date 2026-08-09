@@ -152,7 +152,21 @@ To meet the authentication requirement of Section 3, the Proponent shall demonst
 
 ---
 
-### SECTION 11. EFFECTIVE DATE
+### SECTION 11. LAWFUL ACTIVITY AT FIREARMS-RELATED AND OTHER SENSITIVE LOCATIONS
+
+(a) The Legislature finds that the automated collection of vehicle identification data at or near locations associated with lawful sensitive activity — including medical facilities, houses of worship, legal-aid offices, and locations associated with the lawful purchase, transfer, storage, training, or use of firearms — creates records that can identify individuals by their movements rather than by transaction or warrant process, without the legal framework, oversight, or limitations that would otherwise apply (including, for firearms-related locations, the framework governing federal firearms transaction records under 18 U.S.C. § 922).
+
+(b) No law enforcement agency shall use ALPR data collected at or within [500] feet of a location described in subsection (a) to: (i) identify individuals by their association with the activity conducted at that location; (ii) create or contribute to any list, database, or record linking individuals to that activity; or (iii) share with any federal agency for purposes not directly related to a specific, documented criminal investigation involving that individual.
+
+(c) Any ALPR data collected at a location described in subsection (a) shall be subject to the same warrant requirement applicable to the contents of a cell phone under Riley v. California, 573 U.S. 373 (2014), before it may be queried, searched, or used in any law enforcement investigation.
+
+(d) A private business that installs ALPR cameras at a location described in subsection (a) shall have the unilateral right to terminate any contract with the ALPR vendor and require removal of the cameras upon [30] days' written notice, notwithstanding any contractual provision to the contrary. Any contractual provision purporting to override this right is void as against public policy.
+
+**Drafting note:** Subsection (d) addresses the Eagle Sports Range pattern — contractual forced continued collection against a customer's wishes. The section is written to cover firearms-related locations under the Second Amendment legal standard (NYSRPA v. Bruen) and parallel sensitive locations, so the same statute serves multiple local concerns without political framing. Pair with H.R. 9800 (Protection Against Mass Surveillance Act, introduced July 21, 2026) as the federal legislative hook.
+
+---
+
+### SECTION 12. EFFECTIVE DATE
 
 This Act takes effect [DATE].
 

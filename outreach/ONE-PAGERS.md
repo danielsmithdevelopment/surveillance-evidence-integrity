@@ -1,13 +1,17 @@
 # Challenge the Footage — One-Pagers
 
-Two print-ready versions: city councils / contracting authorities, and public defenders.  
+Print-ready versions for city councils / contracting authorities (two jurisdiction framings, same contract ask) and public defenders.  
 Aimed at one page each when pasted into a letterhead or Google Doc (11–12 pt body).
 
-**Last reviewed:** August 5, 2026 · Aligned with PRs #1–#9 / [PRODUCT.md](../challenge-tool/PRODUCT.md)
+**Framing rule:** Lead with the audience’s local risk; ask for the **same** integrity and placement clauses either way. Do not mix political causes in a single council handout.
+
+**Last reviewed:** August 9, 2026 · Aligned with [PRODUCT.md](../challenge-tool/PRODUCT.md)
 
 ---
 
-## Version 1: City Councils and Contracting Authorities
+## Version 1A: City Councils — access / accountability framing
+
+*Use where stalking, federal data sharing, and unauthorized queries are the local concern.*
 
 ---
 
@@ -41,19 +45,91 @@ The industry operates at a documented misidentification error rate of approximat
 
 **The access problem**
 
-Public records data shows that 84% of searches run against the Flock Safety network carried no case number. The Institute for Justice has documented at least 28 officers using license plate reader systems to track romantic interests. When most searches lack documented justification, unauthorized personal use is structurally undetectable.
+Public records data shows that 84% of searches run against the Flock Safety network carried no case number. The Institute for Justice has documented at least 28 officers using license plate reader systems to track romantic interests. Federal agencies have accessed local networks without clear local consent in multiple reported cases. When most searches lack documented justification, unauthorized personal use and unexpected sharing are structurally hard to detect.
 
 ---
 
 **What to require in your next contract**
 
-Three clauses. Any vendor who refuses to sign them is telling you something.
+Four clauses. Any vendor who refuses to sign them is telling you something. (Full text: `model-contract-language.md`.)
 
 **1.** Footage must be hashed inside the camera hardware before transmission. The vendor must provide cryptographic proof of this on request, including to defense counsel in any case using the footage as evidence.
 
 **2.** Every query must be logged with a case number. Queries without case numbers must be blocked — not flagged, blocked. The log must be stored in a form the vendor cannot alter after the fact.
 
 **3.** The vendor must not integrate with any system capable of altering footage without leaving a detectable trace in the audit log. Violation is a material breach.
+
+**4.** Location-sensitive collection: ALPR data collected at or near places associated with lawful sensitive activity — including medical, worship, legal-aid, and firearms-related locations — must not be used to build activity lists or share with federal agencies outside a documented investigation of a specific person. Private hosts of cameras at those locations must be able to terminate on notice (`model-contract-language.md` §7).
+
+(Same integrity ideas should apply to **body-worn camera** contracts: hash before leave-device, activation/mute/export logs, export a third party can verify.)
+
+---
+
+**Free resources**
+
+- Clause-ready model contract language:  
+  **github.com/danielsmithdevelopment/surveillance-evidence-integrity**  
+  → `model-contract-language.md`
+- Challenge documents & evidence tool: **challengethefootage.com**
+- Public defender access / questions: **pd@challengethefootage.com** · **sponsor@challengethefootage.com**
+
+---
+
+## Version 1B: City Councils — firearms-location / federal bill framing
+
+*Use where ALPR placement near ranges, gun stores, or shows is the local concern. Same contract ask as Version 1A.*
+
+---
+
+**BEFORE YOU RENEW YOUR SURVEILLANCE CAMERA CONTRACT**
+
+**Three things your vendor probably can’t prove — and why that matters.**
+
+Your city contracts with a surveillance camera company. Officers use the footage to make stops. Prosecutors use it as evidence. Defense attorneys are starting to ask a question that no major vendor can currently answer:
+
+*How do you know this footage is what the camera recorded, unaltered?*
+
+---
+
+**The authentication gap**
+
+No major surveillance camera vendor publicly documents:
+
+- Footage hashed inside the camera before it leaves the hardware  
+- A tamper-evident record of every time the footage was accessed  
+- That record stored somewhere the vendor cannot alter it  
+
+Without these controls, “this is what the camera recorded” is the vendor’s word. It is not independently verifiable. When that gap is challenged under evidence rules, cities inherit the risk — in court and at contract renewal.
+
+---
+
+**The accuracy problem**
+
+The industry operates at a documented misidentification error rate of approximately 10% — one in ten plates misread. The Institute for Justice has documented at least 27 people detained at gunpoint or jailed due to license plate reader errors since 2018. A 10% error rate on a system used to initiate arrests is not defensible as a legal standard. The appropriate floor is 0.1% or better, independently certified.
+
+---
+
+**Lawful activity at firearms-related locations**
+
+ALPR cameras at or near gun ranges, gun stores, and gun shows log vehicles that arrive and leave — without a warrant and without the statutory framework that governs federal firearms transaction records (Form 4473). Travel-pattern data can identify who visits those locations. Federal agencies can query local networks.
+
+H.R. 9800 — the Protection Against Mass Surveillance Act, introduced by Rep. Tim Burchett (R-TN) on July 21, 2026 — would restrict federal agencies’ purchase of and access to Flock-class mass surveillance systems. It is a pending legislative acknowledgment of the problem, not a partisan talking point.
+
+Private businesses that host these cameras have reported being told they were “contractually obligated” to keep them operating after requesting removal (Eagle Sports Range, Cudahy, WI, August 2026). If a host cannot turn collection off, the city should ask who actually controls the data stream.
+
+---
+
+**What to require in your next contract**
+
+Four clauses. Any vendor who refuses to sign them is telling you something. (Full text: `model-contract-language.md`.)
+
+**1.** Footage must be hashed inside the camera hardware before transmission. The vendor must provide cryptographic proof of this on request, including to defense counsel in any case using the footage as evidence.
+
+**2.** Every query must be logged with a case number. Queries without case numbers must be blocked — not flagged, blocked. The log must be stored in a form the vendor cannot alter after the fact.
+
+**3.** The vendor must not integrate with any system capable of altering footage without leaving a detectable trace in the audit log. Violation is a material breach.
+
+**4.** Location-sensitive collection: ALPR data collected at or near places associated with lawful sensitive activity — including medical, worship, legal-aid, and firearms-related locations — must not be used to build activity lists or share with federal agencies outside a documented investigation of a specific person. Private hosts of cameras at those locations must be able to terminate on notice (`model-contract-language.md` §7).
 
 (Same integrity ideas should apply to **body-worn camera** contracts: hash before leave-device, activation/mute/export logs, export a third party can verify.)
 
@@ -101,7 +177,7 @@ Motion challenging system reliability. Documented ~10% ALPR error estimates. At 
 Motion arguing unauthorized or undocumented access. FOIA-derived patterns of case-number-less Flock searches. 28+ documented officer stalking / misuse cases. Discovery into the searching officer’s query history.
 
 **42 U.S.C. § 1983 — Civil demand letter**  
-For your client’s civil claim. Damages framing, fee-shifting under §1988, response deadline, CC line for civil-rights organizations.
+For your client’s civil claim when facts support it — including Fourth Amendment theories and, where location facts fit, parallel claims under applicable constitutional doctrine. Damages framing, fee-shifting under §1988, response deadline.
 
 ---
 
@@ -119,7 +195,7 @@ Select footage category **Body-worn**, then recording status:
 
 **Cell phone / civilian recording**
 
-Select **Cell phone**. Use when the state (or a witness) offers phone video — including AI-enhanced or chat-re-exported clips (*State v. Puloka*; *Mendones*). If your client captured the encounter with Challenge the Footage Evidence / Witness, share the **session ID** with counsel:  
+Select **Cell phone**. Use when the state (or a witness) offers phone video — including AI-enhanced or chat-re-exported clips (*State v. Puloka*; *Mendones*). If your client captured the encounter with Challenge the Footage Evidence, share the **session ID** with counsel:  
 `GET /api/evidence/verify/{sessionId}` returns hashes, Merkle root, optional independent verification reference, and a how-to-verify checklist.  
 **Audio and video are authoritative**; on-device transcripts can be imperfect and are labeled accordingly.
 
