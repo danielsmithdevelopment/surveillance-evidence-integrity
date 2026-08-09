@@ -77,7 +77,7 @@ export const MEDIA_SECTIONS = [
     id: "wisconsin-contract",
     title: "Wisconsin — contract control vs. “customer owns the data”",
     intro:
-      "Eagle Sports Range asked Flock to remove cameras; Flock said the contract required keeping them running. The gap between public ownership claims and contractual forced collection is a new authenticity / civil / suppression vector.",
+      "Eagle Sports Range asked Flock to remove cameras; Flock said the contract required keeping them running. The gap between public ownership claims and contractual forced collection is a new authenticity / civil / suppression vector — and gun-range ALPR placement feeds the “Form 4473 by movements” Second Amendment argument (H.R. 9800; Texas Gun Rights).",
     stories: [
       {
         outlet: "TMJ4",

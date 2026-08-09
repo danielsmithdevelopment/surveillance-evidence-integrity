@@ -130,6 +130,18 @@ This language is designed to be inserted into a standard municipal services agre
 
 ---
 
+## Section 7: Firearms-Related and Second Amendment Protected Locations
+
+**7.1** Vendor shall not use, permit the use of, or design Camera placement or query tooling so that Footage or associated vehicle-identification data collected at or within [500] feet of a location primarily associated with the lawful purchase, transfer, storage, training, or use of firearms — including gun stores, shooting ranges, gun shows, and firearms training facilities — is used to: (a) identify individuals as gun owners or firearms enthusiasts; (b) create or contribute to any list, database, or record linking individuals to firearms activity; or (c) share with any federal agency except for a specific, documented criminal investigation of an identified individual.
+
+**7.2** City shall not query, request, or accept ALPR data collected at a location described in Section 7.1 for the purposes prohibited in Section 7.1, and shall require any agency within City's jurisdiction that receives such data under this Agreement to adopt the same prohibition in writing.
+
+**7.3** Notwithstanding any minimum term, early-termination fee, or similar provision elsewhere in this Agreement, any private business that hosts Cameras under this Agreement at a location described in Section 7.1 shall have the unilateral right to terminate Camera operation and require removal of Cameras upon [30] days' written notice to Vendor. Any contractual provision purporting to override this right is void as against public policy of City.
+
+*Commentary: Section 7 addresses the "gun-owner registry built from your movements instead of a Form 4473" problem — warrantless logging of who visits ranges, stores, and shows without the statutory framework governing federal firearms transaction records. Subsection 7.3 is the Eagle Sports Range (Cudahy, WI, 2026) clause: private hosts of cameras at Second Amendment–sensitive locations must be able to shut collection off even when the vendor claims a contractual obligation to keep cameras running. Pair with H.R. 9800 and state models such as Washington SB 6002.*
+
+---
+
 ## Suggested Additional Provisions
 
 The following provisions go beyond what most cities will be able to negotiate in an initial contract but represent the full standard that makes footage genuinely trustworthy as evidence. They are included here as aspirational language for jurisdictions with significant negotiating leverage or for inclusion in RFP requirements.

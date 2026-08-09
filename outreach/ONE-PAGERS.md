@@ -45,6 +45,18 @@ Public records data shows that 84% of searches run against the Flock Safety netw
 
 ---
 
+**The gun owner registry problem**
+
+ALPR cameras placed at or near gun ranges, gun stores, and gun shows collect the plates of everyone who visits — without a warrant, without individualized suspicion, without any of the legal safeguards that govern federal firearms transaction records.
+
+Your city's Flock contract may be enabling a backdoor gun owner registry built from vehicle movement data. Every person who visits a gun range in your city and passes a Flock camera is in that database. Federal agencies can query it.
+
+H.R. 9800 — the Protection Against Mass Surveillance Act — is pending in Congress specifically because of this problem.
+
+The model contract language in this repository includes a provision prohibiting use of ALPR data collected near firearms-related locations to identify gun owners or contribute to any registry of firearms activity. Require it.
+
+---
+
 **What to require in your next contract**
 
 Three clauses. Any vendor who refuses to sign them is telling you something.
@@ -54,6 +66,8 @@ Three clauses. Any vendor who refuses to sign them is telling you something.
 **2.** Every query must be logged with a case number. Queries without case numbers must be blocked — not flagged, blocked. The log must be stored in a form the vendor cannot alter after the fact.
 
 **3.** The vendor must not integrate with any system capable of altering footage without leaving a detectable trace in the audit log. Violation is a material breach.
+
+**4.** ALPR data collected at or near gun ranges, gun stores, and gun shows must not be used to identify gun owners, build firearms-activity lists, or share with federal agencies outside a documented investigation of a specific person — and private hosts of those cameras must be able to terminate on notice (see `model-contract-language.md` §7).
 
 (Same integrity ideas should apply to **body-worn camera** contracts: hash before leave-device, activation/mute/export logs, export a third party can verify.)
 

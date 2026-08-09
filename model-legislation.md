@@ -148,11 +148,25 @@ To meet the authentication requirement of Section 3, the Proponent shall demonst
 
 (c) The Legislature finds that state preemption of local surveillance oversight ordinances — including laws that prevent elected city councils from restricting police department use of automated license plate reader systems or other surveillance technology without legislative approval — undermines democratic accountability for surveillance infrastructure and is inconsistent with the Fourth Amendment values this Act implements.
 
-**Drafting note:** This section directly addresses the Wisconsin Act 12 pattern, where state preemption legislation — in some cases supported by surveillance vendor lobbying — strips local governments of authority to enact Community Control Over Police Surveillance ordinances. California, Illinois, and Washington do not currently have equivalent preemption problems, but the section establishes the principle for states where this is a live issue. Several other states have similar preemption dynamics that advocates should research before introduction.
+**Drafting note:** This section directly addresses the Wisconsin Act 12 pattern, where state preemption legislation — in some cases supported by surveillance vendor lobbying — strips local governments of authority to enact Community Control Over Police Surveillance ordinances. California, Illinois, and Washington do not currently have equivalent preemption problems, but the section establishes the principle for states where this is a live issue. Several other states have similar preemption dynamics that advocates should research before introduction. Washington SB 6002 (effective March 30, 2026) is a positive state model restricting ALPR use after Border Patrol access to local databases.
 
 ---
 
-### SECTION 11. EFFECTIVE DATE
+### SECTION 11. SECOND AMENDMENT PROTECTED LOCATIONS
+
+(a) The Legislature finds that the automated collection of vehicle identification data at or near locations associated with the lawful exercise of Second Amendment rights — including gun stores, shooting ranges, gun shows, and firearms training facilities — creates records functionally equivalent to a firearms owner registry built from movement data rather than transaction records, without the legal framework, oversight, or limitations governing federal firearms transaction records under 18 U.S.C. § 922.
+
+(b) No law enforcement agency shall use ALPR data collected at or within [500] feet of a location primarily associated with the lawful purchase, transfer, storage, or use of firearms to: (i) identify individuals as gun owners or firearms enthusiasts; (ii) create or contribute to any list, database, or record linking individuals to firearms activity; or (iii) share with any federal agency for purposes not directly related to a specific, documented criminal investigation involving that individual.
+
+(c) Any ALPR data collected at a location described in subsection (b) shall be subject to the same warrant requirement applicable to the contents of a cell phone under Riley v. California, 573 U.S. 373 (2014), before it may be queried, searched, or used in any law enforcement investigation.
+
+(d) A private business that installs ALPR cameras at a location described in subsection (b) shall have the unilateral right to terminate any contract with the ALPR vendor and require removal of the cameras upon [30] days' written notice, notwithstanding any contractual provision to the contrary. Any contractual provision purporting to override this right is void as against public policy.
+
+**Drafting note:** Subsection (d) directly addresses the Eagle Sports Range situation — Flock's contractual obligation to keep cameras running against the customer's wishes. In any location where Second Amendment activity creates heightened privacy concerns, the business's right to terminate must be non-waivable. This also creates a model for other sensitive location categories (medical facilities, houses of worship, legal aid offices) that legislatures may wish to add. Pair with H.R. 9800 (Protection Against Mass Surveillance Act, introduced July 21, 2026) as the federal legislative hook acknowledging the constitutional problem.
+
+---
+
+### SECTION 12. EFFECTIVE DATE
 
 This Act takes effect [DATE].
 

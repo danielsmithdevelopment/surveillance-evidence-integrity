@@ -19,6 +19,7 @@ export const VENDORS = {
       "Flock Safety's audit logs obtained via FOIA do not contain cryptographic hash values for footage segments and do not show evidence of Merkle chaining or external immutable anchoring.",
       "Andreessen Horowitz (a16z) has funded both Flock Safety and Toka, an Israeli cyber firm co-founded by former Prime Minister Ehud Barak and former IDF cyber chief Yaron Rosen. Haaretz reported in 2022 based on internal documents that Toka sells technology capable of altering both live and archived camera feeds without leaving forensic traces.",
       "Eagle Sports Range (Cudahy, WI, 2026): Flock told a private customer it was 'contractually obligated' to keep cameras operating after a February 2026 removal request — contradicting public claims that customers own and control the data (TMJ4 / FOX6).",
+      "ALPR at gun ranges / stores / shows can function as a backdoor gun-owner registry of movements rather than Form 4473 transactions; H.R. 9800 (Burchett, July 21, 2026) would restrict federal use of Flock-class mass surveillance (AmmoLand / Texas Gun Rights, 2026).",
     ],
     auditLogGaps: [
       "No cryptographic hash of footage at point of capture",
