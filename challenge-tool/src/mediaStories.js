@@ -74,6 +74,34 @@ export const MEDIA_SECTIONS = [
     ],
   },
   {
+    id: "wisconsin-contract",
+    title: "Wisconsin — contract control vs. “customer owns the data”",
+    intro:
+      "Eagle Sports Range asked Flock to remove cameras; Flock said the contract required keeping them running. The gap between public ownership claims and contractual forced collection is a new authenticity / civil / suppression vector.",
+    stories: [
+      {
+        outlet: "TMJ4",
+        date: "August 2026",
+        title: "Cudahy gun range removes Flock cameras over privacy concerns",
+        url: "https://www.tmj4.com/news/local-news/in-your-community/milwaukee-county/cudahy-gun-range-removes-flock-cameras-over-privacy-concerns",
+        summary:
+          "Eagle Sports Range in Cudahy installed three Flock ALPRs in late 2023 after break-ins at other local ranges. In February 2026 it asked Flock to remove them and was told it was “contractually obligated” to keep the cameras operating. After a viral video, GM Saad Jaber removed them anyway: “we care more about the privacy of our customers than we do about a contract.” Cameras had been used once in two years for a parking-lot firearm theft investigation.",
+        whyItMatters:
+          "Contract-forced continued collection contradicts Flock’s public “customers own and control the data” claims — useful for FTC/CCPA deception framing, FRE 901 vendor-control arguments, and San Jose–style private-surveillance / state-actor theories when law enforcement queries the stream.",
+      },
+      {
+        outlet: "FOX6 Milwaukee",
+        date: "August 2026",
+        title: "Cudahy business removes Flock cameras over growing privacy concerns",
+        url: "https://www.fox6now.com/news/cudahy-business-removes-flock-camera-over-growing-privacy-concerns",
+        summary:
+          "Confirms Eagle Sports Range took cameras down despite Flock’s contract position. Notes more than 220 Wisconsin law enforcement agencies use Flock, and covers broader southeastern Wisconsin pushback including officer-misuse cases.",
+        whyItMatters:
+          "Statewide deployment scale + private-customer forced-operation fact pattern. Also supports Second Amendment–adjacent civil theories when plates are collected at gun ranges without a warrant (Bruen).",
+      },
+    ],
+  },
+  {
     id: "404-aug-2026",
     title: "404 Media — August 2026 Flock series",
     intro:

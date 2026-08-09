@@ -25,6 +25,14 @@ Judge Reeves affirmed that tower dumps are per se unconstitutional general warra
 ### [*United States v. Smith*, 110 F.4th 817 (5th Cir. 2024)](https://www.govinfo.gov/content/pkg/USCOURTS-ca5-23-60321/pdf/USCOURTS-ca5-23-60321-0.pdf)
 Geofence warrants categorically unconstitutional. **Why it matters:** circuit bridge from *Carpenter* to bulk digital location tools.
 
+## Wisconsin — contract control vs. “customer owns the data”
+
+### [Cudahy gun range removes Flock cameras (TMJ4, Aug. 2026)](https://www.tmj4.com/news/local-news/in-your-community/milwaukee-county/cudahy-gun-range-removes-flock-cameras-over-privacy-concerns)
+Eagle Sports Range asked Flock to remove cameras in Feb. 2026; Flock said the contract required keeping them running. GM Saad Jaber removed them anyway after a viral video. **Why it matters:** public “customer owns the data” claims vs. contractual forced collection; private-operator / state-actor and Second Amendment (gun-range) angles.
+
+### [Cudahy business removes Flock cameras (FOX6, Aug. 2026)](https://www.fox6now.com/news/cudahy-business-removes-flock-camera-over-growing-privacy-concerns)
+Confirms contract refusal + statewide Wisconsin pushback (220+ LE agencies on Flock).
+
 ## 404 Media — August 2026 Flock series
 
 ### [Cops Used Flock to Track a Man Across State Lines…](https://www.404media.co/cops-used-flock-to-track-a-man-across-state-lines-to-create-pretext-to-search-his-car-for-weed/)
