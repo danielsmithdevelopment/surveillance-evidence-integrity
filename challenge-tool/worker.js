@@ -327,12 +327,17 @@ const VENDORS = {
       "In Savannah, Georgia, six Savannah Police Department employees — four officers and two civilians — were placed on administrative leave in August 2026 after an internal audit found 34 unjustified searches among 127 flagged by SPD's audit-assist tool, including queries on personal acquaintances and family members; one officer allegedly gave an unauthorized outside agency access to the system (WTOC, August 3, 2026).",
       "In Mooresville, North Carolina, at least 10 officers were under investigation for Flock violations as of August 2026 (Union-Bulletin reporting, August 2026).",
       "First Amendment retaliation via ALPR is vendor-agnostic: Lenexa, Kansas tracked a columnist with Axon/Genetec/Leonardo cameras and a written 'MYOC' (make your own case) BOLO — not a Flock deployment. Any ALPR network that enables retroactive plate queries without mandatory documented justification can be used for retaliatory surveillance (KCUR, February–June 2026).",
+      "In August 2026, Eagle Sports Range in Cudahy, Wisconsin confirmed that when it contacted Flock in February 2026 to request removal of its three cameras, Flock told the business it was 'contractually obligated' to keep the cameras in place and operating. The business removed the cameras anyway after a viral video circulated. General manager Saad Jaber stated: 'After the video circulated, we made a clear decision: we care more about the privacy of our customers than we do about a contract.' The cameras had been used once in two years — to help police investigate a single vehicle theft. TMJ4 / FOX6, August 2026.",
+      "More than 220 law enforcement agencies in Wisconsin use Flock Safety camera technology. Two Milwaukee police employees were charged with misusing the technology for personal tracking: Det. Tehrangi Chapman and former MPD Officer Josue Ayala. Ayala was convicted and received a fine and probation. Wisconsin Watch / FOX6, 2026.",
+      "Dane County, Wisconsin ended its Flock contract in 2026 following community pressure. UW-Madison faculty organized against eight Flock cameras installed on campus in July 2025. The ACLU of Wisconsin is advocating for local CCOPS ordinances where state law permits.",
+      "In Wisconsin, state Act 12 preempts local governments from enacting Community Control Over Police Surveillance ordinances that would require elected officials to approve surveillance tools before deployment. Several Milwaukee council members have stated this law prevents them from restricting MPD's Flock camera use or setting standards for surveillance technology despite constituent pressure. This state preemption pattern — where Flock's lobbying has contributed to laws stripping local oversight authority — is documented in Wisconsin and appears in other states.",
     ],
     authFacts: [
       "Flock Safety's audit logs obtained via FOIA do not contain cryptographic hash values for footage segments and show no evidence of Merkle chaining or external immutable anchoring.",
       "Andreessen Horowitz (a16z) has funded both Flock Safety and Toka, an Israeli cyber firm co-founded by former Prime Minister Ehud Barak and former IDF cyber chief Yaron Rosen. Haaretz reported in 2022 based on internal documents that Toka sells technology capable of altering both live and archived camera feeds without leaving forensic traces.",
       "FBI and Homeland Security have accessed local Flock networks without clear awareness or approval from contracting localities.",
       "Wapello County, Iowa policy instructs officers not to mention ALPR usage in reports or complaints 'unless absolutely necessary,' making the ALPR basis for a stop structurally hidden from defendants, defense counsel, and courts — directly implicating Franks v. Delaware where material information is omitted from probable cause affidavits at the direction of departmental policy.",
+      "Flock publicly states that customers own and control the data collected by its systems and that Flock does not claim ownership or use the data for its own purposes. The Eagle Sports Range case directly contradicts this: when a customer requested removal of cameras and termination of data collection, Flock cited contractual obligations to keep cameras operating. A customer who genuinely owned and controlled their data would be able to turn off collection on request. The contractual obligation to keep cameras running after a customer requests termination is evidence that Flock has an independent interest in the data stream not disclosed in its public ownership claims. This discrepancy is potentially actionable under FTC unfair and deceptive practices authority and, for California customers, under the CCPA.",
     ],
     civilFacts: [
       "In October 2024, the Institute for Justice filed a federal lawsuit against the city of Norfolk, Virginia — the first civil ALPR lawsuit to survive a government motion to dismiss.",
@@ -341,6 +346,7 @@ const VENDORS = {
       "Wrongful arrest settlements involving short detention without physical injury typically range from $10,000 to $75,000. Cases involving prolonged detention, lost employment, physical injury, or emotional trauma frequently reach $100,000 to $500,000 or more.",
       "Colorado and New Mexico have fully or partially abolished qualified immunity for state law claims as of 2026, and California and Washington have active legislation under consideration — eliminating the primary defense available to officers in those jurisdictions.",
       "Where ALPR tracking follows protected speech (criticism of police, protest, political leafleting) and is used to engineer pretextual stops — as documented in the Lenexa, Kansas 'MYOC' case on non-Flock systems — a parallel § 1983 First Amendment retaliation theory is available independent of Fourth Amendment claims (Nieves v. Bartlett, 2019).",
+      "Scanning license plates at a gun range entrance creates a de facto registry of gun range customers. Where government agencies use Flock data collected at gun ranges to identify who visits those ranges without a warrant, the search may implicate Second Amendment protections established in NYSRPA v. Bruen, 597 U.S. 1 (2022), in addition to Fourth Amendment search doctrine. The collection of lawful gun ownership information without individualized suspicion or warrant has been found constitutionally significant in multiple federal circuits.",
     ],
     droneFacts: [
       "Flock Safety is deploying drone surveillance programs beginning September 2026. The Lancaster, New York Police Department announced a three-month drone trial launching in September 2026, with drones responding to crimes, fires, and natural disasters (CNY News, August 5, 2026).",
@@ -363,9 +369,14 @@ const VENDORS = {
       "Union-Bulletin — Mooresville NC Flock investigation (August 2026)",
       "CNY News — Lancaster NY Flock drone program (August 2026)",
       "KCUR — Lenexa, Kansas retaliatory ALPR tracking / MYOC (February–June 2026) — vendor-agnostic pattern",
+      "TMJ4 — Eagle Sports Range Flock camera removal (August 2026)",
+      "FOX6 — Wisconsin Flock pushback and Milwaukee officer convictions (2026)",
+      "Wisconsin Watch — Dane County contract termination (May 2026)",
+      "WPR — Wisconsin communities end Flock contracts (June 2026)",
       "In re Four Applications… a/k/a Tower-Dump Warrants, No. 3:25-cr-00038 (S.D. Miss. Aug. 5, 2026) (Reeves, C.J.) — CourtListener ECF 41",
       "United States v. Smith, 110 F.4th 817 (5th Cir. 2024) — geofence warrants",
       "Carpenter v. United States, 585 U.S. 296 (2018)",
+      "NYSRPA v. Bruen, 597 U.S. 1 (2022)",
       "ACLU — ALPR abuse documentation",
     ],
   },
@@ -602,9 +613,12 @@ Additional Fourth Amendment vectors (include when facts fit):
 - **Pretext stop via travel-pattern analysis:** Mass ALPR networks used to reconstruct interstate travel (e.g. Wisconsin↔Michigan marijuana corridor / Abrams-Phillips) and retrofit that pattern into probable cause. Whren v. United States permits many pretextual stops, but using a dragnet surveillance network to build a behavioral profile of travel to an activity legal in another state is contestable — and is the fact pattern that maps most cleanly onto the tower-dump / geofence line.
 - **Concealment / bad faith / Franks:** Written policies instructing officers not to mention ALPR usage to occupants, in reports, or in complaints (Wapello County, Iowa SOP Nov. 2025), plus FBI/DOJ guidance to be "as vague as permissible" about Flock use because searches are public-records-discoverable, are evidence of systemic concealment. Omitting material ALPR reliance from a probable cause affidavit at the direction of policy can support a Franks v. Delaware challenge.
 - **Mission creep / traffic enforcement:** Flock pitched for serious crime / stolen vehicles / missing persons but used for minor traffic citations despite public "not for traffic enforcement" claims — undermines stated purpose limitations and supports overbreadth / pretext arguments.
+- **Private-operator contract control / state-actor theory:** Where a private business (rather than a government agency) operated the Flock cameras that captured the plate at issue, add an argument that the private operator's contractual relationship with Flock — including Flock's documented practice of forcing continued data collection against the customer's wishes (Eagle Sports Range, Cudahy, Wisconsin, 2026) — may make Flock a state actor for Fourth Amendment purposes when the data is shared with or queried by law enforcement. The San Jose plaintiffs argue this "deeply integrated" private surveillance theory. The Eagle Sports Range contract dispute is documented evidence that Flock maintains independent control over camera operation regardless of what the nominal operator wants, supporting the argument that Flock — not the private business — is the operative data collector.
 
 ### Vector 4 — Civil damages (Section 1983)
 Wrongful stops and detentions based on ALPR misidentification are actionable under § 1983. Settlement ranges commonly $10,000–$75,000 for brief detentions to $100,000–$500,000+ for prolonged harm.
+
+Where the user visited a location associated with lawful Second Amendment activity — a gun range, a firearms dealer, a gun show — and their plate was captured by ALPR without a warrant, include a Second Amendment argument in the civil demand letter alongside the Fourth Amendment claim. Under NYSRPA v. Bruen (2022), government collection of information about who engages in lawful gun ownership activity without individualized suspicion implicates Second Amendment protections. Discovery requests should seek all ALPR queries run against plates captured at the specific location, and any sharing of that data with federal agencies including ATF.
 
 ### Vector 5 — First Amendment retaliation via ALPR surveillance
 ALPR systems have been documented as instruments of First Amendment retaliation. In Lenexa, Kansas, police used a non-Flock ALPR network (Axon, Genetec, Leonardo) to track Canyen Ashworth’s vehicle ~150 times over less than two years after he published a newspaper column criticizing the department, then issued a department-wide BOLO directing officers to “MYOC” — make your own case — find pretextual reasons to stop him. He was never charged and was not the person in the poster-hanger video (KCUR, Feb.–June 2026).
@@ -1075,11 +1089,12 @@ Requirements:
 7. When relevant: travel-pattern / interstate surveillance as probable-cause padding (e.g. Abrams-Phillips / I-41 Wisconsin–Michigan) — the cleanest fact pattern for the tower-dump analogy
 8. When relevant: departmental SOPs or federal guidance instructing officers to hide or vaguely describe ALPR use (Wapello County "DO NOT MENTION ALPR USAGE" SOP; FBI/DOJ "as vague as permissible" guidance) as evidence of bad faith and Franks materiality
 9. When relevant: Lenexa-style MYOC / First Amendment retaliation — written directives to find a pretext to stop a critic of the department aggravate the Fourth Amendment claim and support parallel § 1983 speech-retaliation theories (Nieves v. Bartlett)
-10. When relevant: low-altitude drone / aerial surveillance over curtilage — Kyllo, Jardines, Carpenter, Jones; distinguish Riley / Dow Chemical manned-aircraft cases
-11. Cryptographic audit-trail failures taint vendor logs
-12. Ten discovery requests including: officer query history; ALPR disclosure / SOP policy on the incident date; whether ALPR was omitted from affidavits; any warrant, court order, or supervisory authorization before the ALPR queries; any BOLO or MYOC-style alert naming the defendant; and (if aerial) flight logs / sensor packages
-13. Prayer for suppression
-14. Signature block placeholder
+10. When relevant: private-business Flock deployments where Flock contractually forced continued operation against the customer's wishes (Eagle Sports Range, Cudahy WI, 2026) — argue Flock's independent control and law-enforcement sharing support a "deeply integrated" private-surveillance / state-actor theory (as argued in San Jose) for Fourth Amendment purposes
+11. When relevant: low-altitude drone / aerial surveillance over curtilage — Kyllo, Jardines, Carpenter, Jones; distinguish Riley / Dow Chemical manned-aircraft cases
+12. Cryptographic audit-trail failures taint vendor logs
+13. Ten discovery requests including: officer query history; ALPR disclosure / SOP policy on the incident date; whether ALPR was omitted from affidavits; any warrant, court order, or supervisory authorization before the ALPR queries; any BOLO or MYOC-style alert naming the defendant; contracts / SOWs showing who controlled camera operation and termination; and (if aerial) flight logs / sensor packages
+14. Prayer for suppression
+15. Signature block placeholder
 Write the complete motion. Number all argument paragraphs.`,
   };
 }
@@ -1121,6 +1136,7 @@ Requirements:
    - Fourth Amendment violation: unreasonable seizure without probable cause or based on AI system output that does not meet reliability standards
    - 42 U.S.C. § 1983: deprivation of constitutional rights under color of state law
    - First Amendment retaliation (include when facts fit): if the client was tracked via ALPR after criticizing police, attending a protest, or distributing political material, plead a parallel § 1983 First Amendment retaliation theory. Cite the Lenexa, Kansas MYOC pattern (KCUR 2026) as the documented template — written directives to find a pretext to stop a critic; Nieves v. Bartlett (2019) where no probable cause exists. Emphasize the pattern is vendor-agnostic (Lenexa used Axon/Genetec/Leonardo, not Flock).
+   - Second Amendment (include when facts fit): if the client's plate was captured at a gun range, firearms dealer, gun show, or other lawful Second Amendment location without a warrant, plead that warrantless ALPR collection of who engages in lawful gun ownership activity implicates Second Amendment protections under NYSRPA v. Bruen, 597 U.S. 1 (2022), alongside the Fourth Amendment claim. Cite Eagle Sports Range (Cudahy, WI, 2026) as the documented private gun-range ALPR fact pattern. Demand discovery of all queries against plates captured at that location and any sharing with ATF or other federal agencies.
    - State tort claims as applicable: false arrest, false imprisonment, intentional infliction of emotional distress
 4. Damages section:
    - Compensatory: detention time (calculated at an hourly rate), lost wages, medical expenses if any, property damage if any

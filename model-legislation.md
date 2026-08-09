@@ -140,7 +140,19 @@ To meet the authentication requirement of Section 3, the Proponent shall demonst
 
 ---
 
-### SECTION 10. EFFECTIVE DATE
+### SECTION 10. PREEMPTION AND LOCAL AUTHORITY
+
+(a) Nothing in this Act shall be construed to preempt or limit the authority of any county, municipality, or local government to enact ordinances, policies, or regulations providing greater protection for individuals against surveillance camera systems than the minimum standards established by this Act.
+
+(b) Any state law that operates to prevent a local government from enacting Community Control Over Police Surveillance ordinances, requiring law enforcement to obtain approval from elected officials before deploying surveillance technology, or setting standards for the use of surveillance data by law enforcement agencies, is in conflict with the purposes of this Act and shall be construed narrowly.
+
+(c) The Legislature finds that state preemption of local surveillance oversight ordinances — including laws that prevent elected city councils from restricting police department use of automated license plate reader systems or other surveillance technology without legislative approval — undermines democratic accountability for surveillance infrastructure and is inconsistent with the Fourth Amendment values this Act implements.
+
+**Drafting note:** This section directly addresses the Wisconsin Act 12 pattern, where state preemption legislation — in some cases supported by surveillance vendor lobbying — strips local governments of authority to enact Community Control Over Police Surveillance ordinances. California, Illinois, and Washington do not currently have equivalent preemption problems, but the section establishes the principle for states where this is a live issue. Several other states have similar preemption dynamics that advocates should research before introduction.
+
+---
+
+### SECTION 11. EFFECTIVE DATE
 
 This Act takes effect [DATE].
 

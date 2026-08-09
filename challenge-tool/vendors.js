@@ -18,6 +18,7 @@ export const VENDORS = {
       "Dozens of cities have canceled or declined to renew Flock contracts over unauthorized federal data sharing, including cities in multiple states.",
       "Flock Safety's audit logs obtained via FOIA do not contain cryptographic hash values for footage segments and do not show evidence of Merkle chaining or external immutable anchoring.",
       "Andreessen Horowitz (a16z) has funded both Flock Safety and Toka, an Israeli cyber firm co-founded by former Prime Minister Ehud Barak and former IDF cyber chief Yaron Rosen. Haaretz reported in 2022 based on internal documents that Toka sells technology capable of altering both live and archived camera feeds without leaving forensic traces.",
+      "Eagle Sports Range (Cudahy, WI, 2026): Flock told a private customer it was 'contractually obligated' to keep cameras operating after a February 2026 removal request — contradicting public claims that customers own and control the data (TMJ4 / FOX6).",
     ],
     auditLogGaps: [
       "No cryptographic hash of footage at point of capture",
@@ -30,6 +31,7 @@ export const VENDORS = {
       "haveibeenflocked.com — FOIA-derived audit logs",
       "Haaretz, 2022 — Toka internal documents",
       "Andreessen Horowitz portfolio disclosures",
+      "TMJ4 / FOX6 — Eagle Sports Range Flock removal (August 2026)",
     ],
   },
 
