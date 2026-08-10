@@ -60,6 +60,8 @@ Serve the following on the prosecution as part of standard discovery, supplement
 
 **Request 10:** Any agreement between Flock Safety and any third party providing that third party with access to camera footage or associated data, to the extent that agreement could affect the integrity or chain of custody of the footage at issue.
 
+**Request 11:** For any Flock Safety Condor PTZ camera — complete logs of all IP addresses and sessions that accessed the camera's administrative portal, live feed, or archived footage during the 30-day retention window preceding the incident at issue; Flock's internal documentation of when the December 2025 open-internet misconfiguration began and when it was remediated for the specific camera at issue; and all records of whether footage from the camera was accessed, downloaded, modified, or deleted by any party other than authorized agency personnel during the relevant period. If the camera model is unknown, demand production of the model identifier and apply this request to every Condor unit whose footage or derivative data is offered.
+
 ---
 
 ## How to Use the Responses
@@ -87,6 +89,12 @@ Without external anchoring, whatever Merkle Chain exists is stored inside Flock'
 FOIA data shows FBI and Homeland Security have accessed Flock networks without clear local agency awareness. If the Audit Log reveals federal agency access to footage at issue — or if Flock cannot produce a complete Audit Log and therefore cannot rule out such access — this creates additional chain of custody questions. Who had access to the footage? What did they do with it? When?
 
 The absence of a complete, tamper-evident Audit Log means these questions cannot be answered from the record.
+
+### If Condor exposure records are incomplete or the exposure start date is unknown (Request 11)
+
+In December 2025, researchers publicly documented that at least 60 Flock Condor PTZ cameras streamed live and archived footage to the open internet with no authentication, including administrative access capable of deleting recordings. Flock described a "limited misconfiguration" that had "since been remedied" but did not disclose when the misconfiguration began.
+
+If Flock cannot produce (a) the start and remediation dates for the specific camera, (b) complete external-access / IP session logs for the retention window preceding the incident, and (c) proof that no unauthorized party downloaded, modified, or deleted footage — the prosecution cannot meet FRE 901(b)(9) for Condor footage. The authentication argument is no longer only "controls are missing"; it is that the footage was demonstrably accessible to unknown third parties with administrative rights during an undisclosed window. Demand camera-model identification if Condor vs. ALPR is contested.
 
 ### If Flock refuses to produce materials or claims they don't exist
 

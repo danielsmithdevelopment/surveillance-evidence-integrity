@@ -74,6 +74,45 @@ export const MEDIA_SECTIONS = [
     ],
   },
   {
+    id: "condor-exposure",
+    title: "Condor open-internet exposure — FRE 901 ops-sec",
+    intro:
+      "Documented period when Flock Condor PTZ cameras streamed live and archived video to the open internet with no authentication — including administrative access capable of deleting recordings. Converts FRE 901 from missing-controls theory to confirmed third-party access.",
+    stories: [
+      {
+        outlet: "404 Media",
+        date: "December 2025",
+        title: "Flock Exposed Its AI-Powered Cameras to the Internet. We Tracked Ourselves",
+        url: "https://www.404media.co/flock-exposed-its-ai-powered-cameras-to-the-internet-we-tracked-ourselves/",
+        summary:
+          "Benn Jordan and Jon “GainSec” Gaines found at least 60 Flock Condor PTZ cameras livestreaming unencrypted video with no username or password — discoverable via search engine. Anyone could watch live feeds, download ~30 days of archive, change settings, view logs, run diagnostics, and delete recordings. 404 Media verified by watching a reporter on camera in real time at a California traffic signal. Flock called it a limited misconfiguration that had “since been remedied” but did not disclose when exposure began.",
+        whyItMatters:
+          "Strongest Condor FRE 901(b)(9) fact: unknown exposure window + third-party admin access including deletion. Demand IP/session logs and start/remediation dates per camera (authentication-challenge-guide Request 11).",
+      },
+      {
+        outlet: "404 Media",
+        date: "January 12, 2026",
+        title: "How Benn Jordan Discovered Flock's Cameras Were Left Streaming to the Internet",
+        url: "https://www.404media.co/how-benn-jordan-discovered-flocks-cameras-were-left-streaming-to-the-internet/",
+        summary:
+          "Podcast follow-up with Jordan on discovery methodology after earlier Flock ALPR physical-access vulnerability research.",
+        whyItMatters:
+          "Methodology and timeline support for discovery into when misconfiguration began and which units were affected.",
+      },
+      {
+        outlet: "9News",
+        date: "December 2025",
+        title:
+          "Douglas County's Flock camera compromised as company leaves it exposed, livestreaming on internet",
+        url: "https://www.9news.com/video/tech/hackers-find-that-some-flock-surveillance-cameras-are-easily-accessible-online/73-4da8ae7e-f94f-424d-9bac-836d69f12f7b",
+        summary:
+          "Local confirmation that a Douglas County, Colorado Flock camera (trailhead / open-space context) was among units left livestreaming on the open internet.",
+        whyItMatters:
+          "Jurisdiction-specific proof point for Colorado Condor / Flock authenticity challenges and contracting review.",
+      },
+    ],
+  },
+  {
     id: "wisconsin-contract",
     title: "Wisconsin — contract control vs. “customer owns the data”",
     intro:

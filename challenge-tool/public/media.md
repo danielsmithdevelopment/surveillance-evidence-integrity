@@ -25,6 +25,17 @@ Judge Reeves affirmed that tower dumps are per se unconstitutional general warra
 ### [*United States v. Smith*, 110 F.4th 817 (5th Cir. 2024)](https://www.govinfo.gov/content/pkg/USCOURTS-ca5-23-60321/pdf/USCOURTS-ca5-23-60321-0.pdf)
 Geofence warrants categorically unconstitutional. **Why it matters:** circuit bridge from *Carpenter* to bulk digital location tools.
 
+## Condor open-internet exposure — FRE 901 ops-sec
+
+### [Flock Exposed Its AI-Powered Cameras to the Internet (404 Media, Dec. 2025)](https://www.404media.co/flock-exposed-its-ai-powered-cameras-to-the-internet-we-tracked-ourselves/)
+At least 60 Condor PTZ cameras livestreaming with no auth; archive download + admin controls including deletion. **Why it matters:** documented third-party access window; FRE 901(b)(9) for Condor footage; discovery Request 11 (IP logs / exposure start–remediation).
+
+### [How Benn Jordan Discovered… (404 Media, Jan. 12, 2026)](https://www.404media.co/how-benn-jordan-discovered-flocks-cameras-were-left-streaming-to-the-internet/)
+Methodology podcast. **Why it matters:** timeline and discovery support for when misconfiguration began.
+
+### [Douglas County Flock camera compromised (9News, Dec. 2025)](https://www.9news.com/video/tech/hackers-find-that-some-flock-surveillance-cameras-are-easily-accessible-online/73-4da8ae7e-f94f-424d-9bac-836d69f12f7b)
+Colorado trailhead camera among exposed units. **Why it matters:** local proof point for Condor authenticity challenges.
+
 ## Wisconsin — contract control vs. “customer owns the data”
 
 ### [Cudahy gun range removes Flock cameras (TMJ4, Aug. 2026)](https://www.tmj4.com/news/local-news/in-your-community/milwaukee-county/cudahy-gun-range-removes-flock-cameras-over-privacy-concerns)
