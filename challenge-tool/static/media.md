@@ -25,6 +25,20 @@ Judge Reeves affirmed that tower dumps are per se unconstitutional general warra
 ### [*United States v. Smith*, 110 F.4th 817 (5th Cir. 2024)](https://www.govinfo.gov/content/pkg/USCOURTS-ca5-23-60321/pdf/USCOURTS-ca5-23-60321-0.pdf)
 Geofence warrants categorically unconstitutional. **Why it matters:** circuit bridge from *Carpenter* to bulk digital location tools.
 
+## LAPD OIG — 32.3% hot-list false positives
+
+### [LAPD OIG ALPR review (July 10, 2026)](https://www.oig.lacity.org/_files/ugd/b2dd23_781bdb1b27314ec4acc45f4b821320d8.pdf)
+161 false positives / 498 alerts (32.3%); high-risk stop protocol; stale hot-list / database failures. LAPD non-renewed Flock. **Why it matters:** official government FRE 702 / Daubert and § 1983 notice evidence.
+
+### [LAPD Abandons Flock Contract… (Futurism, July 2026)](https://futurism.com/future-society/lapd-abandons-flock-contract-false-alarm)
+Contract exit after OIG false-positive findings.
+
+### [How Flock Cameras Wrongly Tracked Me… (The Drive / Joel Feder, 2026)](https://www.thedrive.com/news/how-flock-cameras-wrongly-tracked-me-for-days-over-stolen-plates-and-sent-police-after-me)
+Minnesota high-risk stop from hot-list / matching failure. **Why it matters:** system-of-systems reliability, not OCR alone.
+
+### [Schmidt v. Norfolk — Fourth Circuit amicus (ACLU/EFF, Apr. 20, 2026)](https://www.aclu.org/cases/schmidt-v-norfolk)
+Pending ALPR Fourth Amendment appeal. **Why it matters:** Vector 3 unsettled circuit question.
+
 ## Condor open-internet exposure — FRE 901 ops-sec
 
 ### [Flock Exposed Its AI-Powered Cameras to the Internet (404 Media, Dec. 2025)](https://www.404media.co/flock-exposed-its-ai-powered-cameras-to-the-internet-we-tracked-ourselves/)
