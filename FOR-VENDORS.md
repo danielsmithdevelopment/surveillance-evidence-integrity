@@ -74,7 +74,7 @@ This is not a distant regulatory risk. The Institute for Justice has active fede
 
 **What it means:** Every query against footage or associated metadata must be logged with the querying agency, officer identifier, timestamp, and a mandatory case number. Queries without case numbers must be blocked at the system level, not merely flagged.
 
-**Why it matters:** FOIA-derived audit logs from Flock Safety's network show 233 million searches with 84% carrying no case number. The Institute for Justice has documented at least 28 cases of officers using ALPR systems to track romantic interests. When case numbers are optional, unauthorized personal use is structurally undetectable.
+**Why it matters:** FOIA-derived audit logs from Flock Safety's network show 233 million searches with 84% carrying no case number. The Institute for Justice Database of ALPR Abuse (146 source-cited incidents, August 12, 2026) documents stalking, personal non-investigative searches, evidence tampering, and other misuse — published the day before Flock announced mandatory case codes and Audit Assistance. When case numbers are optional, unauthorized personal use is structurally undetectable.
 
 **What to build:**
 - Require a valid case number for every query — no exceptions
@@ -91,7 +91,7 @@ This is not a distant regulatory risk. The Institute for Justice has active fede
 
 **What it means:** The vendor must demonstrate through independent third-party testing that its system achieves an error rate of no worse than 1 misidentification per 1,000 reads (0.1%) under standardized conditions. Results must be published and recertified annually.
 
-**Why it matters:** A 2019 industry estimate found the accuracy rate of license plate readers is approximately 90% — one in ten plates misread. DHS's June 2025 market survey acknowledges character confusion errors without setting any minimum standard. The Institute for Justice has documented at least 27 cases of innocent people detained at gunpoint due to ALPR errors since 2018.
+**Why it matters:** A 2019 industry estimate found the accuracy rate of license plate readers is approximately 90% — one in ten plates misread. DHS's June 2025 market survey acknowledges character confusion errors without setting any minimum standard. Roseville, California documented a **71%** plate misread rate on 1,427 felony/stolen Flock alerts (Business Insider / Roseville PD; IJ database). The IJ Database of ALPR Abuse (146 source-cited incidents) documents gunpoint detentions and jailings from character-confusion misreads.
 
 The 0.1% standard is two orders of magnitude better than current documented industry performance. It is also the threshold below which wrongful-stop rates become defensible at the scale these networks operate. At 10% error rates scanning 2,000 plates per minute, a network produces thousands of false alerts per hour. At 0.1%, that drops to a manageable number that human officers can meaningfully verify before acting.
 

@@ -14,7 +14,7 @@ No hash computed at the camera before footage leaves the hardware. No Merkle-cha
 
 Without these controls, "this is what the camera recorded, unaltered" is a vendor assertion. It is not a mathematically provable fact. And the capability to alter surveillance footage without leaving forensic traces is commercially available — documented by Haaretz in 2022 based on internal records from Toka, an Israeli cyber firm co-founded by former Prime Minister Ehud Barak.
 
-The industry also operates at a documented ~10% misidentification error rate. The Institute for Justice has documented at least 27 wrongful stops and detentions from ALPR errors since 2018, and at least 28 cases of officers using ALPR networks to track romantic interests.
+The industry also operates at a documented ~10% misidentification error rate. The Institute for Justice Database of ALPR Abuse (published August 12, 2026) contains **146 source-cited incidents** — stalking, plate-misread wrongful stops, evidence tampering, and other misuse — including Roseville, CA’s documented **71%** plate misread rate on felony/stolen Flock alerts.
 
 This repository is the response to that.
 
@@ -100,7 +100,7 @@ Proponents of surveillance footage must demonstrate the system producing it is r
 AI-generated identification evidence is subject to reliability scrutiny. A documented ~10% error rate does not meet the standard for evidence used to initiate stops, detentions, and arrests. The appropriate floor is 0.1% or better, independently certified.
 
 **Fourth Amendment — Unauthorized access**
-ALPR queries without documented case numbers and legitimate law enforcement purpose are constitutionally suspect. When 84% of queries in FOIA-derived audit logs carry no case number, and the documented pattern of officer abuse runs to at least 28 cases, a search without documentation cannot be distinguished from personal misuse. Documented uses also include interstate travel-pattern profiling as probable-cause padding and departmental SOPs instructing officers not to mention ALPR usage to suspects or in reports (404 Media Flock reporting, August 2026).
+ALPR queries without documented case numbers and legitimate law enforcement purpose are constitutionally suspect. When 84% of queries in FOIA-derived audit logs carry no case number, and the Institute for Justice Database of ALPR Abuse documents 146 source-cited misuse incidents (published August 12, 2026 — the day before Flock’s mandatory “guardrails” announcement), a search without documentation cannot be distinguished from personal misuse. Documented uses also include interstate travel-pattern profiling as probable-cause padding and departmental SOPs instructing officers not to mention ALPR usage to suspects or in reports (404 Media Flock reporting, August 2026).
 
 **42 U.S.C. § 1983 — Civil damages**
 Wrongful stops, detentions at gunpoint, and arrests based on misidentification constitute Fourth Amendment violations actionable under Section 1983. Settlements range from $10,000–$75,000 for brief detentions to $100,000–$500,000+ for prolonged detention or physical harm.

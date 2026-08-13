@@ -15,6 +15,18 @@ npm run lighthouse       # Lighthouse CI budgets
 npm run ci               # all of the above
 ```
 
+## Realistic case packs (Feder / Isaacs / Berling)
+
+Against a running Worker (`npm run worker` with `ALLOW_TEST_AUTH=true`):
+
+```bash
+npm run generate:realistic   # writes .artifacts/realistic-cases/ + summary.json
+```
+
+Uses published fact patterns: Joel Feder / Plymouth MN (partial-plate "34 DTM" vs "34 10 DTM"), Lindsey Isaacs / Volusia FL (13-day wrongful imprisonment; color mismatch), Michelle Berling / West Chester OH (Flock data tampering conviction → FRE 901).
+
+**Not covered yet:** document-upload / IDP auto-extraction from The Drive / WESH / Plymouth PD PDFs. Today the form is manual (`additionalFacts`, `searchFacts`, `civilHarm`). Extraction is a product gap — these packs test generation quality once fields are filled.
+
 ## What each suite covers
 
 | Suite | File(s) | Scope |

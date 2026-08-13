@@ -177,6 +177,8 @@ ${ctx.defendant.toUpperCase()},
 12. ${pressure}`
           : `7. The record does not show that ${vendorName} computes a cryptographic hash of footage within camera hardware at capture.
 
+7a. When the State relies on an ALPR "hit," capture, or location inference described in an arrest report or officer narrative without producing the underlying capture file, camera identity, timestamp provenance, and hash / chain-of-custody for that capture, FRE 901 is not satisfied — a citation in a report is not authenticated system output.
+
 8. The record does not show Merkle-chained audit logs covering the segment at issue.
 
 9. The record does not show external immutable anchoring of Merkle roots or equivalent integrity proofs outside ${vendorName}'s control.
@@ -211,7 +213,12 @@ ${bullets(authFacts)}
 ${extra}`
       : `3. The prosecution intends to introduce ${t.evidenceLabel} from ${vendorName} relating to Case ${ctx.caseNumber} in ${ctx.court}, ${ctx.jurisdiction}${ctx.city ? ` (${ctx.city})` : ""}.
 
-4. Documented integrity gaps:
+4. Operator case facts: ${
+          ctx.additionalFacts ||
+          `not specified — counsel should insert verified capture/stop facts and any arrest-report citations to ${vendorName} output.`
+        }
+
+5. Documented integrity gaps:
 ${bullets(authFacts)}
 ${extra}`;
 
@@ -320,15 +327,27 @@ IV. ARGUMENT
 3. Documented accuracy concerns:
 ${bullets(errorFacts)}
 
-4. Proposed minimum reliability threshold for evidence used to initiate stops, detentions, or prosecutions: no worse than 1 error per 1,000 reads (0.1%), independently verified by a neutral third party — two orders of magnitude better than commonly cited industry plate-misread performance.
+4. Case-specific reliability facts (operator-provided): ${
+              ctx.additionalFacts ||
+              "not specified — insert the plate string, alert text, partial-plate / OCRerror, appearance mismatch, or other reliability defect at issue."
+            }
+
+5. Query / alert context (operator-provided): ${
+              ctx.searchFacts ||
+              "not specified — insert how officers received and acted on the alert (case number, hot-list source, multi-day tracking)."
+            }
+
+6. Proposed minimum reliability threshold for evidence used to initiate stops, detentions, or prosecutions: no worse than 1 error per 1,000 reads (0.1%), independently verified by a neutral third party — two orders of magnitude better than commonly cited industry plate-misread performance.
 
 IV. ARGUMENT
 
-5. ${vendorName} has not demonstrated through independent testing that its system meets that threshold for the conditions present in this case.
+7. ${vendorName} has not demonstrated through independent testing that its system meets that threshold for the conditions present in this case.
 
-6. No clear judicial consensus yet defines an acceptable error rate for AI-generated surveillance evidence used in criminal prosecution; gatekeeping under Daubert still requires a reliability showing.
+8. No clear judicial consensus yet defines an acceptable error rate for AI-generated surveillance evidence used in criminal prosecution; gatekeeping under Daubert still requires a reliability showing.
 
-7. Character-confusion errors (0/O, 1/I, and similar) are a known failure mode producing wrongful stops.`;
+9. Character-confusion and partial-plate matching errors (0/O, 1/I, dropped characters, and similar) are known failure modes producing wrongful stops.
+
+10. ALPR Daubert unit of analysis is layered: (a) plate OCR / partial-plate matching; (b) hot-list / database matching; (c) vehicle appearance attributes (color, make, model) the system may not determine. A failure in any layer can produce an armed stop or prosecution — treat appearance matching as an independent reliability problem from plate reading when case facts implicate color or look-alike vehicles.`;
 
   const accuracy = `${caption}
 ${t.accuracy}

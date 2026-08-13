@@ -39,13 +39,13 @@ Without these controls, “this is what the camera recorded” is the vendor’s
 
 **The accuracy problem**
 
-The industry operates at a documented plate-character misread rate of approximately 10%. On actionable hot-list alerts that trigger stops — the output officers act on — the LAPD Office of the Inspector General (July 10, 2026) found a **32.3% false positive rate** (161 of 498 alerts) over two months; each false alert led to a stop of an innocent driver under high-risk stop protocol. Many failures were stale hot-list / database records, not OCR misreads — so the reliability unit is cameras + database + alert. The Institute for Justice has documented at least 27 people detained at gunpoint or jailed due to license plate reader errors since 2018. LAPD allowed its Flock contract to expire rather than renew. A system used to initiate armed stops at a one-in-three false-positive rate is not a defensible legal standard. The appropriate floor is 0.1% or better, independently certified.
+The industry operates at a documented plate-character misread rate of approximately 10%. On actionable hot-list alerts that trigger stops — the output officers act on — the LAPD Office of the Inspector General (July 10, 2026) found a **32.3% false positive rate** (161 of 498 alerts) over two months; each false alert led to a stop of an innocent driver under high-risk stop protocol. Many failures were stale hot-list / database records, not OCR misreads — so the reliability unit is cameras + database + alert. Separately, Roseville, California found that in **71%** of 1,427 Flock felony/stolen alerts over two years, the cameras misread the plates (Business Insider / Roseville PD; IJ database). The Institute for Justice Database of ALPR Abuse (published August 12, 2026; 146 source-cited incidents) documents wrongful stops, gunpoint detentions, and jailings from plate misreads and misinterpreted alerts. LAPD allowed its Flock contract to expire rather than renew. A system used to initiate armed stops at a one-in-three false-positive rate is not a defensible legal standard. The appropriate floor is 0.1% or better, independently certified.
 
 ---
 
 **The access problem**
 
-Public records data shows that 84% of searches run against the Flock Safety network carried no case number. The Institute for Justice has documented at least 28 officers using license plate reader systems to track romantic interests. Federal agencies have accessed local networks without clear local consent in multiple reported cases. When most searches lack documented justification, unauthorized personal use and unexpected sharing are structurally hard to detect.
+Public records data shows that 84% of searches run against the Flock Safety network carried no case number. The Institute for Justice Database of ALPR Abuse (146 source-cited incidents, published August 12, 2026 — the day before Flock announced mandatory “guardrails”) documents stalking, non-law-enforcement personal searches, evidence tampering, and other misuse. Federal agencies have accessed local networks without clear local consent in multiple reported cases. When most searches lack documented justification, unauthorized personal use and unexpected sharing are structurally hard to detect.
 
 ---
 
@@ -105,7 +105,7 @@ Without these controls, “this is what the camera recorded” is the vendor’s
 
 **The accuracy problem**
 
-The industry operates at a documented plate-character misread rate of approximately 10%. On actionable hot-list alerts that trigger stops — the output officers act on — the LAPD Office of the Inspector General (July 10, 2026) found a **32.3% false positive rate** (161 of 498 alerts) over two months; each false alert led to a stop of an innocent driver under high-risk stop protocol. Many failures were stale hot-list / database records, not OCR misreads — so the reliability unit is cameras + database + alert. The Institute for Justice has documented at least 27 people detained at gunpoint or jailed due to license plate reader errors since 2018. LAPD allowed its Flock contract to expire rather than renew. A system used to initiate armed stops at a one-in-three false-positive rate is not a defensible legal standard. The appropriate floor is 0.1% or better, independently certified.
+The industry operates at a documented plate-character misread rate of approximately 10%. On actionable hot-list alerts that trigger stops — the output officers act on — the LAPD Office of the Inspector General (July 10, 2026) found a **32.3% false positive rate** (161 of 498 alerts) over two months; each false alert led to a stop of an innocent driver under high-risk stop protocol. Many failures were stale hot-list / database records, not OCR misreads — so the reliability unit is cameras + database + alert. Separately, Roseville, California found that in **71%** of 1,427 Flock felony/stolen alerts over two years, the cameras misread the plates (Business Insider / Roseville PD; IJ database). The Institute for Justice Database of ALPR Abuse (published August 12, 2026; 146 source-cited incidents) documents wrongful stops, gunpoint detentions, and jailings from plate misreads and misinterpreted alerts. LAPD allowed its Flock contract to expire rather than renew. A system used to initiate armed stops at a one-in-three false-positive rate is not a defensible legal standard. The appropriate floor is 0.1% or better, independently certified.
 
 ---
 
@@ -171,10 +171,10 @@ Under FRE 901(b)(9), the proponent must show the system produces accurate result
 Motion in limine arguing the footage cannot be independently authenticated. Ten specific discovery requests targeting the vendor’s integrity controls — or documented lack of them.
 
 **FRE 702 / Daubert — Accuracy**  
-Motion challenging system reliability. Documented ~10% ALPR character-misread estimates; LAPD OIG July 10, 2026 audit finding **32.3% false positives** on actionable Flock hot-list alerts (stale database / system-of-systems failures). At least 27 wrongful stops and detentions since 2018 (Institute for Justice). A 0.1% independently certified floor as the procurement/evidence standard vendors cannot currently show.
+Motion challenging system reliability. Documented ~10% ALPR character-misread estimates; Roseville, CA **71%** plate misread rate on 1,427 felony/stolen Flock alerts; LAPD OIG July 10, 2026 audit finding **32.3% false positives** on actionable Flock hot-list alerts (stale database / system-of-systems failures). IJ Database of ALPR Abuse (146 source-cited incidents). A 0.1% independently certified floor as the procurement/evidence standard vendors cannot currently show.
 
 **Fourth Amendment — Suppression**  
-Motion arguing unauthorized or undocumented access. FOIA-derived patterns of case-number-less Flock searches. 28+ documented officer stalking / misuse cases. Discovery into the searching officer’s query history.
+Motion arguing unauthorized or undocumented access. FOIA-derived patterns of case-number-less Flock searches. IJ Database of ALPR Abuse (146 incidents, Aug. 12, 2026) — stalking, personal misuse, evidence tampering. Discovery into the searching officer’s query history.
 
 **42 U.S.C. § 1983 — Civil demand letter**  
 For your client’s civil claim when facts support it — including Fourth Amendment theories and, where location facts fit, parallel claims under applicable constitutional doctrine. Damages framing, fee-shifting under §1988, response deadline.

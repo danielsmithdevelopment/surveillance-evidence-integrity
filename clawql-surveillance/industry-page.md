@@ -47,7 +47,7 @@ Industry context
 
 The authentication problem is not theoretical. It is being litigated right now.
 
-Active federal litigation has produced the first civil ALPR challenges to survive motions to dismiss, establishing that courts will hear authentication arguments about surveillance footage. Public defenders equipped with challenge tools are filing FRE 901 and FRE 702 motions in volume. The Institute for Justice has documented at least 27 cases of innocent people detained at gunpoint or jailed due to misidentification errors since 2018, and at least 28 cases of officers using ALPR networks to track personal interests — with the bulk of both categories happening since 2024.
+Active federal litigation has produced the first civil ALPR challenges to survive motions to dismiss, establishing that courts will hear authentication arguments about surveillance footage. Public defenders equipped with challenge tools are filing FRE 901 and FRE 702 motions in volume. The Institute for Justice Database of ALPR Abuse (published August 12, 2026) contains 146 source-cited incidents — stalking, plate-misread wrongful stops and jailings, evidence tampering, and other misuse — with Roseville, CA documenting a 71% plate misread rate on felony/stolen Flock alerts.
 
 Cities are responding. Dozens have canceled or declined to renew surveillance contracts. New RFPs are incorporating contract language requiring hash at capture, Merkle-chained audit logs, and external immutable anchoring. The procurement conversation has shifted from "does it work" to "can you prove it hasn't been tampered with and can you prove every query had a legitimate purpose."
 
