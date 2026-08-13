@@ -25,6 +25,11 @@ Judge Reeves affirmed that tower dumps are per se unconstitutional general warra
 ### [*United States v. Smith*, 110 F.4th 817 (5th Cir. 2024)](https://www.govinfo.gov/content/pkg/USCOURTS-ca5-23-60321/pdf/USCOURTS-ca5-23-60321-0.pdf)
 Geofence warrants categorically unconstitutional. **Why it matters:** circuit bridge from *Carpenter* to bulk digital location tools.
 
+## Flock Aug. 13 guardrails — admissions of prior inadequacy
+
+### [Flock Updates Privacy, Accountability, Security, and Transparency Safeguards (Garrett Langley, Aug. 13, 2026)](https://www.flocksafety.com/blog/flock-guardrails-address-lpr-privacy-concerns-and-police-transparency)
+Mandatory Audit Assistance + case codes by year-end; 7-day default retention; MFA; Bishop Fox review; “confused the public” on data ownership; “9 errors per million” claim. **Why it matters:** admissions of prior voluntary-regime inadequacy; OCR metric vs LAPD OIG 32.3% actionable false positives; Eagle Sports / ownership contradiction.
+
 ## LAPD OIG — 32.3% hot-list false positives
 
 ### [LAPD OIG ALPR review (July 10, 2026)](https://www.oig.lacity.org/_files/ugd/b2dd23_781bdb1b27314ec4acc45f4b821320d8.pdf)
