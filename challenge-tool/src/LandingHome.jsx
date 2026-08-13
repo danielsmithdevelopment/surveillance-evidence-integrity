@@ -54,13 +54,13 @@ const FAQ = [
 export function LandingHero({ onGenerateClick, signInSlot }) {
   return (
     <div className="relative z-10 mx-auto max-w-6xl px-5 pb-14 pt-12 sm:px-8 sm:pb-16 sm:pt-16">
-      <p className="animate-rise font-display text-[clamp(2.4rem,7vw,4.25rem)] leading-[0.95] tracking-tight text-ink">
+      <h1 className="animate-rise font-display text-[clamp(2.4rem,7vw,4.25rem)] leading-[0.95] tracking-tight text-ink">
         Challenge the Footage
-      </p>
-      <h1 className="animate-rise mt-5 max-w-2xl text-[clamp(1.35rem,3.2vw,1.85rem)] font-medium leading-snug text-ink">
+      </h1>
+      <p className="animate-rise mt-5 max-w-2xl text-[clamp(1.35rem,3.2vw,1.85rem)] font-medium leading-snug text-ink">
         Surveillance cameras are being used against people in court — and the footage can&apos;t
         always be trusted. Here&apos;s how to fight back.
-      </h1>
+      </p>
       <p className="animate-rise-delay mt-4 max-w-xl text-base leading-relaxed text-ink-muted sm:text-lg">
         Record a verifiable evidence chain when it matters, then generate challenge documents
         attorneys can review and file.
