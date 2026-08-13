@@ -135,10 +135,7 @@ export function LandingSections() {
             <p className="mt-2 text-sm leading-relaxed text-ink-muted">
               In Dec 2025, researchers found Flock Condor PTZ cameras livestreaming to the open
               internet with no login — including archive download and admin controls.{" "}
-              <a
-                className="font-medium text-teal-deep underline underline-offset-2"
-                href="/media"
-              >
+              <a className="font-medium text-teal-deep underline underline-offset-2" href="/media">
                 Media &amp; sources
               </a>
             </p>
@@ -235,8 +232,8 @@ export function LandingSections() {
               Failure-to-record plus authenticity of what exists.
             </li>
             <li>
-              <strong className="text-ink">Cell phone / civilian</strong> — Your recording or theirs.
-              Provenance, deepfake risk, Challenge Evidence session IDs for counsel.
+              <strong className="text-ink">Cell phone / civilian</strong> — Your recording or
+              theirs. Provenance, deepfake risk, Challenge Evidence session IDs for counsel.
             </li>
           </ul>
           <p className="mt-6 text-sm text-ink-muted">
