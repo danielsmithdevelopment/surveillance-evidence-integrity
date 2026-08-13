@@ -351,6 +351,16 @@ export const MEDIA_SECTIONS = [
       },
       {
         outlet: "Institute for Justice",
+        date: "August 12, 2026",
+        title: "IJ Database of ALPR Abuse — 146 documented incidents",
+        url: "https://ij.org/the-ij-database-of-alpr-abuse",
+        summary:
+          "Source-cited research database of ALPR abuse (stalking, errors, non-LE use, other misuse). Published one day before Flock’s mandatory guardrails announcement.",
+        whyItMatters:
+          "Authoritative cite for Vectors 2–4; replaces outdated “≥27 / ≥28” estimates. See dedicated media section for Roseville, Berling, and Millcreek entries.",
+      },
+      {
+        outlet: "Institute for Justice",
         date: "2024–2026",
         title: "Norfolk, VA camera surveillance (Plate Privacy Project)",
         url: "https://ij.org/case/norfolk-virginia-camera-surveillance/",
