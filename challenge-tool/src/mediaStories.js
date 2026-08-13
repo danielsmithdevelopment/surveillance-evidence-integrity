@@ -152,7 +152,8 @@ export const MEDIA_SECTIONS = [
       {
         outlet: "WCPO / IJ database",
         date: "August 2024",
-        title: "West Chester, OH — Michelle Berling convicted for tampering with Flock data and images",
+        title:
+          "West Chester, OH — Michelle Berling convicted for tampering with Flock data and images",
         url: "https://ij.org/the-ij-database-of-alpr-abuse",
         summary:
           "Former officer Michelle Berling sentenced to five years probation after conviction for tampering with Flock data and images — the only documented criminal conviction for evidence tampering using the Flock system itself.",

@@ -51,7 +51,10 @@ describe("offline document templates", () => {
     assert.match(docs.access, /7XKR492/);
     assert.match(docs.civil, /detained at gunpoint/);
     assert.match(docs.motion, /Witness session ws-demo-1/);
-    assert.match(docs.accuracy, /Witness session ws-demo-1|ADDITIONAL FACTS|Case-specific reliability/i);
+    assert.match(
+      docs.accuracy,
+      /Witness session ws-demo-1|ADDITIONAL FACTS|Case-specific reliability/i
+    );
   });
 
   it("weaves operator plate / appearance facts into FRE 702 accuracy", () => {

@@ -14,10 +14,7 @@ import { fileURLToPath } from "node:url";
 
 const BASE = process.env.CTF_BASE || "http://127.0.0.1:8787";
 const TOKEN = process.env.CTF_TEST_TOKEN || "test:realistic-cases:pd.test@example.com";
-const outRoot = join(
-  dirname(fileURLToPath(import.meta.url)),
-  "../../.artifacts/realistic-cases"
-);
+const outRoot = join(dirname(fileURLToPath(import.meta.url)), "../../.artifacts/realistic-cases");
 
 const CASES = [
   {
@@ -34,11 +31,11 @@ const CASES = [
       city: "Plymouth, MN",
       cameraType: "Fixed ALPR / License Plate Reader — Flock Safety",
       additionalFacts:
-        "June 28, 2026 Kohl's parking lot stop. Four police vehicles. Husband and wife ordered out, patted down. Root cause: California Jaguar Land Rover dealership entered incomplete plate \"34 DTM\" into NCIC; correct plate is \"34 10 DTM.\" Flock matched the partial plate and generated repeated alerts. Officers tracked the vehicle for two days (alerts June 26 and June 28) and did not verify plate format before the armed stop. Body camera footage obtained and published (The Drive). Flock CEO Garrett Langley later interviewed Feder.",
+        'June 28, 2026 Kohl\'s parking lot stop. Four police vehicles. Husband and wife ordered out, patted down. Root cause: California Jaguar Land Rover dealership entered incomplete plate "34 DTM" into NCIC; correct plate is "34 10 DTM." Flock matched the partial plate and generated repeated alerts. Officers tracked the vehicle for two days (alerts June 26 and June 28) and did not verify plate format before the armed stop. Body camera footage obtained and published (The Drive). Flock CEO Garrett Langley later interviewed Feder.',
       searchFacts:
         "Plymouth PD operated 18 Flock cameras generating 580,000 plate reads and 14,800 hotlist hits in a recent 30-day period (Flock transparency portal). Officers received Flock alerts on June 26 and June 28. Alert based on NCIC entry made in California by a Jaguar Land Rover dealership. No case number was opened before tracking began. Officers tracked the vehicle for multiple days before initiating the stop.",
       civilHarm:
-        "Wrongful stop and detention at gunpoint by four police vehicles in Kohl's parking lot, June 28, 2026. Officers tracked vehicle for two days using Flock cameras. Husband and wife ordered out of vehicle, patted down. Root cause: California dealership entered incomplete plate \"34 DTM\" into NCIC; correct plate is \"34 10 DTM.\" Flock system matched partial plate and generated repeated alerts. Officers did not verify plate format before initiating armed stop. Body camera footage obtained and published.",
+        'Wrongful stop and detention at gunpoint by four police vehicles in Kohl\'s parking lot, June 28, 2026. Officers tracked vehicle for two days using Flock cameras. Husband and wife ordered out of vehicle, patted down. Root cause: California dealership entered incomplete plate "34 DTM" into NCIC; correct plate is "34 10 DTM." Flock system matched partial plate and generated repeated alerts. Officers did not verify plate format before initiating armed stop. Body camera footage obtained and published.',
     },
     checks: {
       motion: [
@@ -52,11 +49,7 @@ const CASES = [
         /Roseville|71%|32\.3%|LAPD|IJ Database|Institute for Justice/i,
         /partial plate|character|misread|NCIC/i,
       ],
-      access: [
-        /580,?000|14,?800|18 Flock/i,
-        /case number/i,
-        /June 26|June 28|tracked/i,
-      ],
+      access: [/580,?000|14,?800|18 Flock/i, /case number/i, /June 26|June 28|tracked/i],
       civil: [
         /gunpoint|Kohl'?s|wrongful stop/i,
         /34 DTM|34 10 DTM/,
@@ -72,7 +65,8 @@ const CASES = [
       tosAccepted: true,
       footageCategory: "fixed_surveillance",
       vendor: "flock",
-      caseNumber: "Volusia County / FHP investigation — charges dropped (case no. per arrest report)",
+      caseNumber:
+        "Volusia County / FHP investigation — charges dropped (case no. per arrest report)",
       defendant: "Lindsey Isaacs",
       court: "Volusia County Circuit Court",
       jurisdiction: "Florida",
@@ -96,9 +90,7 @@ const CASES = [
         /9:51|9:53|3 miles|time-distance|partial plate/i,
         /Roseville|71%|32\.3%|IJ Database|misread/i,
       ],
-      access: [
-        /warrant|9:51|I-4|case number|investigative lead/i,
-      ],
+      access: [/warrant|9:51|I-4|case number|investigative lead/i],
       civil: [
         /13 days|vehicular homicide|eight felony/i,
         /\$100,?000|\$500,?000|damages|imprisonment/i,
@@ -204,9 +196,7 @@ async function main() {
       };
       console.log(
         `  ${key}: ${text.length} chars` +
-          (check
-            ? ` — ${check.ok ? "PASS" : "FAIL"} (miss ${check.misses.length})`
-            : "")
+          (check ? ` — ${check.ok ? "PASS" : "FAIL"} (miss ${check.misses.length})` : "")
       );
       if (check && !check.ok) {
         console.log("    misses:", check.misses.join("; "));
@@ -217,9 +207,7 @@ async function main() {
   }
 
   writeFileSync(join(outRoot, "summary.json"), JSON.stringify(summary, null, 2));
-  const failed = summary.cases.filter((c) =>
-    Object.values(c.docs).some((d) => d.ok === false)
-  );
+  const failed = summary.cases.filter((c) => Object.values(c.docs).some((d) => d.ok === false));
   console.log("\nWrote", outRoot);
   console.log(
     failed.length
