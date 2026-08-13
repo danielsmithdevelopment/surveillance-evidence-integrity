@@ -39,7 +39,7 @@ Without these controls, “this is what the camera recorded” is the vendor’s
 
 **The accuracy problem**
 
-The industry operates at a documented misidentification error rate of approximately 10% — one in ten plates misread. The Institute for Justice has documented at least 27 people detained at gunpoint or jailed due to license plate reader errors since 2018. A 10% error rate on a system used to initiate arrests is not defensible as a legal standard. The appropriate floor is 0.1% or better, independently certified.
+The industry operates at a documented plate-character misread rate of approximately 10%. On actionable hot-list alerts that trigger stops — the output officers act on — the LAPD Office of the Inspector General (July 10, 2026) found a **32.3% false positive rate** (161 of 498 alerts) over two months; each false alert led to a stop of an innocent driver under high-risk stop protocol. Many failures were stale hot-list / database records, not OCR misreads — so the reliability unit is cameras + database + alert. The Institute for Justice has documented at least 27 people detained at gunpoint or jailed due to license plate reader errors since 2018. LAPD allowed its Flock contract to expire rather than renew. A system used to initiate armed stops at a one-in-three false-positive rate is not a defensible legal standard. The appropriate floor is 0.1% or better, independently certified.
 
 ---
 
@@ -105,7 +105,7 @@ Without these controls, “this is what the camera recorded” is the vendor’s
 
 **The accuracy problem**
 
-The industry operates at a documented misidentification error rate of approximately 10% — one in ten plates misread. The Institute for Justice has documented at least 27 people detained at gunpoint or jailed due to license plate reader errors since 2018. A 10% error rate on a system used to initiate arrests is not defensible as a legal standard. The appropriate floor is 0.1% or better, independently certified.
+The industry operates at a documented plate-character misread rate of approximately 10%. On actionable hot-list alerts that trigger stops — the output officers act on — the LAPD Office of the Inspector General (July 10, 2026) found a **32.3% false positive rate** (161 of 498 alerts) over two months; each false alert led to a stop of an innocent driver under high-risk stop protocol. Many failures were stale hot-list / database records, not OCR misreads — so the reliability unit is cameras + database + alert. The Institute for Justice has documented at least 27 people detained at gunpoint or jailed due to license plate reader errors since 2018. LAPD allowed its Flock contract to expire rather than renew. A system used to initiate armed stops at a one-in-three false-positive rate is not a defensible legal standard. The appropriate floor is 0.1% or better, independently certified.
 
 ---
 
@@ -171,7 +171,7 @@ Under FRE 901(b)(9), the proponent must show the system produces accurate result
 Motion in limine arguing the footage cannot be independently authenticated. Ten specific discovery requests targeting the vendor’s integrity controls — or documented lack of them.
 
 **FRE 702 / Daubert — Accuracy**  
-Motion challenging system reliability. Documented ~10% ALPR error estimates. At least 27 wrongful stops and detentions since 2018 (Institute for Justice). A 0.1% independently certified floor as the procurement/evidence standard vendors cannot currently show.
+Motion challenging system reliability. Documented ~10% ALPR character-misread estimates; LAPD OIG July 10, 2026 audit finding **32.3% false positives** on actionable Flock hot-list alerts (stale database / system-of-systems failures). At least 27 wrongful stops and detentions since 2018 (Institute for Justice). A 0.1% independently certified floor as the procurement/evidence standard vendors cannot currently show.
 
 **Fourth Amendment — Suppression**  
 Motion arguing unauthorized or undocumented access. FOIA-derived patterns of case-number-less Flock searches. 28+ documented officer stalking / misuse cases. Discovery into the searching officer’s query history.

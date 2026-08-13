@@ -74,6 +74,56 @@ export const MEDIA_SECTIONS = [
     ],
   },
   {
+    id: "lapd-oig-accuracy",
+    title: "LAPD OIG — 32.3% hot-list false positives",
+    intro:
+      "Official government audit of actionable Flock hot-list alerts: 161 false positives out of 498 (32.3%), each resulting in a stop of an innocent driver. Strengthens FRE 702 / Daubert because the reliability unit is cameras + database + alert — not OCR alone.",
+    stories: [
+      {
+        outlet: "LAPD Office of the Inspector General",
+        date: "July 10, 2026",
+        title:
+          "Review of the Los Angeles Police Department’s Automatic License Plate Reader System and Use in the Field",
+        url: "https://www.oig.lacity.org/_files/ugd/b2dd23_781bdb1b27314ec4acc45f4b821320d8.pdf",
+        summary:
+          "Two-month review (Aug–Sep 2025) of ALPR / hot-list operations while LAPD ran nearly 2,000 cameras. Found 161 alerts acknowledged as plate matches that subsequent investigation showed were not stolen vehicles, against 337 alerts that recovered stolen vehicles — 32.3% false positive rate. Describes high-risk stop protocol (backup, air support, supervisor; driver ordered out) and warns of liberty, trust, and legal/financial liability risks. Stale hot-list / database clearance failures are a central cause.",
+        whyItMatters:
+          "Cite by name and date in every Flock FRE 702 motion and in § 1983 demand letters for hot-list false-positive stops. Official notice evidence — not an advocacy estimate.",
+      },
+      {
+        outlet: "Futurism",
+        date: "July 2026",
+        title: "LAPD Abandons Flock Contract After Making a Horrifying Discovery",
+        url: "https://futurism.com/future-society/lapd-abandons-flock-contract-false-alarm",
+        summary:
+          "Reports LAPD non-renewal after the OIG audit’s 32.3% false-positive finding on hot-list alerts that triggered stops of innocent drivers.",
+        whyItMatters:
+          "Institutional rejection by one of the largest U.S. police departments; pairs accuracy failure with contract exit.",
+      },
+      {
+        outlet: "The Drive",
+        date: "2026",
+        title:
+          "How Flock Cameras Wrongly Tracked Me for Days Over ‘Stolen’ Plates and Sent Police After Me",
+        url: "https://www.thedrive.com/news/how-flock-cameras-wrongly-tracked-me-for-days-over-stolen-plates-and-sent-police-after-me",
+        summary:
+          "Journalist Joel Feder and his wife were subjected to a multi-officer high-risk stop in Plymouth, Minnesota, while test-driving a Range Rover after Flock/hot-list data wrongly treated the plate as stolen — a database / matching failure cascading into armed enforcement.",
+        whyItMatters:
+          "Concrete civilian consequence of hot-list / system-of-systems false positives; illustrates Daubert unit-of-analysis argument beyond OCR.",
+      },
+      {
+        outlet: "ACLU / EFF",
+        date: "April 20, 2026",
+        title: "Schmidt v. City of Norfolk — Fourth Circuit amicus (ALPR Fourth Amendment)",
+        url: "https://www.aclu.org/cases/schmidt-v-norfolk",
+        summary:
+          "ACLU, ACLU of Virginia, and EFF amicus brief in the Fourth Circuit supporting plaintiffs challenging Norfolk’s Flock ALPR program under the Fourth Amendment. Case pending after district-court summary judgment for the city.",
+        whyItMatters:
+          "Pending circuit authority for Vector 3 warrant / mass-location arguments in VA, MD, NC, SC, WV; constitutional question not settled in Flock’s favor.",
+      },
+    ],
+  },
+  {
     id: "condor-exposure",
     title: "Condor open-internet exposure — FRE 901 ops-sec",
     intro:
