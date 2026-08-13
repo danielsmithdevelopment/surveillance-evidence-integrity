@@ -39,6 +39,20 @@ Minnesota high-risk stop from hot-list / matching failure. **Why it matters:** s
 ### [Schmidt v. Norfolk — Fourth Circuit amicus (ACLU/EFF, Apr. 20, 2026)](https://www.aclu.org/cases/schmidt-v-norfolk)
 Pending ALPR Fourth Amendment appeal. **Why it matters:** Vector 3 unsettled circuit question.
 
+## IJ Database of ALPR Abuse — 146 incidents
+
+### [The IJ Database of ALPR Abuse (Institute for Justice, Aug. 12, 2026)](https://ij.org/the-ij-database-of-alpr-abuse)
+146 source-cited incidents (stalking, errors, non-LE use, other misuse); actively maintained; primary sources for every entry. Published the day before Flock’s mandatory “guardrails” announcement (Aug. 13). **Why it matters:** authoritative abuse reference for Vectors 2–4; timing supports systematic-failure / remedial-control arguments.
+
+### [Roseville, CA — 71% plate misread rate on felony/stolen alerts (Business Insider / Roseville PD, July 2026)](https://ij.org/the-ij-database-of-alpr-abuse)
+1,427 Flock alerts; cameras misread plates in 71% (1,011). Upstream OCR on actionable alerts — distinct from LAPD OIG 32.3% hot-list FPs. **Why it matters:** strongest single deployment accuracy fact for FRE 702 / Daubert.
+
+### [West Chester, OH — Michelle Berling Flock evidence tampering conviction (WCPO / IJ, Aug. 2024)](https://ij.org/the-ij-database-of-alpr-abuse)
+Five years probation for tampering with Flock data and images — only documented criminal conviction for evidence tampering using the Flock system. **Why it matters:** FRE 901 integrity; authorized-user manipulation has occurred.
+
+### [Millcreek, UT — unauthorized Flock camera, unknown installer/access (KUTV / IJ, Aug. 2026)](https://ij.org/the-ij-database-of-alpr-abuse)
+Camera on city property removed after authorities could not determine who installed it or who had access. **Why it matters:** authentication chain failure for unknown-access cameras.
+
 ## Condor open-internet exposure — FRE 901 ops-sec
 
 ### [Flock Exposed Its AI-Powered Cameras to the Internet (404 Media, Dec. 2025)](https://www.404media.co/flock-exposed-its-ai-powered-cameras-to-the-internet-we-tracked-ourselves/)
@@ -77,6 +91,7 @@ Georgia State Patrol Flock-based phone citation despite “not for traffic” cl
 - [Flock Exposed Cameras to the Internet](https://www.404media.co/flock-exposed-its-ai-powered-cameras-to-the-internet-we-tracked-ourselves/)
 - [Flock Leaked Searches via DuckDuckGo, Bing](https://www.404media.co/flock-leaked-cops-license-plate-searches-via-duckduckgo-bing/)
 - [Have I Been Flocked?](https://haveibeenflocked.com)
+- [IJ Database of ALPR Abuse (146 incidents, Aug. 12, 2026)](https://ij.org/the-ij-database-of-alpr-abuse)
 - [IJ Norfolk ALPR case](https://ij.org/case/norfolk-virginia-camera-surveillance/)
 - [EFF on ALPR](https://www.eff.org/issues/automated-license-plate-readers-alpr)
 - [Oak Park terminates Flock](https://www.oakpark.com/2025/08/07/oak-park-terminates-flock-license-plate-reader-contract/)

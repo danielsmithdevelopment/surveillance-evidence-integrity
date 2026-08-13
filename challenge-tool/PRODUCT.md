@@ -144,13 +144,13 @@ The same four FRE vectors apply across all three. Fact packs, precedents, and di
 
 ### Vector 2 — FRE 702 / Daubert: Accuracy
 
-Documented ~10% ALPR misread estimates; IJ wrongful-stop pattern; DHS market-survey acknowledgment of character confusion without a hard floor. Proposed procurement floor: **≤0.1%**, independently certified.
+Documented ~10% ALPR misread estimates; Roseville, CA 71% plate misread rate on felony/stolen Flock alerts; LAPD OIG 32.3% hot-list false positives; IJ Database of ALPR Abuse (146 source-cited incidents); DHS market-survey acknowledgment of character confusion without a hard floor. Proposed procurement floor: **≤0.1%**, independently certified.
 
 For BWC, reliability pressure also hits mute gaps, non-activation, dock re-encode, and vendor AI assist (transcript/redaction/search) as secondary model-error risk.
 
 ### Vector 3 — Fourth Amendment: Access / suppression
 
-FOIA-derived patterns of case-number-less queries; documented officer misuse of ALPR for romantic tracking. Stops initiated on unreliable hits + missing required BWC raise Brady / due-process / statutory-inference arguments.
+FOIA-derived patterns of case-number-less queries; IJ Database of ALPR Abuse (146 source-cited incidents: stalking, personal misuse, evidence tampering, unknown-access cameras). Stops initiated on unreliable hits + missing required BWC raise Brady / due-process / statutory-inference arguments.
 
 ### Vector 4 — 42 U.S.C. § 1983: Civil damages
 

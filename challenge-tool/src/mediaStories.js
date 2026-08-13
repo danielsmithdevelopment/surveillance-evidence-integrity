@@ -124,6 +124,54 @@ export const MEDIA_SECTIONS = [
     ],
   },
   {
+    id: "ij-alpr-abuse-database",
+    title: "IJ Database of ALPR Abuse — 146 incidents",
+    intro:
+      "Institute for Justice source-cited database published August 12, 2026 — the day before Flock’s mandatory “guardrails” announcement. Replaces outdated “≥27 / ≥28” estimates as the authoritative abuse reference for Vectors 2–4 and FRE 901 integrity arguments.",
+    stories: [
+      {
+        outlet: "Institute for Justice",
+        date: "August 12, 2026",
+        title: "The IJ Database of ALPR Abuse — 146 documented incidents",
+        url: "https://ij.org/the-ij-database-of-alpr-abuse",
+        summary:
+          "Actively maintained research database of ALPR abuse incidents identified from media reports and public records. Categories: stalking, errors (misreads / wrongful stops), non-law-enforcement use, and other misuse (unauthorized sharing, evidence tampering, policy violations). Every incident links to a primary source.",
+        whyItMatters:
+          "Cite in every ALPR motion. Timing (Aug. 12) immediately precedes Flock’s Aug. 13 mandatory case-code / Audit Assistance / lockout changes — pattern evidence that mandatory controls respond to documented systematic failure.",
+      },
+      {
+        outlet: "Business Insider / Roseville PD",
+        date: "July 2026",
+        title: "Roseville, CA — 71% plate misread rate on felony/stolen Flock alerts",
+        url: "https://ij.org/the-ij-database-of-alpr-abuse",
+        summary:
+          "Flock sent 1,427 alerts over two years flagging cars as stolen or used in a felony. Department analysis found cameras misread the plates in 71% of those alerts (1,011 misreads). Upstream OCR accuracy on actionable alerts — distinct from LAPD OIG’s 32.3% hot-list false-positive rate.",
+        whyItMatters:
+          "Strongest single deployment accuracy fact for FRE 702 / Daubert. Pair with LAPD OIG: OCR misreads (Roseville) + system-of-systems false positives (LAPD).",
+      },
+      {
+        outlet: "WCPO / IJ database",
+        date: "August 2024",
+        title: "West Chester, OH — Michelle Berling convicted for tampering with Flock data and images",
+        url: "https://ij.org/the-ij-database-of-alpr-abuse",
+        summary:
+          "Former officer Michelle Berling sentenced to five years probation after conviction for tampering with Flock data and images — the only documented criminal conviction for evidence tampering using the Flock system itself.",
+        whyItMatters:
+          "FRE 901 authentication: Flock data/images are susceptible to deliberate manipulation by authorized users, and such manipulation has occurred. Also civil integrity disputes.",
+      },
+      {
+        outlet: "KUTV / IJ database",
+        date: "August 2026",
+        title: "Millcreek, UT — unauthorized Flock camera with unknown installer and access",
+        url: "https://ij.org/the-ij-database-of-alpr-abuse",
+        summary:
+          "City authorities discovered a Flock camera on city property and removed it after being unable to determine who installed it or who had access to it.",
+        whyItMatters:
+          "Authentication chain failure: an ALPR camera with unknown installation and access history cannot be authenticated as a reliable evidence source.",
+      },
+    ],
+  },
+  {
     id: "condor-exposure",
     title: "Condor open-internet exposure — FRE 901 ops-sec",
     intro:

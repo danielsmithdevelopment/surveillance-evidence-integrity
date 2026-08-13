@@ -9,7 +9,7 @@ Empowerment (civilian capture) without pressure (court challenges + procurement)
 
 | Category | Typical systems | Core failure modes | Pressure ask |
 |---|---|---|---|
-| **Fixed / ALPR** | Flock, Vigilant, municipal CCTV | No hash-at-capture; query abuse; ~10% misreads; vendor-only logs | FRE 901 / 702 exclusion; case-numbered access; Challenge-grade procurement |
+| **Fixed / ALPR** | Flock, Vigilant, municipal CCTV | No hash-at-capture; query abuse; ~10% OCR / Roseville 71% alert misreads / LAPD 32.3% hot-list FPs; vendor-only logs | FRE 901 / 702 exclusion; case-numbered access; Challenge-grade procurement |
 | **Body-worn / in-car** | Axon Evidence, Motorola, WatchGuard | Failure to activate; mute/buffer/dock gaps; cloud re-encode; vault as sole oracle | Stage 1 duty-to-record remedies → Stage 2 authenticity; clawql-surveillance-class controls |
 | **Cell phone** | iPhone/Android, WhatsApp/Snapchat/iCloud re-exports | AI edit/deepfake risk; re-encode destroys provenance; selective clips | No authenticity presumption without cryptographic proof; Challenge-grade civilian capture as the floor |
 
