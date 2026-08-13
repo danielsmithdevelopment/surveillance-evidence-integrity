@@ -1377,6 +1377,7 @@ async function handleGenerate(request, env) {
     cameraType: form.cameraType || "",
     searchFacts: form.searchFacts || "",
     civilHarm: form.civilHarm || "",
+    additionalFacts: form.additionalFacts || "",
     footageCategory,
     bodyCamRecordingStatus: normalizeBodyCamRecordingStatus(
       form.bodyCamRecordingStatus,

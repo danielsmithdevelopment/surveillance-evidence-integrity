@@ -51,6 +51,27 @@ describe("offline document templates", () => {
     assert.match(docs.access, /7XKR492/);
     assert.match(docs.civil, /detained at gunpoint/);
     assert.match(docs.motion, /Witness session ws-demo-1/);
+    assert.match(docs.accuracy, /Witness session ws-demo-1|ADDITIONAL FACTS|Case-specific reliability/i);
+  });
+
+  it("weaves operator plate / appearance facts into FRE 702 accuracy", () => {
+    const docs = buildOfflineDocs({
+      vendorName: "Flock Safety",
+      profile,
+      ctx: {
+        ...ctx,
+        additionalFacts:
+          'Dealership entered incomplete plate "34 DTM"; correct plate is "34 10 DTM." Color mismatch: black vs maroon Durango.',
+        searchFacts:
+          "Plymouth PD 18 Flock cameras; 580,000 plate reads; 14,800 hotlist hits. Alerts June 26 and June 28.",
+      },
+      enriched: "",
+    });
+    assert.match(docs.accuracy, /34 DTM/);
+    assert.match(docs.accuracy, /34 10 DTM/);
+    assert.match(docs.accuracy, /maroon|appearance|color/i);
+    assert.match(docs.accuracy, /580,?000|14,?800/);
+    assert.match(docs.motion, /arrest report|citation in a report/i);
   });
 
   it("includes ten discovery requests per motion type", () => {
