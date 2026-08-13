@@ -108,29 +108,21 @@ export function SiteNav() {
       >
         Challenge the Footage
       </a>
-      <ul className="m-0 flex list-none flex-wrap items-center justify-end gap-x-3 gap-y-2 p-0 text-sm font-medium text-ink sm:gap-x-5">
-        <li>
-          <a
-            href="/#how-it-works"
-            className="hidden text-ink-muted transition hover:text-teal focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-teal sm:inline"
-          >
-            How it works
-          </a>
-        </li>
+      <ul className="m-0 flex list-none flex-wrap items-center justify-end gap-x-4 gap-y-2 p-0 text-sm font-medium text-ink sm:gap-5">
         <li>
           <a
             href="/evidence"
             className="text-ink-muted transition hover:text-teal focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-teal"
           >
-            Capture
+            Evidence
           </a>
         </li>
         <li>
           <a
-            href="/#generate"
+            href="/media"
             className="text-ink-muted transition hover:text-teal focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-teal"
           >
-            Generate
+            Media
           </a>
         </li>
         <li>
@@ -141,12 +133,12 @@ export function SiteNav() {
             Public defenders
           </a>
         </li>
-        <li className="hidden md:list-item">
+        <li className="hidden sm:list-item">
           <a
-            href="/media"
+            href="/terms"
             className="text-ink-muted transition hover:text-teal focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-teal"
           >
-            Resources
+            Terms
           </a>
         </li>
         <InstallAppControl />
@@ -168,82 +160,42 @@ export function SiteNav() {
 
 export function SiteFooter() {
   return (
-    <footer className="mt-auto border-t border-line/70 px-5 py-10 text-sm text-ink-muted sm:px-8">
-      <div className="mx-auto flex max-w-6xl flex-col gap-4 text-center sm:text-left">
-        <p>
-          Built by{" "}
-          <a
-            className="font-medium text-teal-deep underline underline-offset-2 hover:text-teal focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal"
-            href="https://github.com/danielsmithdevelopment"
-          >
-            Daniel Smith
-          </a>
-          {" · "}
-          Powered by{" "}
-          <a
-            className="font-medium text-teal-deep underline underline-offset-2 hover:text-teal focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal"
-            href="https://clawql.com"
-          >
-            ClawQL
-          </a>
-          {" · "}
-          <a
-            className="font-medium text-teal-deep underline underline-offset-2 hover:text-teal focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal"
-            href="https://github.com/danielsmithdevelopment/surveillance-evidence-integrity"
-            target="_blank"
-            rel="noreferrer"
-          >
-            Open source on GitHub
-            <span className="sr-only"> (opens in a new tab)</span>
-          </a>
-        </p>
-        <p>
-          <a
-            className="font-medium text-teal-deep underline underline-offset-2 hover:text-teal"
-            href="/media"
-          >
-            Resources
-          </a>
-          {" · "}
-          <a
-            className="font-medium text-teal-deep underline underline-offset-2 hover:text-teal"
-            href="/evidence"
-          >
-            Capture evidence
-          </a>
-          {" · "}
-          <a
-            className="font-medium text-teal-deep underline underline-offset-2 hover:text-teal"
-            href="/public-defenders"
-          >
-            Public defenders
-          </a>
-          {" · "}
-          <a
-            className="font-medium text-teal-deep underline underline-offset-2 hover:text-teal"
-            href="/terms"
-          >
-            Terms
-          </a>
-          {" · "}
-          <a
-            className="font-medium text-teal-deep underline underline-offset-2 hover:text-teal"
-            href="mailto:pd@challengethefootage.com"
-          >
-            Contact
-          </a>
-        </p>
-        <p>Templates for attorney review — not legal advice.</p>
-        <p className="text-xs leading-relaxed">
-          Not affiliated with Flock Safety, Axon, Motorola Solutions, Genetec, Verkada, or any
-          law-enforcement vendor. MIT-licensed open source. Recording and case details are used to
-          operate the service — see{" "}
-          <a className="underline underline-offset-2 hover:text-teal" href="/terms">
-            Terms
-          </a>
-          . Install from your browser for a home-screen app experience.
-        </p>
-      </div>
+    <footer className="mt-auto border-t border-line/70 px-5 py-10 text-center text-sm text-ink-muted sm:px-8">
+      <p>
+        Built by{" "}
+        <a
+          className="font-medium text-teal-deep underline underline-offset-2 hover:text-teal focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal"
+          href="https://github.com/danielsmithdevelopment"
+        >
+          Daniel Smith
+        </a>
+        {" · "}
+        Powered by{" "}
+        <a
+          className="font-medium text-teal-deep underline underline-offset-2 hover:text-teal focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal"
+          href="https://clawql.com"
+        >
+          ClawQL
+        </a>
+        {" · "}
+        <a
+          className="font-medium text-teal-deep underline underline-offset-2 hover:text-teal focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal"
+          href="/media"
+        >
+          Media
+        </a>
+        {" · "}
+        <a
+          className="font-medium text-teal-deep underline underline-offset-2 hover:text-teal focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal"
+          href="/evidence"
+        >
+          Evidence
+        </a>
+      </p>
+      <p className="mt-2">Templates for attorney review — not legal advice.</p>
+      <p className="mt-2 text-xs">
+        Install from your browser for a home-screen app experience on this device.
+      </p>
     </footer>
   );
 }

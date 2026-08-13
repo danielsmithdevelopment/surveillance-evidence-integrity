@@ -10,7 +10,6 @@ import {
   inputClass,
 } from "./Shell.jsx";
 import { TrustChainSection } from "./TrustChain.jsx";
-import { LandingHero, LandingSections } from "./LandingHome.jsx";
 import { registerWebMcpTools } from "./webmcp.js";
 import {
   BODY_CAM_RECORDING_STATUSES,
@@ -381,16 +380,6 @@ export default function App() {
     navigator.clipboard.writeText(docs[tab] || "");
   }
 
-  useEffect(() => {
-    const hash = window.location.hash;
-    if (hash === "#generate" || hash === "#how-it-works" || hash === "#faq") {
-      const el = document.querySelector(hash);
-      if (el) {
-        requestAnimationFrame(() => el.scrollIntoView({ behavior: "smooth", block: "start" }));
-      }
-    }
-  }, []);
-
   function scrollToForm() {
     formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     formRef.current?.querySelector("select, input, textarea")?.focus();
@@ -409,42 +398,76 @@ export default function App() {
         />
         <SiteNav />
 
-        <LandingHero
-          onGenerateClick={scrollToForm}
-          signInSlot={
-            !token ? (
-              <SignIn onCredential={onCredential} allowTestAuth={allowTestAuth} />
-            ) : (
-              <div
-                className="inline-flex flex-wrap items-center gap-2 rounded-full border border-line bg-white/70 px-4 py-2 text-sm"
-                aria-live="polite"
-              >
-                <span>
-                  Signed in as <strong>{userEmail || "Google user"}</strong>
-                </span>
-                {entitlement?.testAuth && (
-                  <span className="rounded-md bg-teal px-2 py-0.5 text-xs font-semibold text-white">
-                    Local demo
+        <div className="relative z-10 mx-auto grid max-w-6xl gap-10 px-5 pb-14 pt-14 sm:px-8 sm:pb-20 sm:pt-20 lg:grid-cols-[1.15fr_0.85fr] lg:items-end lg:gap-16">
+          <div className="animate-rise">
+            <h1 className="font-display text-[clamp(3rem,8vw,5.5rem)] leading-[0.95] tracking-tight text-ink">
+              Challenge
+              <br />
+              <span className="italic text-teal-deep">the Footage</span>
+            </h1>
+            <p className="mt-6 max-w-md text-lg leading-relaxed text-ink-muted sm:text-xl">
+              Secure a verifiable trust chain for what you capture, then generate attorney-review
+              challenge documents — one account.
+            </p>
+            <div className="mt-8 flex flex-wrap items-center gap-4">
+              {!token ? (
+                <SignIn onCredential={onCredential} allowTestAuth={allowTestAuth} />
+              ) : (
+                <div
+                  className="flex flex-wrap items-center gap-2 rounded-full border border-line bg-white/70 px-4 py-2 text-sm"
+                  aria-live="polite"
+                >
+                  <span>
+                    Signed in as <strong>{userEmail || "Google user"}</strong>
                   </span>
-                )}
-                {entitlement?.isPD && (
-                  <span className="rounded-md bg-teal px-2 py-0.5 text-xs font-semibold text-white">
-                    PD · unlimited
-                  </span>
-                )}
-                {entitlement && !entitlement.isPD && !entitlement.testAuth && (
-                  <span className="rounded-md bg-ink px-2 py-0.5 text-xs font-semibold text-white">
-                    {entitlement.canGenerate
-                      ? entitlement.entitled
-                        ? "Paid access"
-                        : `Free ${entitlement.freeUsed}/${entitlement.freeAllowed}`
-                      : "Payment required"}
-                  </span>
-                )}
+                  {entitlement?.testAuth && (
+                    <span className="rounded-md bg-teal px-2 py-0.5 text-xs font-semibold text-white">
+                      Local demo
+                    </span>
+                  )}
+                  {entitlement?.isPD && (
+                    <span className="rounded-md bg-teal px-2 py-0.5 text-xs font-semibold text-white">
+                      PD · unlimited
+                    </span>
+                  )}
+                  {entitlement && !entitlement.isPD && !entitlement.testAuth && (
+                    <span className="rounded-md bg-ink px-2 py-0.5 text-xs font-semibold text-white">
+                      {entitlement.canGenerate
+                        ? entitlement.entitled
+                          ? "Paid access"
+                          : `Free ${entitlement.freeUsed}/${entitlement.freeAllowed}`
+                        : "Payment required"}
+                    </span>
+                  )}
+                </div>
+              )}
+              <button type="button" className={btnGhost} onClick={scrollToForm}>
+                Start a generation
+              </button>
+            </div>
+          </div>
+
+          <div
+            className="animate-rise-delay relative hidden min-h-[280px] lg:block"
+            aria-hidden="true"
+          >
+            <div className="absolute inset-0 rounded-[2rem] bg-gradient-to-br from-teal/20 via-white/40 to-amber/15" />
+            <div className="absolute inset-6 rounded-[1.5rem] border border-white/60 bg-ink/[0.03] backdrop-blur-[2px]" />
+            <div className="absolute inset-0 flex flex-col justify-between p-10 font-mono text-[11px] leading-relaxed text-ink-muted">
+              <div>
+                <p className="text-teal">VECTORS</p>
+                <p className="mt-3 text-ink">01 FRE 901 · chain of custody</p>
+                <p className="text-ink">02 FRE 702 · 0.1% floor</p>
+                <p className="text-ink">03 4th Am · case numbers / MYOC</p>
+                <p className="text-ink">04 § 1983 · stop + 1A retaliation</p>
               </div>
-            )
-          }
-        />
+              <div>
+                <p>Flock · Axon · Motorola</p>
+                <p>Genetec · Verkada · custom</p>
+              </div>
+            </div>
+          </div>
+        </div>
       </header>
 
       <main
@@ -454,7 +477,7 @@ export default function App() {
       >
         {evidenceSession && (
           <div
-            className="mb-10 rounded-xl border border-teal/25 bg-teal-soft/70 px-4 py-3 text-sm text-ink animate-fade"
+            className="mb-6 rounded-xl border border-teal/25 bg-teal-soft/70 px-4 py-3 text-sm text-ink animate-fade"
             role="status"
           >
             Evidence session linked: <code className="font-mono">{evidenceSession}</code>
@@ -465,17 +488,14 @@ export default function App() {
           </div>
         )}
 
-        <LandingSections />
-
-        <div className="my-12">
+        <div className="mb-8">
           <TrustChainSection compact />
         </div>
 
         <section
-          id="generate"
           ref={formRef}
           aria-labelledby="case-details-heading"
-          className="scroll-mt-6 rounded-2xl border border-line bg-white p-5 shadow-[0_18px_50px_rgba(18,26,33,0.06)] sm:p-8"
+          className="rounded-2xl border border-line bg-white p-5 shadow-[0_18px_50px_rgba(18,26,33,0.06)] sm:p-8"
         >
           <div className="mb-6">
             <h2 id="case-details-heading" className="font-display text-3xl text-ink">
