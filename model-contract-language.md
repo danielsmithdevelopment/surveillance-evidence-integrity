@@ -76,7 +76,7 @@ This language is designed to be inserted into a standard municipal services agre
 
 **3.5** Vendor shall provide Audit Log records, in their original format with complete metadata, to defense counsel in any criminal proceeding in which Footage from a Camera operated under this Agreement is offered as evidence, upon receipt of a valid legal process or written authorization from the prosecuting agency.
 
-*Commentary: Case numbers are not filled in on the majority of Flock searches, as the FOIA data shows. This clause requires logging regardless of whether a case number is provided. It also requires that federal agency access be logged with the same specificity as local agency access. The WORM requirement means Vendor cannot clean up the logs after a problematic access event.*
+*Commentary: Case numbers are not filled in on the majority of Flock searches, as the FOIA data shows (≈84% without case numbers). This clause requires logging regardless of whether a case number is provided — and cities should go further by contractually requiring case codes that block queries without them, not merely log their absence. On August 13, 2026, Flock itself announced it will require case codes for all law enforcement searches by end of year after years of optional adoption — an admission that voluntary case codes were inadequate. Cities need not wait for Flock's end-of-year timeline: require mandatory blocking case codes in the next renewal. It also requires that federal agency access be logged with the same specificity as local agency access. The WORM requirement means Vendor cannot clean up the logs after a problematic access event.*
 
 ---
 

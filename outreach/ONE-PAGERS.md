@@ -45,7 +45,7 @@ The industry operates at a documented plate-character misread rate of approximat
 
 **The access problem**
 
-Public records data shows that 84% of searches run against the Flock Safety network carried no case number. The Institute for Justice has documented at least 28 officers using license plate reader systems to track romantic interests. Federal agencies have accessed local networks without clear local consent in multiple reported cases. When most searches lack documented justification, unauthorized personal use and unexpected sharing are structurally hard to detect.
+Public records data shows that 84% of searches run against the Flock Safety network carried no case number. The Institute for Justice has documented at least 28 officers using license plate reader systems to track romantic interests. Federal agencies have accessed local networks without clear local consent in multiple reported cases. When most searches lack documented justification, unauthorized personal use and unexpected sharing are structurally hard to detect. On August 13, 2026, Flock itself announced it will make case codes and Audit Assistance mandatory by year-end after years of voluntary adoption — an admission that the voluntary system was inadequate. Cities need not wait: require blocking case codes in the next contract.
 
 ---
 

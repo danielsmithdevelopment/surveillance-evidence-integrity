@@ -74,6 +74,25 @@ export const MEDIA_SECTIONS = [
     ],
   },
   {
+    id: "flock-guardrails-admissions",
+    title: "Flock Aug. 13 guardrails — admissions of prior inadequacy",
+    intro:
+      "CEO Garrett Langley’s Aug. 13, 2026 blog: mandatory Audit Assistance and case codes, 7-day default retention, MFA, Bishop Fox review — each a concession that the prior voluntary regime was insufficient. Also contrasts “9 errors per million” OCR claim with LAPD OIG 32.3% actionable false positives.",
+    stories: [
+      {
+        outlet: "Flock Safety / Garrett Langley",
+        date: "August 13, 2026",
+        title:
+          "Flock Updates Privacy, Accountability, Security, and Transparency Safeguards",
+        url: "https://www.flocksafety.com/blog/flock-guardrails-address-lpr-privacy-concerns-and-police-transparency",
+        summary:
+          "Announces 7-day default ALPR retention (from 30), Evidence Mode, offense filtering for sharing, mandatory Audit Assistance by year-end (only ~1/3 had adopted voluntarily; reviews “associated with arrests” of officers), mandatory case codes for LE searches by year-end, proactive lockout, MFA mandatory as of early August, Bishop Fox review (findings Sept.), and a forthcoming plain-English contract explanation after admitting contractual language “confused the public” on data ownership. Claims “fewer than 9 human-reported errors for every 1 million alerts.”",
+        whyItMatters:
+          "Vendor admissions that voluntary accountability was inadequate during documented abuse period. Pair OCR “9/million” claim against LAPD OIG 32.3% hot-list false positives in every FRE 702 motion. Contract “confused the public” line supports Eagle Sports ownership contradiction. Demand when Audit Assistance / case codes were on for the agency at issue.",
+      },
+    ],
+  },
+  {
     id: "lapd-oig-accuracy",
     title: "LAPD OIG — 32.3% hot-list false positives",
     intro:
