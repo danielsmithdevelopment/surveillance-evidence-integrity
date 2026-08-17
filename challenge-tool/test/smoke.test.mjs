@@ -20,9 +20,16 @@ describe("challenge-tool artifacts", () => {
   });
 
   it("worker exposes required API routes", () => {
-    for (const route of ["/api/checkout", "/api/entitlement", "/api/generate", "/api/history"]) {
+    for (const route of [
+      "/api/checkout",
+      "/api/entitlement",
+      "/api/generate",
+      "/api/extract-case",
+      "/api/history",
+    ]) {
       assert.match(workerSrc, new RegExp(route.replace("/", "\\/")));
     }
+    assert.match(workerSrc, /gatewayReadiness/);
     assert.match(workerSrc, /ALLOW_TEST_AUTH/);
     assert.match(workerSrc, /buildOfflineDocs/);
     assert.match(workerSrc, /wantsOfflineGeneration/);

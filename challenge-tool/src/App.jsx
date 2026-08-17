@@ -11,6 +11,7 @@ import {
 } from "./Shell.jsx";
 import { TrustChainSection } from "./TrustChain.jsx";
 import { registerWebMcpTools } from "./webmcp.js";
+import { extractCaseFacts } from "../case-extract.js";
 import {
   BODY_CAM_RECORDING_STATUSES,
   FOOTAGE_CATEGORIES,
@@ -255,6 +256,8 @@ export default function App() {
   const [docs, setDocs] = useState(null);
   const [tab, setTab] = useState("motion");
   const [evidenceSession, setEvidenceSession] = useState(null);
+  const [pasteSource, setPasteSource] = useState("");
+  const [extractNotes, setExtractNotes] = useState(null);
   const formRef = useRef(null);
   const panelId = useId();
 
@@ -303,6 +306,18 @@ export default function App() {
 
   function updateField(key, value) {
     setForm((f) => ({ ...f, [key]: value }));
+  }
+
+  function handleExtractFromPaste() {
+    setError(null);
+    const result = extractCaseFacts(pasteSource);
+    if (result.fields.vendor) setVendor(result.fields.vendor);
+    const { vendor: _v, ...rest } = result.fields;
+    setForm((f) => ({ ...f, ...rest }));
+    setExtractNotes({ filled: result.filled, notes: result.notes });
+    if (result.filled.length === 0) {
+      setError(result.notes?.[0] || "Could not extract fields from that text.");
+    }
   }
 
   async function handleCheckout() {
@@ -510,6 +525,49 @@ export default function App() {
                 public defenders free
               </a>
             </p>
+          </div>
+
+          <div className="mb-6 rounded-xl border border-dashed border-teal/35 bg-paper/60 p-4 sm:p-5">
+            <p className="text-[0.7rem] font-bold uppercase tracking-[0.14em] text-teal">
+              Quick fill
+            </p>
+            <p className="mt-1 text-sm text-ink-muted">
+              Paste a news article, police statement, or arrest-report summary — then extract into
+              the form below. Review every field before generating.
+            </p>
+            <Field label="Source text" className="mt-3">
+              {(id) => (
+                <textarea
+                  id={id}
+                  className={`${inputClass} min-h-32 resize-y font-mono text-xs`}
+                  value={pasteSource}
+                  onChange={(e) => setPasteSource(e.target.value)}
+                  placeholder="Paste The Drive / WESH / department statement text here…"
+                />
+              )}
+            </Field>
+            <div className="mt-3 flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                className={btnSecondary}
+                disabled={!pasteSource.trim()}
+                onClick={handleExtractFromPaste}
+              >
+                Extract into form
+              </button>
+              {extractNotes?.filled?.length > 0 && (
+                <p className="text-sm text-ink-muted" role="status">
+                  Filled: {extractNotes.filled.join(", ")}
+                </p>
+              )}
+            </div>
+            {extractNotes?.notes?.length > 0 && (
+              <ul className="mt-2 list-disc space-y-1 pl-5 text-xs text-ink-muted">
+                {extractNotes.notes.map((n) => (
+                  <li key={n}>{n}</li>
+                ))}
+              </ul>
+            )}
           </div>
 
           <div className="mb-4">

@@ -329,6 +329,7 @@ git checkout main
 | Auth 401 after sign-in | Client ID mismatch between GIS button and Worker secret |
 | Checkout 500 | ClawQL payments not configured / Stripe not linked on gateway |
 | Offline-looking docs in prod | Missing `CLAWQL_*` secrets → Worker uses offline templates |
+| `/api/health` shows `gatewayReadiness.missing` | Run `wrangler secret put` for listed keys (see §4) |
 | Evidence upload fails | No `EVIDENCE_BUCKET` and no `R2_*` secrets |
 | PD still paywalled | KV key must be exact `pd_whitelist:{email}` lowercase match to Google email |
 
