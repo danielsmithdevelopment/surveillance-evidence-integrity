@@ -15,6 +15,7 @@
  *   POST /api/generate
  *   GET  /api/history
  *   GET  /api/session/:id
+ *   POST /api/extract-case
  *   GET  /api/health
  *
  * Also: Link headers, Markdown negotiation (Accept: text/markdown), agent-ready well-known files.
@@ -25,6 +26,7 @@
  */
 
 import { buildOfflineDocs } from "./offline-docs.js";
+import { extractCaseFacts } from "./case-extract.js";
 import {
   FOOTAGE_CATEGORY_IDS,
   bodyCamRatchetLine,
@@ -755,13 +757,18 @@ export default {
     const url = new URL(request.url);
     try {
       if (url.pathname === "/api/health" && request.method === "GET") {
+        const readiness = gatewayReadiness(env);
         return json({
           ok: true,
           service: "challenge-the-footage",
           time: new Date().toISOString(),
           generationMode: wantsOfflineGeneration(env) ? "offline" : "gateway",
           testAuthEnabled: env.ALLOW_TEST_AUTH === "true",
+          gatewayReadiness: readiness,
         });
+      }
+      if (url.pathname === "/api/extract-case" && request.method === "POST") {
+        return handleExtractCase(request);
       }
       if (url.pathname === "/api/checkout" && request.method === "POST")
         return handleCheckout(request, env);
@@ -893,6 +900,25 @@ function wantsOfflineGeneration(env) {
   if (env.GENERATION_MODE === "offline") return true;
   if (env.GENERATION_MODE === "gateway") return false;
   return !env.CLAWQL_GATEWAY_URL || !env.CLAWQL_API_KEY;
+}
+
+function gatewayReadiness(env) {
+  const missing = [];
+  if (!env.CLAWQL_GATEWAY_URL) missing.push("CLAWQL_GATEWAY_URL");
+  if (!env.CLAWQL_API_KEY) missing.push("CLAWQL_API_KEY");
+  if (!env.GOOGLE_CLIENT_ID) missing.push("GOOGLE_CLIENT_ID");
+  const forced =
+    env.GENERATION_MODE === "offline"
+      ? "offline"
+      : env.GENERATION_MODE === "gateway"
+        ? "gateway"
+        : null;
+  return {
+    configured: missing.filter((k) => k.startsWith("CLAWQL")).length === 0 && forced !== "offline",
+    missing,
+    googleSignIn: !!env.GOOGLE_CLIENT_ID,
+    generationModeForced: forced,
+  };
 }
 
 // ─── Gateway helpers ──────────────────────────────────────────────────────────
@@ -1290,6 +1316,18 @@ async function handleEntitlement(request, env) {
     canGenerate: ent.entitled || freeUsed < FREE_GENERATIONS,
     testAuth: !!user.testAuth,
   });
+}
+
+async function handleExtractCase(request) {
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return json({ error: "Invalid request body" }, 400);
+  }
+  const text = body.text || body.source || "";
+  const result = extractCaseFacts(text);
+  return json(result);
 }
 
 async function handleGenerate(request, env) {
