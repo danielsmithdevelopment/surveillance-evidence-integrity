@@ -177,7 +177,7 @@ Motion challenging system reliability. Documented ~10% ALPR character-misread es
 Motion arguing unauthorized or undocumented access. FOIA-derived patterns of case-number-less Flock searches. IJ Database of ALPR Abuse (146 incidents, Aug. 12, 2026) — stalking, personal misuse, evidence tampering. Discovery into the searching officer’s query history.
 
 **42 U.S.C. § 1983 — Civil demand letter**  
-For your client’s civil claim when facts support it — including Fourth Amendment theories and, where location facts fit, parallel claims under applicable constitutional doctrine. Damages framing, fee-shifting under §1988, response deadline.
+For your client’s civil claim when facts support it — including Fourth Amendment theories, Monell agency liability where departments failed to audit Flock use (Washington Post, Aug. 19, 2026), and parallel claims under applicable constitutional doctrine. Damages framing, fee-shifting under §1988, response deadline.
 
 ---
 
