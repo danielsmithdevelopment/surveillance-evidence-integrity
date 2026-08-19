@@ -53,6 +53,17 @@ Five years probation for tampering with Flock data and images — only documente
 ### [Millcreek, UT — unauthorized Flock camera, unknown installer/access (KUTV / IJ, Aug. 2026)](https://ij.org/the-ij-database-of-alpr-abuse)
 Camera on city property removed after authorities could not determine who installed it or who had access. **Why it matters:** authentication chain failure for unknown-access cameras.
 
+## Washington Post — departments failed to audit Flock misuse
+
+### [We found cops who misused Flock. Their police departments didn't know. (WaPo, Aug. 19, 2026)](https://www.washingtonpost.com/technology/2026/08/19/we-found-cops-who-misused-flock-their-police-departments-didnt-know/)
+MacMillan, Schaffer, Harwell used HaveIBeenFlocked.com logs to flag officers with hundreds/thousands of searches on individual plates; linked officers to plates via public records. Haines City officer confessed/arrested day after Post contacted wife (affidavit cites reporter). Indianapolis Chief Terry suspended officer; acknowledged no regular audits despite public assurances. **Why it matters:** Monell deliberate indifference — audit tools existed; departments did not use them.
+
+### [Milwaukee Ayala — victim found ~200 searches on HaveIBeenFlocked.com (FOX6, 2026)](https://www.fox6now.com/news/milwaukee-police-officer-charged-with-misusing-flock-safety-system)
+Misuse not found internally; victim alerted police after self-search. MPD assumed audits were working. **Why it matters:** failed-oversight / Monell framing.
+
+### [Eugene OR logs — 'hehehe' search reasons; abortion-related nationwide queries (Register-Guard / UW CHR, 2025–2026)](https://www.registerguard.com/)
+Medford PD searched Eugene cameras with reason "hehehe"; Johnson County TX search for woman who "had an abortion." **Why it matters:** reason field provides no real accountability.
+
 ## Condor open-internet exposure — FRE 901 ops-sec
 
 ### [Flock Exposed Its AI-Powered Cameras to the Internet (404 Media, Dec. 2025)](https://www.404media.co/flock-exposed-its-ai-powered-cameras-to-the-internet-we-tracked-ourselves/)
@@ -92,6 +103,7 @@ Georgia State Patrol Flock-based phone citation despite “not for traffic” cl
 - [Flock Leaked Searches via DuckDuckGo, Bing](https://www.404media.co/flock-leaked-cops-license-plate-searches-via-duckduckgo-bing/)
 - [Have I Been Flocked?](https://haveibeenflocked.com)
 - [IJ Database of ALPR Abuse (146 incidents, Aug. 12, 2026)](https://ij.org/the-ij-database-of-alpr-abuse)
+- [WaPo — departments failed to audit Flock misuse (Aug. 19, 2026)](https://www.washingtonpost.com/technology/2026/08/19/we-found-cops-who-misused-flock-their-police-departments-didnt-know/)
 - [IJ Norfolk ALPR case](https://ij.org/case/norfolk-virginia-camera-surveillance/)
 - [EFF on ALPR](https://www.eff.org/issues/automated-license-plate-readers-alpr)
 - [Oak Park terminates Flock](https://www.oakpark.com/2025/08/07/oak-park-terminates-flock-license-plate-reader-contract/)

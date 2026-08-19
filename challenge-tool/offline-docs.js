@@ -520,7 +520,8 @@ III. LEGAL BASIS
 1. Fourth Amendment — unreasonable seizure and/or reliance on digital evidence that does not meet authenticity / reliability standards.
 2. 42 U.S.C. § 1983 — deprivation of constitutional rights under color of state law.
 3. First Amendment retaliation (include when facts fit) — ALPR tracking after protected speech (criticism of police, protest, political leafleting) used to engineer pretextual stops, as documented in the Lenexa, Kansas “MYOC” pattern (Axon/Genetec/Leonardo — vendor-agnostic). Nieves v. Bartlett (2019) where no probable cause exists.
-4. Parallel state tort theories as applicable (false arrest, false imprisonment, IIED, spoliation where recognized).
+4. Monell municipal liability (include when facts fit fixed/ALPR officer misuse and failed audits): deliberate indifference where agencies had Flock audit tools, failed to conduct regular audits, and abuse was detected only by journalists or victims using HaveIBeenFlocked.com — Washington Post, August 19, 2026 (MacMillan, Schaffer, Harwell).
+5. Parallel state tort theories as applicable (false arrest, false imprisonment, IIED, spoliation where recognized).
 
 IV. DAMAGES
 
@@ -533,10 +534,11 @@ Qualified-immunity landscape: note jurisdictions that have abolished or limited 
 V. DEMAND
 
 1. Preserve all ${vendorName} media, audit / access logs, device images, BOLOs / MYOC-style alerts, and related exports for this incident.
-2. Produce capture-time integrity proofs (hashes / content credentials / Challenge-grade packages) or admit they do not exist.
-3. Where First Amendment retaliation is alleged: produce ALPR queries against the client's plate in the 90 days after public criticism; the complete BOLO; communications directing officers to find stop pretexts; and BOLO issuance policy.
-4. Respond within 30 days with a meaningful settlement proposal or detailed factual rebuttal.
-5. Failure to respond will result in filing a § 1983 complaint in federal district court.
+2. For Monell claims: produce all records of department audits of officer Flock use in the 24 months before the incident; leadership communications on misuse risk; public statements on appropriate Flock use; prior internal complaints; and written audit policy if any.
+3. Produce capture-time integrity proofs (hashes / content credentials / Challenge-grade packages) or admit they do not exist.
+4. Where First Amendment retaliation is alleged: produce ALPR queries against the client's plate in the 90 days after public criticism; the complete BOLO; communications directing officers to find stop pretexts; and BOLO issuance policy.
+5. Respond within 30 days with a meaningful settlement proposal or detailed factual rebuttal.
+6. Failure to respond will result in filing a § 1983 complaint in federal district court.
 
 Sources consulted for template framing:
 ${sources.map((s) => `- ${s}`).join("\n")}

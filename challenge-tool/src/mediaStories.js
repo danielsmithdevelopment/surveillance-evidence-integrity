@@ -336,6 +336,44 @@ export const MEDIA_SECTIONS = [
     ],
   },
   {
+    id: "wapo-flock-audit-failure",
+    title: "Washington Post — departments failed to audit Flock misuse",
+    intro:
+      "August 19, 2026 original reporting: journalists using HaveIBeenFlocked.com audit logs detected officer stalking in days that departments missed for months. Supports Monell deliberate-indifference claims when agencies had audit tools but did not use them.",
+    stories: [
+      {
+        outlet: "The Washington Post",
+        date: "August 19, 2026",
+        title: "We found cops who misused Flock. Their police departments didn't know.",
+        url: "https://www.washingtonpost.com/technology/2026/08/19/we-found-cops-who-misused-flock-their-police-departments-didnt-know/",
+        summary:
+          "MacMillan, Schaffer, and Harwell used FOIA-derived Flock audit logs (via HaveIBeenFlocked.com) to flag officers running hundreds or thousands of searches on individual plates, then linked officers to searched plates via public records and social media. Haines City, FL: officer confessed and was arrested within one day of Post contacting his wife — arrest affidavit cites reporter outreach. Indianapolis: Chief Tanya Terry suspended an officer and acknowledged the department had not been conducting regular audits despite public assurances of appropriate use.",
+        whyItMatters:
+          "Monell agency liability: audit tools existed; departments chose not to look. Journalists detected abuse using the same data departments had. Include in every § 1983 demand where failed audits are factually supported.",
+      },
+      {
+        outlet: "FOX6 Milwaukee",
+        date: "2026",
+        title: "Milwaukee Officer Josue Ayala — victim discovered misuse via HaveIBeenFlocked.com",
+        url: "https://www.fox6now.com/news/milwaukee-police-officer-charged-with-misusing-flock-safety-system",
+        summary:
+          "Internal audit did not uncover Ayala's personal tracking. A victim searched her plate on HaveIBeenFlocked.com (~200 unauthorized searches), alerted police, and prompted the investigation. MPD Chief of Staff: department assumed audit function was utilized and did not understand gaps until abuse 'slipped through the cracks.'",
+        whyItMatters:
+          "Pairs with WaPo methodology — victims and journalists, not departments, detect misuse. Supports deliberate-indifference / failed-oversight framing.",
+      },
+      {
+        outlet: "Register-Guard / UW Center for Human Rights",
+        date: "2025–2026",
+        title: "Eugene OR Flock logs — 'hehehe' reasons and abortion-related searches",
+        url: "https://www.registerguard.com/",
+        summary:
+          "Audit logs show Medford PD searched Eugene cameras with reason field 'hehehe.' Eugene data also appeared in nationwide Border Patrol/DHS searches and a Johnson County, Texas search for a woman who 'had an abortion.' ACLU analyst: officers use one-word reasons like 'investigation' with no transparency.",
+        whyItMatters:
+          "Reason-field accountability is illusory — any text accepted. Fourth Amendment suppression and access-abuse pattern evidence.",
+      },
+    ],
+  },
+  {
     id: "research",
     title: "Research, FOIA, and civil litigation",
     intro: "Primary sources behind the fixed/ALPR fact packs in the generator.",
