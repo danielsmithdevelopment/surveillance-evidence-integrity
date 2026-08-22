@@ -142,6 +142,14 @@ This language is designed to be inserted into a standard municipal services agre
 
 ---
 
+## Section 8: Permitted Use Limitation
+
+**8.1** Vendor represents and warrants that the system will not be used for enforcement of traffic violations including speeding, running red lights, or other moving violations, except where City has explicitly authorized such use in writing in a separately executed addendum. Any expansion of the system's permitted uses beyond those represented to City at the time of contract signing requires a formal contract amendment subject to City Council approval. Vendor's removal or modification of representations about permitted use from its public materials does not operate to expand the permitted uses under this Agreement.
+
+*Commentary: Flock Safety represented for years that its system was not used for traffic enforcement, then quietly removed that language after December 2, 2025, while simultaneously integrating speed-camera vendors into its network via Flock Wing License arrangements and Speed Feedback Trailer products. This clause locks the permitted use at the scope represented at signing and requires explicit City Council authorization for any expansion — preventing the mission creep the EFF documented in March 2026. Pair with Georgia OCGA 17-4-23 and comparable state presence requirements when camera-only citations are at issue.*
+
+---
+
 ## Suggested Additional Provisions
 
 The following provisions go beyond what most cities will be able to negotiate in an initial contract but represent the full standard that makes footage genuinely trustworthy as evidence. They are included here as aspirational language for jurisdictions with significant negotiating leverage or for inclusion in RFP requirements.
