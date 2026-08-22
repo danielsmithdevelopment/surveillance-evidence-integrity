@@ -114,6 +114,12 @@ To meet the authentication requirement of Section 3, the Proponent shall demonst
 
 (d) A government entity that enters into a contract not meeting the requirements of this Section after the effective date of this Act shall not offer Covered Footage from the subject Surveillance Camera System as evidence in any criminal proceeding in this state.
 
+(e) Any contract subject to subsection (a) shall prohibit the Surveillance Camera System operator from claiming any ownership, perpetual license, or irrevocable right to use footage, metadata, or any derivative work, output, analysis, report, or model generated from footage collected under the contract, for any purpose other than providing the contracted services during the contract term. Any contractual provision purporting to grant the operator a perpetual or post-termination right to use footage or derivatives for product development, model training, or commercial purposes is void as against public policy.
+
+(f) Any contract subject to subsection (a) shall require that footage and all associated metadata — including timestamps to millisecond precision, GPS coordinates, camera calibration data, and all processing steps applied between sensor capture and delivery — be provided to the contracting agency and to defense counsel in unprocessed original format upon request. Provision of degraded, low-resolution, or metadata-stripped copies does not satisfy chain of custody requirements under this Act.
+
+**Drafting note:** Subsection (e) directly addresses the Flock perpetual license structure established in February 2026 terms and the derivative works ownership claim in Section 1.12. Oregon's 2026 Automated License Plate Recognition System Act is the positive model — it explicitly prohibits Flock from using captured data for purposes inconsistent with customer policies and directs all legal process to the customer rather than the vendor. Subsection (f) addresses the degraded copy problem reported by HaveIBeenFlocked.com.
+
 ---
 
 ### SECTION 8. APPLICABILITY AND TRANSITION
