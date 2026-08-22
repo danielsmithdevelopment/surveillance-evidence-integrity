@@ -62,6 +62,8 @@ Serve the following on the prosecution as part of standard discovery, supplement
 
 **Request 11:** For any Flock Safety Condor PTZ camera — complete logs of all IP addresses and sessions that accessed the camera's administrative portal, live feed, or archived footage during the 30-day retention window preceding the incident at issue; Flock's internal documentation of when the December 2025 open-internet misconfiguration began and when it was remediated for the specific camera at issue; and all records of whether footage from the camera was accessed, downloaded, modified, or deleted by any party other than authorized agency personnel during the relevant period. If the camera model is unknown, demand production of the model identifier and apply this request to every Condor unit whose footage or derivative data is offered.
 
+**Request 13:** The original unprocessed camera output for the footage at issue — not the version accessible through Flock's Web Interface — including all original metadata: timestamps to millisecond precision, GPS coordinates, camera calibration data, lens parameters, and any processing steps applied between sensor capture and the version provided to law enforcement. If Flock's Web Interface provides only a degraded or processed version of the original footage, request confirmation of what processing was applied and a description of how the produced version differs from the original sensor output. Also request Flock's contractual terms in effect at the time the footage was captured, specifically Section 1.12 (Flock Property definition), Section 1.13 (derivative works), and Section 4.1 (perpetual license), and any communications between the producing agency and Flock regarding the format in which footage would be made available for litigation purposes.
+
 ---
 
 ## How to Use the Responses
@@ -101,6 +103,14 @@ If Flock cannot produce (a) the start and remediation dates for the specific cam
 Either response is useful. If Flock claims that hash values, Merkle Chain records, and External Immutable Anchors don't exist, that confirms the absence of the technical controls — which is the basis of the authentication challenge. If Flock refuses to produce materials that may exist, that is a discovery compliance issue with its own remedies.
 
 In either case, document the response and its implications carefully for the motion.
+
+### If Flock produces only degraded or processed copies (Request 13)
+
+HaveIBeenFlocked.com has reported that Flock may provide customers access not to original raw footage but to altered, degraded, low-resolution copies lacking metadata such as timestamps. If discovery confirms this pattern — or if Flock cannot produce the original unprocessed sensor output — the authentication argument strengthens materially.
+
+The argument: Under FRE 901(b)(9), the prosecution must show that the system produces an accurate result. A system that delivers only vendor-processed derivative copies, with stripped or missing metadata, cannot establish that the produced file matches what the camera originally recorded. Timestamps, GPS coordinates, and calibration data are part of what makes footage identifiable to a specific camera at a specific time; their absence is itself an authentication defect.
+
+Additionally, Flock's current terms define "Flock Property" to include derivative works and outputs generated through Flock Services, and restrict customer rights to download or retain such derivatives. Section 4.1 grants Flock a perpetual, irrevocable license to use Customer Data. If the only version available for litigation is a Flock-controlled derivative, the producing party is offering processed output under a vendor license structure — not the original record. Demand the contractual terms in effect at capture (Sections 1.12, 1.13, and 4.1) and any agency communications about litigation-format production.
 
 ---
 

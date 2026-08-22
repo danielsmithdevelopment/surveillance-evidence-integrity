@@ -257,7 +257,7 @@ export function resolveFootageProfile(footageCategory, vendorKey, vendorProfile,
   };
 }
 
-/** Mode-specific discovery requests (10 each) for offline + prompt guidance. */
+/** Mode-specific discovery requests for offline + prompt guidance (11 for fixed_surveillance auth; 10 for other kinds). */
 export function failureToRecordDiscovery(vendorName) {
   return [
     `Department body-worn camera policy and state statute (if any) requiring activation for the type of encounter at issue, including sanctions for non-activation.`,
@@ -388,6 +388,7 @@ export function discoveryRequests(vendorName, kind, footageCategory, recordingSt
       `Vendor contracts, SLAs, and representations concerning footage authenticity made to the contracting agency.`,
       `Chain-of-custody documentation from capture through production in this case.`,
       `Identity of every person who accessed, exported, or transmitted the footage segment(s) at issue.`,
+      `Original unprocessed camera output (not vendor Web Interface version) with full metadata — timestamps to millisecond precision, GPS, calibration data, lens parameters, and all processing steps between sensor capture and production; vendor contractual terms in effect at capture (Flock §1.12/§1.13/§4.1 or equivalent); communications about litigation-format production.`,
     ],
     accuracy: [
       `All accuracy, precision, recall, and false-positive / false-negative testing for ${vendorName}'s identification or ALPR models.`,
