@@ -166,7 +166,23 @@ To meet the authentication requirement of Section 3, the Proponent shall demonst
 
 ---
 
-### SECTION 12. EFFECTIVE DATE
+### SECTION 12. HUMAN VERIFICATION BEFORE ARREST
+
+(a) No officer shall arrest or detain a person, apply for an arrest or search warrant, or initiate a high-risk vehicle stop based in whole or in part on an automated license plate reader detection or alert unless an officer has first:
+
+- (1) compared the plate characters in the captured image with the plate read and confirmed they match;
+- (2) confirmed the vehicle's make, model, and color in the image match the description associated with the offense or hot-list entry; and
+- (3) for an arrest or warrant application, identified evidence other than the vehicle's detected location that connects the person to the offense.
+
+(b) Any warrant affidavit relying on an ALPR detection shall disclose that reliance, identify the camera and time of each detection, state the verification performed under subsection (a), and disclose any evidence known to the affiant tending to show the person did not commit the offense.
+
+(c) A detection or alert not verified under subsection (a) does not establish probable cause or reasonable suspicion.
+
+**Drafting note:** Lindsey Isaacs publicly called for this rule in September 2026. Her case and Ladavious McNair's both turned on a detection placing a car near a violent crime, followed by arrests while exculpatory evidence sat in the file. Flock describes an alert as an investigative lead rather than a final determination; this section writes that description into law. Subsection (b) also closes the gap created by policies like the Wapello County, Iowa SOP instructing officers to omit ALPR use from reports.
+
+---
+
+### SECTION 13. EFFECTIVE DATE
 
 This Act takes effect [DATE].
 
